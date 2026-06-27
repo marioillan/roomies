@@ -169,7 +169,7 @@ function AgendaCard({ eventos, user, esAdmin, onNuevo, onEditar = null, onElimin
 
       {!user?.tiene_calendar && (
         <a
-          href=`${import.meta.env.VITE_API_URL}/api/auth/google/calendar`
+          href={`${import.meta.env.VITE_API_URL}/api/auth/google/calendar`}
           className='mt-2 w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-blue-50 border border-blue-100 hover:bg-blue-100 transition group'
         >
           <CalendarDays size={15} className='text-blue-500 shrink-0' />
