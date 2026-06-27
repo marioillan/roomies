@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+@theme {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui;
+  --font-sans:    "Manrope", ui-sans-serif, system-ui;
+  --font-mono:    "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+html, body {
+  background-color: #f1f5f9;
+  max-width: 100%;
+  font-family: "Manrope", ui-sans-serif, system-ui;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

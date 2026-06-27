@@ -1,0 +1,68 @@
+import { z } from 'zod';
+
+export const editarPerfilSchema = z.object({
+  nombre:              z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100),
+  genero:              z.string().nullable().optional(),
+  fecha_nacimiento:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida').nullable().optional(),
+  pais:                z.string().nullable().optional(),
+  ocupacion:           z.enum(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']).nullable().optional(),
+  horario:             z.enum(['MADRUGADOR', 'INTERMEDIO', 'NOCTURNO']).nullable().optional(),
+  frecuencia_visitas:  z.enum(['CASI_NUNCA', 'A_VECES', 'FRECUENTE']).nullable().optional(),
+  ambiente:            z.enum(['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']).nullable().optional(),
+  tolerancia_fiestas:  z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
+  frecuencia_salidas:  z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
+  fumador:             z.boolean().nullable().optional(),
+  acepta_fumadores:    z.enum(['SI', 'NO', 'INDIFERENTE']).nullable().optional(),
+  tiene_mascotas:      z.boolean().nullable().optional(),
+  acepta_mascotas:     z.enum(['SI', 'NO', 'DEPENDE']).nullable().optional(),
+  lgbtq_friendly:      z.boolean().nullable().optional(),
+  sobre_mi:            z.string().min(1, 'La descripción es obligatoria').max(500, 'Máximo 500 caracteres'),
+});
+
+export const convivenciaSchema = z.object({
+  ocupacion:           z.enum(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']).nullable().optional(),
+  horario:             z.enum(['MADRUGADOR', 'INTERMEDIO', 'NOCTURNO']).nullable().optional(),
+  frecuencia_visitas:  z.enum(['CASI_NUNCA', 'A_VECES', 'FRECUENTE']).nullable().optional(),
+  ambiente:            z.enum(['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']).nullable().optional(),
+  tolerancia_fiestas:  z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
+  frecuencia_salidas:  z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
+  fumador:             z.boolean().nullable().optional(),
+  acepta_fumadores:    z.enum(['SI', 'NO', 'INDIFERENTE']).nullable().optional(),
+  tiene_mascotas:      z.boolean().nullable().optional(),
+  acepta_mascotas:     z.enum(['SI', 'NO', 'DEPENDE']).nullable().optional(),
+  lgbtq_friendly:      z.boolean().nullable().optional(),
+}).superRefine((data, ctx) => {
+  const rellenos = Object.values(data).filter(v => v !== null && v !== undefined).length;
+  if (rellenos < 3) {
+    ctx.addIssue({ code: 'custom', message: 'Debes rellenar al menos 3 campos del perfil de convivencia' });
+  }
+});
+
+export const interesesSchema = z.object({
+  intereses: z.array(z.number().int().positive()).max(20),
+});
+
+export const preferenciasSchema = z.object({
+  ocupacion:               z.enum(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']).nullable().optional(),
+  ocupacion_req:           z.boolean().nullable().optional(),
+  horario:                 z.enum(['MADRUGADOR', 'INTERMEDIO', 'NOCTURNO']).nullable().optional(),
+  horario_req:             z.boolean().nullable().optional(),
+  frecuencia_visitas:      z.enum(['CASI_NUNCA', 'A_VECES', 'FRECUENTE']).nullable().optional(),
+  frecuencia_visitas_req:  z.boolean().nullable().optional(),
+  ambiente:                z.enum(['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']).nullable().optional(),
+  ambiente_req:            z.boolean().nullable().optional(),
+  tolerancia_fiestas:      z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
+  tolerancia_fiestas_req:  z.boolean().nullable().optional(),
+  frecuencia_salidas:      z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
+  frecuencia_salidas_req:  z.boolean().nullable().optional(),
+  fumador:                 z.boolean().nullable().optional(),
+  fumador_req:             z.boolean().nullable().optional(),
+  acepta_fumadores:        z.enum(['SI', 'NO', 'INDIFERENTE']).nullable().optional(),
+  acepta_fumadores_req:    z.boolean().nullable().optional(),
+  tiene_mascotas:          z.boolean().nullable().optional(),
+  tiene_mascotas_req:      z.boolean().nullable().optional(),
+  acepta_mascotas:         z.enum(['SI', 'NO', 'DEPENDE']).nullable().optional(),
+  acepta_mascotas_req:     z.boolean().nullable().optional(),
+  lgbtq_friendly:          z.boolean().nullable().optional(),
+  lgbtq_friendly_req:      z.boolean().nullable().optional(),
+});

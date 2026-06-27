@@ -1,0 +1,535 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── ENUMs ─────────────────────────────────────────────────────
+
+enum RolGrupo {
+  ADMIN
+  MEMBER
+
+  @@map("rol_grupo")
+}
+
+enum Ocupacion {
+  ESTUDIO
+  TRABAJO
+  ESTUDIO_Y_TRABAJO
+
+  @@map("ocupacion_enum")
+}
+
+enum Horario {
+  MADRUGADOR
+  INTERMEDIO
+  NOCTURNO
+
+  @@map("horario_enum")
+}
+
+enum FrecuenciaVisitas {
+  CASI_NUNCA
+  A_VECES
+  FRECUENTE
+
+  @@map("frecuencia_visitas_enum")
+}
+
+enum Ambiente {
+  TRANQUILO
+  EQUILIBRADO
+  SOCIAL
+
+  @@map("ambiente_enum")
+}
+
+enum FrecuenciaFiestas {
+  NUNCA
+  OCASIONAL
+  FRECUENTE
+
+  @@map("frecuencia_fiestas_enum")
+}
+
+enum FrecuenciaSalidas {
+  NUNCA
+  OCASIONAL
+  FRECUENTE
+
+  @@map("frecuencia_salidas_enum")
+}
+
+enum AceptaFumadores {
+  SI
+  NO
+  INDIFERENTE
+
+  @@map("acepta_fumadores_enum")
+}
+
+enum AceptaMascotas {
+  SI
+  NO
+  DEPENDE
+
+  @@map("acepta_mascotas_enum")
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+
+  @@map("dia_semana_enum")
+}
+
+enum EstadoTarea {
+  PENDIENTE
+  COMPLETADA
+  VALIDADA
+  RECHAZADA
+  CANCELADA
+
+  @@map("estado_tarea_enum")
+}
+
+enum TipoDivision {
+  EQUITATIVA
+  PERSONALIZADA
+
+  @@map("tipo_division_enum")
+}
+
+enum TipoFactura {
+  AGUA
+  LUZ
+  INTERNET
+  ALQUILER
+  OTRO
+
+  @@map("tipo_factura_enum")
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  ACEPTADA
+  RECHAZADA
+
+  @@map("estado_solicitud_enum")
+}
+
+enum EstadoChat {
+  ACTIVO
+  CERRADO
+
+  @@map("estado_chat_enum")
+}
+
+// ── MODELOS ───────────────────────────────────────────────────
+
+model Usuario {
+  id                    String    @id @db.VarChar(36)
+  nombre                String    @db.VarChar(100)
+  email                 String    @unique @db.VarChar(255)
+  password              String?
+  foto_perfil           String?
+  google_id             String?   @unique @db.VarChar(255)
+  google_refresh_token  String?
+  google_calendar_token String?
+  fecha_registro        DateTime? @default(now()) @db.Timestamp(6)
+  created_at            DateTime? @default(now()) @db.Timestamp(6)
+  updated_at            DateTime? @default(now()) @db.Timestamp(6)
+
+  miembros_grupo       MiembroGrupo[]
+  perfil_convivencia   PerfilConvivenciaUsuario?
+  favoritos            Favorito[]
+  solicitudes_contacto SolicitudContacto[]
+  mensajes             Mensaje[]
+  facturas_casero      Factura[]           @relation("CaseroFacturas")
+  pagos_factura        PagoFactura[]
+  eventos              Evento[]
+  productos_anadidos   Producto[]          @relation("ProductoAnadidoPor")
+  productos_comprados  Producto[]          @relation("ProductoCompradoPor")
+  intereses              UsuarioInteres[]
+  asignaciones           AsignacionTarea[]
+  preferencias_companero PreferenciasCompanero?
+
+  @@map("usuarios")
+}
+
+model Grupo {
+  id                     String     @id @db.VarChar(36)
+  nombre                 String     @db.VarChar(100)
+  codigo_acceso          String     @unique @db.VarChar(6)
+  codigo_casero          String?    @unique @db.VarChar(6)
+  foto_perfil            String?
+  descripcion            String
+  ciudad                 String?    @db.VarChar(100)
+  buscar_companero       Boolean?   @default(false)
+  activo                 Boolean?   @default(true)
+  dia_limpieza           DiaSemana?
+  semana_rotacion        Int?       @default(0)
+  rotacion_semana_actual DateTime?  @db.Date
+  created_at             DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at             DateTime?  @default(now()) @db.Timestamp(6)
+
+  miembros             MiembroGrupo[]
+  perfil_convivencia   PerfilConvivenciaGrupo?
+  publicacion          Publicacion?
+  solicitudes_contacto SolicitudContacto[]
+  tareas               Tarea[]
+  facturas             Factura[]
+  eventos              Evento[]
+  productos            Producto[]
+  intereses            GrupoInteres[]
+
+  @@map("grupos")
+}
+
+model MiembroGrupo {
+  id          String    @id @db.VarChar(36)
+  usuario_id  String    @db.VarChar(36)
+  grupo_id    String    @db.VarChar(36)
+  rol         RolGrupo  @default(MEMBER)
+  es_casero   Boolean?  @default(false)
+  activo      Boolean?  @default(true)
+  fecha_union DateTime? @default(now()) @db.Timestamp(6)
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  grupo   Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+
+  @@unique([usuario_id, grupo_id])
+  @@map("miembros_grupo")
+}
+
+model PerfilConvivenciaUsuario {
+  id                 String             @id @db.VarChar(36)
+  usuario_id         String             @unique @db.VarChar(36)
+  pais               String?            @default("España") @db.VarChar(100)
+  genero             String?            @db.VarChar(50)
+  fecha_nacimiento   DateTime?          @db.Date
+  ocupacion          Ocupacion?
+  horario            Horario?
+  frecuencia_visitas FrecuenciaVisitas?
+  ambiente           Ambiente?
+  tolerancia_fiestas FrecuenciaFiestas?
+  frecuencia_salidas FrecuenciaSalidas?
+  fumador            Boolean?
+  acepta_fumadores   AceptaFumadores?
+  tiene_mascotas     Boolean?
+  acepta_mascotas    AceptaMascotas?
+  lgbtq_friendly     Boolean?
+  sobre_mi           String
+  created_at         DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?          @default(now()) @db.Timestamp(6)
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@map("perfiles_convivencia_usuario")
+}
+
+model PreferenciasCompanero {
+  id                       String             @id @db.VarChar(36)
+  usuario_id               String             @unique @db.VarChar(36)
+  ocupacion                Ocupacion?
+  ocupacion_req            Boolean?           @default(false)
+  horario                  Horario?
+  horario_req              Boolean?           @default(false)
+  frecuencia_visitas       FrecuenciaVisitas?
+  frecuencia_visitas_req   Boolean?           @default(false)
+  ambiente                 Ambiente?
+  ambiente_req             Boolean?           @default(false)
+  tolerancia_fiestas       FrecuenciaFiestas?
+  tolerancia_fiestas_req   Boolean?           @default(false)
+  frecuencia_salidas       FrecuenciaSalidas?
+  frecuencia_salidas_req   Boolean?           @default(false)
+  fumador                  Boolean?
+  fumador_req              Boolean?           @default(false)
+  acepta_fumadores         AceptaFumadores?
+  acepta_fumadores_req     Boolean?           @default(false)
+  tiene_mascotas           Boolean?
+  tiene_mascotas_req       Boolean?           @default(false)
+  acepta_mascotas          AceptaMascotas?
+  acepta_mascotas_req      Boolean?           @default(false)
+  lgbtq_friendly           Boolean?
+  lgbtq_friendly_req       Boolean?           @default(false)
+  created_at               DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at               DateTime?          @default(now()) @db.Timestamp(6)
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@map("preferencias_companero")
+}
+
+model PerfilConvivenciaGrupo {
+  id                 String             @id @db.VarChar(36)
+  grupo_id           String             @unique @db.VarChar(36)
+  ocupacion          Ocupacion?
+  horario            Horario?
+  frecuencia_visitas FrecuenciaVisitas?
+  ambiente           Ambiente?
+  tolerancia_fiestas FrecuenciaFiestas?
+  frecuencia_salidas FrecuenciaSalidas?
+  acepta_fumadores   AceptaFumadores?
+  acepta_mascotas    AceptaMascotas?
+  lgbtq_friendly     Boolean?
+  created_at         DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?          @default(now()) @db.Timestamp(6)
+
+  grupo Grupo @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+
+  @@map("perfiles_convivencia_grupo")
+}
+
+model Publicacion {
+  id                   String    @id @db.VarChar(36)
+  grupo_id             String    @unique @db.VarChar(36)
+  titulo               String    @db.VarChar(255)
+  descripcion          String
+  ciudad               String    @db.VarChar(100)
+  direccion            String?   @db.VarChar(255)
+  piso_puerta          String?   @db.VarChar(50)
+  precio               Decimal   @db.Decimal(10, 2)
+  habitaciones_libres  Int?      @default(1)
+  tipo_piso            String?   @db.VarChar(50)
+  habitaciones_totales Int?
+  tamano_piso          Decimal?  @db.Decimal(10, 2)
+  planta               Int?
+  ascensor             Boolean?  @default(false)
+  wifi                 Boolean?  @default(false)
+  lavadora             Boolean?  @default(false)
+  lavavajillas         Boolean?  @default(false)
+  aire_acondicionado   Boolean?  @default(false)
+  calefaccion          Boolean?  @default(false)
+  parking              Boolean?  @default(false)
+  terraza              Boolean?  @default(false)
+  amueblado            Boolean?  @default(false)
+  permite_fumar        Boolean?  @default(false)
+  permite_mascotas     Boolean?  @default(false)
+  visitas              String?   @db.VarChar(50)
+  horario_silencio     String?   @db.VarChar(50)
+  genero_preferido     String?   @db.VarChar(50)
+  normas_adicionales   String?
+  telefono_contacto    String?   @db.VarChar(20)
+  modo_contacto        String?   @default("CHAT") @db.VarChar(20)
+  visible              Boolean?  @default(true)
+  latitud              Decimal?  @db.Decimal(10, 7)
+  longitud             Decimal?  @db.Decimal(10, 7)
+  fecha_publicacion    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at           DateTime? @default(now()) @db.Timestamp(6)
+
+  grupo     Grupo             @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+  fotos     FotoPublicacion[]
+  favoritos Favorito[]
+
+  @@map("publicaciones")
+}
+
+model FotoPublicacion {
+  id             String  @id @db.VarChar(36)
+  publicacion_id String  @db.VarChar(36)
+  url            String
+  orden          Int?    @default(0)
+
+  publicacion Publicacion @relation(fields: [publicacion_id], references: [id], onDelete: Cascade)
+
+  @@map("fotos_publicacion")
+}
+
+model Favorito {
+  id             String    @id @db.VarChar(36)
+  usuario_id     String    @db.VarChar(36)
+  publicacion_id String    @db.VarChar(36)
+  fecha_guardado DateTime? @default(now()) @db.Timestamp(6)
+
+  usuario     Usuario     @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  publicacion Publicacion @relation(fields: [publicacion_id], references: [id], onDelete: Cascade)
+
+  @@unique([usuario_id, publicacion_id])
+  @@map("favoritos")
+}
+
+model SolicitudContacto {
+  id          String          @id @db.VarChar(36)
+  usuario_id  String          @db.VarChar(36)
+  grupo_id    String          @db.VarChar(36)
+  estado      EstadoSolicitud @default(PENDIENTE)
+  fecha_envio DateTime?       @default(now()) @db.Timestamp(6)
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  grupo   Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+  chat    Chat?
+
+  @@unique([usuario_id, grupo_id])
+  @@map("solicitudes_contacto")
+}
+
+model Chat {
+  id           String     @id @db.VarChar(36)
+  solicitud_id String     @unique @db.VarChar(36)
+  estado       EstadoChat @default(ACTIVO)
+  created_at   DateTime?  @default(now()) @db.Timestamp(6)
+
+  solicitud SolicitudContacto @relation(fields: [solicitud_id], references: [id], onDelete: Cascade)
+  mensajes  Mensaje[]
+
+  @@map("chats")
+}
+
+model Mensaje {
+  id           String    @id @db.VarChar(36)
+  chat_id      String    @db.VarChar(36)
+  remitente_id String    @db.VarChar(36)
+  contenido    String
+  enviado_en   DateTime? @default(now()) @db.Timestamp(6)
+
+  chat      Chat    @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+  remitente Usuario @relation(fields: [remitente_id], references: [id])
+
+  @@map("mensajes")
+}
+
+model Tarea {
+  id            String    @id @db.VarChar(36)
+  grupo_id      String    @db.VarChar(36)
+  nombre        String    @db.VarChar(255)
+  descripcion   String?
+  es_recurrente Boolean?  @default(false)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+
+  grupo        Grupo             @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+  asignaciones AsignacionTarea[]
+
+  @@map("tareas")
+}
+
+model AsignacionTarea {
+  id               String      @id @db.VarChar(36)
+  tarea_id         String      @db.VarChar(36)
+  usuario_id       String      @db.VarChar(36)
+  semana           DateTime    @db.Date
+  estado           EstadoTarea @default(PENDIENTE)
+  fecha_completada DateTime?   @db.Timestamp(6)
+
+  tarea   Tarea   @relation(fields: [tarea_id], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuario_id], references: [id])
+
+  @@unique([tarea_id, usuario_id, semana])
+  @@map("asignaciones_tarea")
+}
+
+model Factura {
+  id                String       @id @db.VarChar(36)
+  grupo_id          String       @db.VarChar(36)
+  casero_id         String       @db.VarChar(36)
+  tipo              TipoFactura
+  descripcion       String?
+  importe_total     Decimal      @db.Decimal(10, 2)
+  tipo_division     TipoDivision @default(EQUITATIVA)
+  fecha_emision     DateTime     @db.Date
+  fecha_vencimiento DateTime     @db.Date
+  url_documento     String?
+  created_at        DateTime?    @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?    @default(now()) @db.Timestamp(6)
+
+  grupo  Grupo       @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+  casero Usuario     @relation("CaseroFacturas", fields: [casero_id], references: [id])
+  pagos  PagoFactura[]
+
+  @@map("facturas")
+}
+
+model PagoFactura {
+  id               String    @id @db.VarChar(36)
+  factura_id       String    @db.VarChar(36)
+  usuario_id       String    @db.VarChar(36)
+  importe_asignado Decimal   @db.Decimal(10, 2)
+  pagado           Boolean?  @default(false)
+  fecha_pago       DateTime? @db.Timestamp(6)
+
+  factura Factura @relation(fields: [factura_id], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuario_id], references: [id])
+
+  @@unique([factura_id, usuario_id])
+  @@map("pagos_factura")
+}
+
+model Evento {
+  id                       String    @id @db.VarChar(36)
+  grupo_id                 String    @db.VarChar(36)
+  creado_por_id            String    @db.VarChar(36)
+  titulo                   String    @db.VarChar(255)
+  descripcion              String?
+  fecha_inicio             DateTime  @db.Timestamp(6)
+  fecha_fin                DateTime? @db.Timestamp(6)
+  google_calendar_event_id String?
+  created_at               DateTime? @default(now()) @db.Timestamp(6)
+  updated_at               DateTime? @default(now()) @db.Timestamp(6)
+
+  grupo      Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+  creado_por Usuario @relation(fields: [creado_por_id], references: [id])
+
+  @@map("eventos")
+}
+
+model Producto {
+  id              String    @id @db.VarChar(36)
+  grupo_id        String    @db.VarChar(36)
+  anadido_por_id  String    @db.VarChar(36)
+  nombre          String    @db.VarChar(255)
+  cantidad        Decimal   @default(1) @db.Decimal(10, 2)
+  unidad_medida   String?   @db.VarChar(50)
+  categoria       String    @default("otros") @db.VarChar(20)
+  comprado        Boolean?  @default(false)
+  comprado_por_id String?   @db.VarChar(36)
+  fecha_compra    DateTime? @db.Timestamp(6)
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+
+  grupo        Grupo    @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+  anadido_por  Usuario  @relation("ProductoAnadidoPor", fields: [anadido_por_id], references: [id])
+  comprado_por Usuario? @relation("ProductoCompradoPor", fields: [comprado_por_id], references: [id])
+
+  @@map("productos")
+}
+
+model Interes {
+  id        Int    @id @default(autoincrement())
+  nombre    String @db.VarChar(100)
+  categoria String @db.VarChar(100)
+
+  usuarios UsuarioInteres[]
+  grupos   GrupoInteres[]
+
+  @@map("intereses")
+}
+
+model UsuarioInteres {
+  usuario_id String @db.VarChar(36)
+  interes_id Int
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  interes Interes @relation(fields: [interes_id], references: [id], onDelete: Cascade)
+
+  @@id([usuario_id, interes_id])
+  @@map("usuario_intereses")
+}
+
+model GrupoInteres {
+  grupo_id   String @db.VarChar(36)
+  interes_id Int
+
+  grupo   Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+  interes Interes @relation(fields: [interes_id], references: [id], onDelete: Cascade)
+
+  @@id([grupo_id, interes_id])
+  @@map("grupo_intereses")
+}

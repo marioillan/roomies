@@ -1,0 +1,353 @@
+import { randomUUID } from 'crypto';
+import multer from 'multer';
+import { prisma } from '../src/config/db.js';
+import cloudinary from '../src/config/cloudinary.js';
+import {
+  editarPerfilSchema,
+  convivenciaSchema,
+  preferenciasSchema,
+  interesesSchema,
+} from '../validators/perfilValidator.js';
+
+export const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Solo se permiten imágenes'));
+  },
+});
+
+// ── PUT /api/perfil/editar ─────────────────────────────────────
+export const editarPerfil = async (req, res, next) => {
+  const userId = req.userId;
+  const parsed = editarPerfilSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: parsed.error.errors[0].message });
+  }
+
+  const {
+    nombre, genero, fecha_nacimiento, pais, ocupacion, horario, frecuencia_visitas,
+    ambiente, tolerancia_fiestas, frecuencia_salidas, fumador, acepta_fumadores,
+    tiene_mascotas, acepta_mascotas, lgbtq_friendly, sobre_mi,
+  } = parsed.data;
+
+  // Campos que solo se actualizan si el nuevo valor no es null (equivalente a COALESCE en SQL)
+  const camposOpcionales = {};
+  if (ocupacion != null)          camposOpcionales.ocupacion = ocupacion;
+  if (horario != null)            camposOpcionales.horario = horario;
+  if (frecuencia_visitas != null) camposOpcionales.frecuencia_visitas = frecuencia_visitas;
+  if (ambiente != null)           camposOpcionales.ambiente = ambiente;
+  if (tolerancia_fiestas != null) camposOpcionales.tolerancia_fiestas = tolerancia_fiestas;
+  if (frecuencia_salidas != null) camposOpcionales.frecuencia_salidas = frecuencia_salidas;
+  if (fumador != null)            camposOpcionales.fumador = fumador;
+  if (acepta_fumadores != null)   camposOpcionales.acepta_fumadores = acepta_fumadores;
+  if (tiene_mascotas != null)     camposOpcionales.tiene_mascotas = tiene_mascotas;
+  if (acepta_mascotas != null)    camposOpcionales.acepta_mascotas = acepta_mascotas;
+  if (lgbtq_friendly != null)     camposOpcionales.lgbtq_friendly = lgbtq_friendly;
+
+  try {
+    const [usuarioActualizado, perfilActualizado] = await prisma.$transaction(async (tx) => {
+      const usuario = await tx.usuario.update({
+        where: { id: userId },
+        data: { nombre, updated_at: new Date() },
+        select: { id: true, nombre: true, email: true, foto_perfil: true, fecha_registro: true },
+      });
+
+      const perfil = await tx.perfilConvivenciaUsuario.upsert({
+        where: { usuario_id: userId },
+        create: {
+          id: randomUUID(),
+          usuario_id: userId,
+          genero: genero ?? null,
+          fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
+          pais: pais ?? null,
+          ocupacion: ocupacion ?? null,
+          horario: horario ?? null,
+          frecuencia_visitas: frecuencia_visitas ?? null,
+          ambiente: ambiente ?? null,
+          tolerancia_fiestas: tolerancia_fiestas ?? null,
+          frecuencia_salidas: frecuencia_salidas ?? null,
+          fumador: fumador ?? null,
+          acepta_fumadores: acepta_fumadores ?? null,
+          tiene_mascotas: tiene_mascotas ?? null,
+          acepta_mascotas: acepta_mascotas ?? null,
+          lgbtq_friendly: lgbtq_friendly ?? null,
+          sobre_mi,
+        },
+        update: {
+          genero: genero ?? null,
+          fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
+          pais: pais ?? null,
+          sobre_mi,
+          updated_at: new Date(),
+          ...camposOpcionales,
+        },
+      });
+
+      return [usuario, perfil];
+    });
+
+    res.json({ user: usuarioActualizado, perfil: perfilActualizado });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── PUT /api/perfil/foto ───────────────────────────────────────
+export const subirFoto = async (req, res, next) => {
+  const userId = req.userId;
+  if (!req.file) return res.status(400).json({ message: 'No se ha enviado ninguna imagen' });
+
+  try {
+    const url = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'roomies/avatars', transformation: [{ width: 200, height: 200, crop: 'fill' }] },
+        (err, result) => err ? reject(err) : resolve(result.secure_url)
+      );
+      stream.end(req.file.buffer);
+    });
+
+    const usuario = await prisma.usuario.update({
+      where: { id: userId },
+      data: { foto_perfil: url, updated_at: new Date() },
+      select: { id: true, nombre: true, email: true, foto_perfil: true, fecha_registro: true },
+    });
+
+    res.json({ user: usuario });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── GET /api/perfil/convivencia ────────────────────────────────
+export const getConvivencia = async (req, res, next) => {
+  try {
+    const perfil = await prisma.perfilConvivenciaUsuario.findFirst({
+      where: { usuario_id: req.userId },
+    });
+    res.json({ perfil: perfil ?? null });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── PUT /api/perfil/convivencia ────────────────────────────────
+export const editarConvivencia = async (req, res, next) => {
+  const userId = req.userId;
+  const parsed = convivenciaSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: parsed.error.errors[0].message });
+  }
+  const {
+    ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas,
+    frecuencia_salidas, fumador, acepta_fumadores, tiene_mascotas, acepta_mascotas,
+    lgbtq_friendly,
+  } = parsed.data;
+
+  const camposConvivencia = {
+    ocupacion: ocupacion ?? null,
+    horario: horario ?? null,
+    frecuencia_visitas: frecuencia_visitas ?? null,
+    ambiente: ambiente ?? null,
+    tolerancia_fiestas: tolerancia_fiestas ?? null,
+    frecuencia_salidas: frecuencia_salidas ?? null,
+    fumador: fumador ?? null,
+    acepta_fumadores: acepta_fumadores ?? null,
+    tiene_mascotas: tiene_mascotas ?? null,
+    acepta_mascotas: acepta_mascotas ?? null,
+    lgbtq_friendly: lgbtq_friendly ?? null,
+  };
+
+  try {
+    const perfil = await prisma.perfilConvivenciaUsuario.upsert({
+      where: { usuario_id: userId },
+      create: { id: randomUUID(), usuario_id: userId, sobre_mi: '', ...camposConvivencia },
+      update: { ...camposConvivencia, updated_at: new Date() },
+    });
+    res.json({ perfil });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── GET /api/perfil/publico/:userId ───────────────────────────
+export const getPerfilPublico = async (req, res, next) => {
+  const { userId } = req.params;
+  try {
+    const [usuarioData, interesesData] = await Promise.all([
+      prisma.usuario.findFirst({
+        where: { id: userId },
+        select: {
+          id: true,
+          nombre: true,
+          foto_perfil: true,
+          fecha_registro: true,
+          perfil_convivencia: {
+            select: {
+              id: true,
+              genero: true,
+              fecha_nacimiento: true,
+              pais: true,
+              sobre_mi: true,
+              ocupacion: true,
+              horario: true,
+              frecuencia_visitas: true,
+              ambiente: true,
+              tolerancia_fiestas: true,
+              frecuencia_salidas: true,
+              fumador: true,
+              acepta_fumadores: true,
+              tiene_mascotas: true,
+              acepta_mascotas: true,
+              lgbtq_friendly: true,
+            },
+          },
+        },
+      }),
+      prisma.usuarioInteres.findMany({
+        where: { usuario_id: userId },
+        select: { interes: { select: { id: true, nombre: true, categoria: true } } },
+        orderBy: [{ interes: { categoria: 'asc' } }, { interes: { nombre: 'asc' } }],
+      }),
+    ]);
+
+    if (!usuarioData) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    const pcu = usuarioData.perfil_convivencia;
+    const usuario = {
+      id: usuarioData.id,
+      nombre: usuarioData.nombre,
+      foto_perfil: usuarioData.foto_perfil,
+      fecha_registro: usuarioData.fecha_registro,
+      genero: pcu?.genero ?? null,
+      fecha_nacimiento: pcu?.fecha_nacimiento ?? null,
+      pais: pcu?.pais ?? null,
+      sobre_mi: pcu?.sobre_mi ?? null,
+    };
+    const convivencia = pcu ? {
+      ocupacion: pcu.ocupacion,
+      horario: pcu.horario,
+      frecuencia_visitas: pcu.frecuencia_visitas,
+      ambiente: pcu.ambiente,
+      tolerancia_fiestas: pcu.tolerancia_fiestas,
+      frecuencia_salidas: pcu.frecuencia_salidas,
+      fumador: pcu.fumador,
+      acepta_fumadores: pcu.acepta_fumadores,
+      tiene_mascotas: pcu.tiene_mascotas,
+      acepta_mascotas: pcu.acepta_mascotas,
+      lgbtq_friendly: pcu.lgbtq_friendly,
+    } : null;
+
+    res.json({ usuario, convivencia, intereses: interesesData.map(ui => ui.interes) });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── GET /api/perfil/preferencias ─────────────────────────────
+export const getPreferencias = async (req, res, next) => {
+  try {
+    const preferencias = await prisma.preferenciasCompanero.findFirst({
+      where: { usuario_id: req.userId },
+    });
+    res.json({ preferencias: preferencias ?? null });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── PUT /api/perfil/preferencias ─────────────────────────────
+export const editarPreferencias = async (req, res, next) => {
+  const parsed = preferenciasSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+
+  const d = parsed.data;
+  const campos = {
+    ocupacion:               d.ocupacion               ?? null,
+    ocupacion_req:           d.ocupacion_req           ?? false,
+    horario:                 d.horario                 ?? null,
+    horario_req:             d.horario_req             ?? false,
+    frecuencia_visitas:      d.frecuencia_visitas      ?? null,
+    frecuencia_visitas_req:  d.frecuencia_visitas_req  ?? false,
+    ambiente:                d.ambiente                ?? null,
+    ambiente_req:            d.ambiente_req            ?? false,
+    tolerancia_fiestas:      d.tolerancia_fiestas      ?? null,
+    tolerancia_fiestas_req:  d.tolerancia_fiestas_req  ?? false,
+    frecuencia_salidas:      d.frecuencia_salidas      ?? null,
+    frecuencia_salidas_req:  d.frecuencia_salidas_req  ?? false,
+    fumador:                 d.fumador                 ?? null,
+    fumador_req:             d.fumador_req             ?? false,
+    acepta_fumadores:        d.acepta_fumadores        ?? null,
+    acepta_fumadores_req:    d.acepta_fumadores_req    ?? false,
+    tiene_mascotas:          d.tiene_mascotas          ?? null,
+    tiene_mascotas_req:      d.tiene_mascotas_req      ?? false,
+    acepta_mascotas:         d.acepta_mascotas         ?? null,
+    acepta_mascotas_req:     d.acepta_mascotas_req     ?? false,
+    lgbtq_friendly:          d.lgbtq_friendly          ?? null,
+    lgbtq_friendly_req:      d.lgbtq_friendly_req      ?? false,
+  };
+
+  try {
+    const preferencias = await prisma.preferenciasCompanero.upsert({
+      where:  { usuario_id: req.userId },
+      create: { id: randomUUID(), usuario_id: req.userId, ...campos },
+      update: { ...campos, updated_at: new Date() },
+    });
+    res.json({ preferencias });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── GET /api/perfil/intereses ─────────────────────────────────
+export const getIntereses = async (req, res, next) => {
+  try {
+    const todos = await prisma.interes.findMany({
+      orderBy: [{ categoria: 'asc' }, { nombre: 'asc' }],
+    });
+    const categorias = {};
+    for (const interes of todos) {
+      if (!categorias[interes.categoria]) categorias[interes.categoria] = [];
+      categorias[interes.categoria].push({ id: interes.id, nombre: interes.nombre });
+    }
+    res.json({ categorias });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── GET /api/perfil/mis-intereses ─────────────────────────────
+export const getMisIntereses = async (req, res, next) => {
+  try {
+    const data = await prisma.usuarioInteres.findMany({
+      where: { usuario_id: req.userId },
+      select: { interes: { select: { id: true, nombre: true, categoria: true } } },
+      orderBy: [{ interes: { categoria: 'asc' } }, { interes: { nombre: 'asc' } }],
+    });
+    res.json({ intereses: data.map(ui => ui.interes) });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── PUT /api/perfil/intereses ─────────────────────────────────
+export const editarIntereses = async (req, res, next) => {
+  const parsed = interesesSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+
+  const { intereses } = parsed.data;
+  try {
+    await prisma.$transaction([
+      prisma.usuarioInteres.deleteMany({ where: { usuario_id: req.userId } }),
+      ...(intereses.length > 0
+        ? [prisma.usuarioInteres.createMany({
+            data: intereses.map(interes_id => ({ usuario_id: req.userId, interes_id })),
+          })]
+        : []),
+    ]);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+};
