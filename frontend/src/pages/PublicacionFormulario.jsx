@@ -577,7 +577,7 @@ function PublicacionFormPage() {
   const [fotosNuevas, setFotosNuevas]       = useState([])     // File[]
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/grupos/publicacion', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         setPublicacion(d.publicacion ?? null)
@@ -642,7 +642,7 @@ function PublicacionFormPage() {
 
   const handleDeleteExistente = async (fotoId) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/grupos/publicacion/fotos/${fotoId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion/fotos/${fotoId}`, {
         method: 'DELETE',
         credentials: 'include',
       })
@@ -657,7 +657,7 @@ function PublicacionFormPage() {
     }
     try {
       // 1. Guardar datos de la publicación
-      const res = await fetch('http://localhost:3000/api/grupos/publicacion', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -670,7 +670,7 @@ function PublicacionFormPage() {
       if (fotosNuevas.length > 0) {
         const formData = new FormData()
         fotosNuevas.forEach(f => formData.append('fotos', f))
-        const fotosRes = await fetch('http://localhost:3000/api/grupos/publicacion/fotos', {
+        const fotosRes = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion/fotos`, {
           method: 'PUT',
           credentials: 'include',
           body: formData,

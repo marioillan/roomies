@@ -590,10 +590,10 @@ function EditarUsuario() {
 
   useEffect(() => {
     Promise.allSettled([
-      fetch('http://localhost:3000/api/perfil/convivencia',   { credentials: 'include' }).then(r => r.json()),
-      fetch('http://localhost:3000/api/perfil/intereses').then(r => r.json()),
-      fetch('http://localhost:3000/api/perfil/mis-intereses', { credentials: 'include' }).then(r => r.json()),
-      fetch('http://localhost:3000/api/perfil/preferencias',  { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/convivencia`,   { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/intereses`).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/mis-intereses`, { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/preferencias`,  { credentials: 'include' }).then(r => r.json()),
     ]).then(([convRes, todosRes, misRes, prefRes]) => {
       const perfil = convRes.status === 'fulfilled' ? convRes.value.perfil : null
       const pref   = prefRes.status === 'fulfilled'  ? prefRes.value.preferencias : null
@@ -659,7 +659,7 @@ function EditarUsuario() {
     try {
       const formData = new FormData()
       formData.append('foto', file)
-      const res = await fetch('http://localhost:3000/api/perfil/foto', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/perfil/foto`, {
         method: 'PUT', credentials: 'include', body: formData,
       })
       const json = await res.json()
@@ -733,19 +733,19 @@ function EditarUsuario() {
     }
     try {
       const [res] = await Promise.all([
-        fetch('http://localhost:3000/api/perfil/editar', {
+        fetch(`${import.meta.env.VITE_API_URL}/api/perfil/editar`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify(payload),
         }),
-        fetch('http://localhost:3000/api/perfil/intereses', {
+        fetch(`${import.meta.env.VITE_API_URL}/api/perfil/intereses`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ intereses: [...interesesSeleccionados] }),
         }),
-        fetch('http://localhost:3000/api/perfil/preferencias', {
+        fetch(`${import.meta.env.VITE_API_URL}/api/perfil/preferencias`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

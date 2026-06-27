@@ -27,7 +27,7 @@ function RegistroModal({ onClose, onSuccess, onSwitchToLogin }) {
   const onSubmit = async (data) => {
     setServerError('')
     try {
-      const res = await fetch('http://localhost:3000/api/auth/registro', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/registro`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -42,7 +42,7 @@ function RegistroModal({ onClose, onSuccess, onSwitchToLogin }) {
   }
 
   const handleGoogle = () => {
-    window.location.href = 'http://localhost:3000/api/auth/google'
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`
   }
 
   const fieldClass = (hasError) =>

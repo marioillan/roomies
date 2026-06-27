@@ -12,7 +12,7 @@ export default function AccesoGrupo({ setTieneGrupo }) {
   const [esCasero, setEsCasero]     = useState(false)
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/grupos/mi-grupo', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => { if (data.grupo) navigate('/grupo', { replace: true }) })
       .catch(() => {})
@@ -29,7 +29,7 @@ export default function AccesoGrupo({ setTieneGrupo }) {
     setError('')
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:3000/api/grupos/unirse', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/unirse`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

@@ -335,10 +335,10 @@ function EditarPerfilGrupo() {
 
   useEffect(() => {
     Promise.allSettled([
-      fetch('http://localhost:3000/api/grupos/mi-grupo',      { credentials: 'include' }).then(r => r.json()),
-      fetch('http://localhost:3000/api/grupos/convivencia',   { credentials: 'include' }).then(r => r.json()),
-      fetch('http://localhost:3000/api/grupos/intereses',     { credentials: 'include' }).then(r => r.json()),
-      fetch('http://localhost:3000/api/grupos/mis-intereses', { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`,      { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/convivencia`,   { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/intereses`,     { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mis-intereses`, { credentials: 'include' }).then(r => r.json()),
     ]).then(([grupoRes, convRes, todosRes, misRes]) => {
       const camposGrupo = grupoRes.status === 'fulfilled' && grupoRes.value.grupo
         ? {
@@ -384,7 +384,7 @@ function EditarPerfilGrupo() {
     try {
       const formData = new FormData()
       formData.append('foto', file)
-      const res  = await fetch('http://localhost:3000/api/grupos/foto', { method: 'PUT', credentials: 'include', body: formData })
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/foto`, { method: 'PUT', credentials: 'include', body: formData })
       const json = await res.json()
       if (!res.ok) return setFotoError(json.message)
       setFotoPreview(json.grupo.foto_perfil)
@@ -407,7 +407,7 @@ function EditarPerfilGrupo() {
     )
     try {
       const [res] = await Promise.all([
-        fetch('http://localhost:3000/api/grupos/editar', {
+        fetch(`${import.meta.env.VITE_API_URL}/api/grupos/editar`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -419,13 +419,13 @@ function EditarPerfilGrupo() {
             buscar_companero: data.buscar_companero ?? null,
           }),
         }),
-        fetch('http://localhost:3000/api/grupos/intereses', {
+        fetch(`${import.meta.env.VITE_API_URL}/api/grupos/intereses`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ intereses: [...interesesSeleccionados] }),
         }),
-        fetch('http://localhost:3000/api/grupos/convivencia', {
+        fetch(`${import.meta.env.VITE_API_URL}/api/grupos/convivencia`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

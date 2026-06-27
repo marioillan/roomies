@@ -6,7 +6,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
 
   const recargarUsuario = useCallback(() => {
-    fetch('http://localhost:3000/api/auth/me', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setUser(data.user) })
       .catch(() => {})

@@ -136,7 +136,7 @@ function Publicacion() {
   const esAdmin = miembros.find(m => m.id === user?.id)?.rol_en_grupo === 'ADMIN'
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/grupos/publicacion', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         setPublicacion(d.publicacion ?? null)

@@ -169,7 +169,7 @@ function AgendaCard({ eventos, user, esAdmin, onNuevo, onEditar = null, onElimin
 
       {!user?.tiene_calendar && (
         <a
-          href='http://localhost:3000/api/auth/google/calendar'
+          href=`${import.meta.env.VITE_API_URL}/api/auth/google/calendar`
           className='mt-2 w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-blue-50 border border-blue-100 hover:bg-blue-100 transition group'
         >
           <CalendarDays size={15} className='text-blue-500 shrink-0' />
@@ -390,7 +390,7 @@ function HistoricoCard({ grupoId, navigate }) {
 
   useEffect(() => {
     if (!grupoId) return
-    fetch(`http://localhost:3000/api/facturas/historial?grupo_id=${grupoId}`, { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/facturas/historial?grupo_id=${grupoId}`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => setHistorial(d.historial ?? []))
       .catch(() => setHistorial([]))
@@ -484,19 +484,19 @@ function GrupoDashboard() {
   const esAdmin = miembros.find(m => m.id === user?.id)?.rol_en_grupo === 'ADMIN'
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/compra', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/compra`, { credentials: 'include' })
       .then(r => r.json()).then(d => setProductosCompra(d.productos ?? [])).catch(() => setProductosCompra([]))
 
-    fetch('http://localhost:3000/api/grupos/eventos', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/eventos`, { credentials: 'include' })
       .then(r => r.json()).then(d => setEventos(d.eventos ?? [])).catch(() => setEventos([]))
 
-    fetch('http://localhost:3000/api/tareas', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/tareas`, { credentials: 'include' })
       .then(r => r.json()).then(d => setDatosTareas(d)).catch(() => setDatosTareas({ configurado: false, asignaciones: [] }))
   }, [])
 
   useEffect(() => {
     if (!grupo?.id) return
-    fetch(`http://localhost:3000/api/facturas?grupo_id=${grupo.id}`, { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/facturas?grupo_id=${grupo.id}`, { credentials: 'include' })
       .then(r => r.json()).then(d => setFacturas(d.facturas ?? [])).catch(() => setFacturas([]))
   }, [grupo?.id])
 
@@ -514,7 +514,7 @@ function GrupoDashboard() {
   const agregarEvento    = ev => setEventos(prev => [...(prev ?? []), ev].sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio)))
   const actualizarEvento = ev => setEventos(prev => (prev ?? []).map(e => e.id === ev.id ? { ...e, ...ev } : e).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio)))
   const eliminarEvento   = async id => {
-    const r = await fetch(`http://localhost:3000/api/grupos/eventos/${id}`, { method: 'DELETE', credentials: 'include' })
+    const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/eventos/${id}`, { method: 'DELETE', credentials: 'include' })
     if (r.ok) setEventos(prev => (prev ?? []).filter(e => e.id !== id))
   }
 

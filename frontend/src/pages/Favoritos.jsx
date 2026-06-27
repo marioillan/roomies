@@ -41,7 +41,7 @@ function FavCard({ pub, onQuitar }) {
     e.stopPropagation()
     setSolicitud('enviando')
     try {
-      const res  = await fetch(`http://localhost:3000/api/chats/solicitar/${pub.id}`, {
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/chats/solicitar/${pub.id}`, {
         method: 'POST', credentials: 'include',
       })
       if (res.ok) { setSolicitud('enviada'); return }
@@ -194,14 +194,14 @@ export default function Favoritos() {
   const [orden, setOrden]                 = useState('recientes')
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/favoritos/publicaciones', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/favoritos/publicaciones`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => { setPublicaciones(d.publicaciones ?? []); setLoading(false) })
       .catch(() => { setError('Error al cargar favoritos'); setLoading(false) })
   }, [])
 
   const quitarFavorito = async (publicacionId) => {
-    await fetch(`http://localhost:3000/api/favoritos/${publicacionId}`, {
+    await fetch(`${import.meta.env.VITE_API_URL}/api/favoritos/${publicacionId}`, {
       method: 'POST', credentials: 'include',
     })
     setPublicaciones(prev => prev.filter(p => p.id !== publicacionId))

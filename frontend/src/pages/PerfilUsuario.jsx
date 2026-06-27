@@ -17,9 +17,9 @@ function PerfilUsuario() {
 
   useEffect(() => {
     Promise.allSettled([
-      fetch('http://localhost:3000/api/perfil/convivencia', { credentials: 'include' }).then(r => r.json()),
-      fetch('http://localhost:3000/api/grupos/publicacion', { credentials: 'include' }).then(r => r.json()),
-      fetch('http://localhost:3000/api/perfil/mis-intereses', { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/convivencia`, { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion`, { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/mis-intereses`, { credentials: 'include' }).then(r => r.json()),
     ]).then(([perfilRes, pubRes, interesesRes]) => {
       if (perfilRes.status     === 'fulfilled') setPerfilConvivencia(perfilRes.value.perfil ?? null)
       if (pubRes.status        === 'fulfilled') setPublicacionVisible(pubRes.value.publicacion?.visible ?? false)

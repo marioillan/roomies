@@ -32,8 +32,8 @@ function ModalEvento({ evento, diaInicial, onClose, onGuardado }) {
         fecha_fin:    form.fecha_fin || null,
       }
       const url = evento
-        ? `http://localhost:3000/api/grupos/eventos/${evento.id}`
-        : 'http://localhost:3000/api/grupos/eventos'
+        ? `${import.meta.env.VITE_API_URL}/api/grupos/eventos/${evento.id}`
+        : `${import.meta.env.VITE_API_URL}/api/grupos/eventos`
       const r = await fetch(url, {
         method: evento ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },

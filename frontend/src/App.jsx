@@ -35,7 +35,7 @@ function App() {
 
   useEffect(() => {
     if (!user) { setTieneGrupo(false); return }
-    fetch('http://localhost:3000/api/grupos/mi-grupo', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`, { credentials: 'include' })
       .then(r => r.json())
       .then(g => setTieneGrupo(!!g.grupo))
       .catch(() => {})
@@ -53,7 +53,7 @@ function App() {
   }, [])
 
   const handleLogout = async () => {
-    await fetch('http://localhost:3000/api/auth/logout', { method: 'POST', credentials: 'include' })
+    await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' })
     setUser(null)
     navigate('/')
   }

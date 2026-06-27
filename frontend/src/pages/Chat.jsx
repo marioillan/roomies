@@ -7,7 +7,7 @@ import {
   Clock, Trash2, X, ArrowLeft,
 } from 'lucide-react'
 
-const API = 'http://localhost:3000'
+const API = `${import.meta.env.VITE_API_URL}`
 
 const AVATAR_COLORS = ['#ec4899', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b']
 

@@ -25,7 +25,7 @@ function LayoutGrupo({ onLogout }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/grupos/mi-grupo', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         setGrupo(data.grupo ?? null)

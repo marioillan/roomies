@@ -195,7 +195,7 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
     setErrorHome('')
     setLoadingHome(true)
     try {
-      const res = await fetch('http://localhost:3000/api/grupos/unirse', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/unirse`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

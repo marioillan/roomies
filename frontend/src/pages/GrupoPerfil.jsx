@@ -24,9 +24,9 @@ function GrupoPerfil() {
 
   useEffect(() => {
     Promise.allSettled([
-      fetch('http://localhost:3000/api/grupos/convivencia',   { credentials: 'include' }).then(r => r.json()),
-      fetch('http://localhost:3000/api/grupos/mis-intereses', { credentials: 'include' }).then(r => r.json()),
-      fetch('http://localhost:3000/api/grupos/publicacion',   { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/convivencia`,   { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mis-intereses`, { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion`,   { credentials: 'include' }).then(r => r.json()),
     ]).then(([convRes, interesesRes, pubRes]) => {
       if (convRes.status      === 'fulfilled') setConvivencia(convRes.value.perfil ?? null)
       if (interesesRes.status === 'fulfilled') setIntereses(interesesRes.value.intereses ?? [])
@@ -53,7 +53,7 @@ function GrupoPerfil() {
     setSaliendo(true)
     setErrorSalir('')
     try {
-      const res = await fetch('http://localhost:3000/api/grupos/salir', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/salir`, {
         method: 'DELETE',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -77,7 +77,7 @@ function GrupoPerfil() {
     setSaliendo(true)
     setErrorSalir('')
     try {
-      const res = await fetch('http://localhost:3000/api/grupos/transferir-admin', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/transferir-admin`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

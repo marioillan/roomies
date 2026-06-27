@@ -129,7 +129,7 @@ function ModalAñadirZona({ onClose, onAñadida }) {
     if (!nom) { setError('El nombre es obligatorio'); return }
     setEnviando(true); setError(null)
     try {
-      const r = await fetch('http://localhost:3000/api/tareas/zonas', {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas/zonas`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         credentials: 'include', body: JSON.stringify({ nombre: nom }),
       })
@@ -236,7 +236,7 @@ function Tareas() {
   async function cargar() {
     setCargando(true)
     try {
-      const r = await fetch('http://localhost:3000/api/tareas', { credentials: 'include' })
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas`, { credentials: 'include' })
       const data = await r.json()
       if (!r.ok) { setError(data.message); return }
       setDatos(data)
@@ -247,7 +247,7 @@ function Tareas() {
   async function iniciar() {
     setIniciando(true); setErrorInit(null)
     try {
-      const r = await fetch('http://localhost:3000/api/tareas/iniciar', {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas/iniciar`, {
         method: 'POST', credentials: 'include',
       })
       const data = await r.json()
@@ -261,7 +261,7 @@ function Tareas() {
     if (toggling) return
     setToggling(asignacionId)
     try {
-      const r = await fetch(`http://localhost:3000/api/tareas/turnos/${asignacionId}/estado`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas/turnos/${asignacionId}/estado`, {
         method: 'PATCH', credentials: 'include',
       })
       const data = await r.json()
@@ -280,7 +280,7 @@ function Tareas() {
     if (!zonaAEliminar) return
     setEliminando(zonaAEliminar.id)
     try {
-      const r = await fetch(`http://localhost:3000/api/tareas/zonas/${zonaAEliminar.id}`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas/zonas/${zonaAEliminar.id}`, {
         method: 'DELETE', credentials: 'include',
       })
       const data = await r.json()

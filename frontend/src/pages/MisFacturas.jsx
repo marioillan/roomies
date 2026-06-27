@@ -43,7 +43,7 @@ function HistorialGastos({ grupoId }) {
 
   useEffect(() => {
     if (!grupoId) return
-    fetch(`http://localhost:3000/api/facturas/historial?grupo_id=${grupoId}`, { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/facturas/historial?grupo_id=${grupoId}`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => setHistorial(d.historial ?? []))
       .catch(() => setHistorial([]))
@@ -256,7 +256,7 @@ export default function MisFacturas() {
 
   useEffect(() => {
     if (!grupo?.id) return
-    fetch(`http://localhost:3000/api/facturas?grupo_id=${grupo.id}`, { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/facturas?grupo_id=${grupo.id}`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => setFacturas(data.facturas ?? []))
       .catch(() => setFacturas([]))

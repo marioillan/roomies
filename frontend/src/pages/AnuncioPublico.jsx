@@ -424,9 +424,9 @@ export default function AnuncioPublico() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`http://localhost:3000/api/publicaciones/${id}`, { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/publicaciones/${id}`, { credentials: 'include' }).then(r => r.json()),
       user
-        ? fetch('http://localhost:3000/api/favoritos', { credentials: 'include' })
+        ? fetch(`${import.meta.env.VITE_API_URL}/api/favoritos`, { credentials: 'include' })
             .then(r => r.json())
             .then(d => (d.favoritos ?? []).includes(id))
             .catch(() => false)
@@ -441,7 +441,7 @@ export default function AnuncioPublico() {
   const toggleFavorito = async () => {
     if (!user) return
     try {
-      await fetch(`http://localhost:3000/api/favoritos/${id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/favoritos/${id}`, {
         method: 'POST', credentials: 'include',
       })
       setEsFavorito(v => !v)
@@ -459,7 +459,7 @@ export default function AnuncioPublico() {
     if (!user) { navigate('/'); return }
     setEstadoSolicitud('enviando')
     try {
-      const r = await fetch(`http://localhost:3000/api/chats/solicitar/${id}`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/chats/solicitar/${id}`, {
         method: 'POST', credentials: 'include',
       })
       if (r.ok) { setEstadoSolicitud('enviada'); return }

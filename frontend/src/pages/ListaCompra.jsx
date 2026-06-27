@@ -331,7 +331,7 @@ function ListaCompra() {
   const [filtro,    setFiltro]    = useState('pendientes')
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/compra', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/compra`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => setProductos(d.productos ?? []))
       .catch(() => { setProductos([]); setError('No se pudieron cargar los productos') })
@@ -347,7 +347,7 @@ function ListaCompra() {
 
   const handleAnadir = async (body) => {
     try {
-      const r = await fetch('http://localhost:3000/api/compra', {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/compra`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         credentials: 'include', body: JSON.stringify(body),
       })
@@ -360,7 +360,7 @@ function ListaCompra() {
 
   const handleToggle = async (id) => {
     try {
-      const r = await fetch(`http://localhost:3000/api/compra/${id}/comprado`, { method: 'PATCH', credentials: 'include' })
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/compra/${id}/comprado`, { method: 'PATCH', credentials: 'include' })
       const data = await r.json()
       if (!r.ok) return
       setProductos(prev => {
@@ -372,7 +372,7 @@ function ListaCompra() {
 
   const handleEditar = async (id, body) => {
     try {
-      const r = await fetch(`http://localhost:3000/api/compra/${id}`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/compra/${id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         credentials: 'include', body: JSON.stringify(body),
       })
@@ -385,7 +385,7 @@ function ListaCompra() {
 
   const handleEliminar = async (id) => {
     try {
-      const r = await fetch(`http://localhost:3000/api/compra/${id}`, { method: 'DELETE', credentials: 'include' })
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/compra/${id}`, { method: 'DELETE', credentials: 'include' })
       if (!r.ok) return
       setProductos(prev => (prev ?? []).filter(p => p.id !== id))
     } catch {}

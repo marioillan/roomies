@@ -47,7 +47,7 @@ function FotoCarrusel({ fotos, titulo, publicacionId, user, esFavorito, onToggle
     if (!user || guardando) return
     setGuardando(true)
     try {
-      const res = await fetch(`http://localhost:3000/api/favoritos/${publicacionId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/favoritos/${publicacionId}`, {
         method: 'POST', credentials: 'include',
       })
       const data = await res.json()
@@ -119,7 +119,7 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito }) {
     if (!user) { navigate('/'); return }
     setEnviando(true)
     try {
-      const res  = await fetch(`http://localhost:3000/api/chats/solicitar/${pub.id}`, {
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/chats/solicitar/${pub.id}`, {
         method: 'POST', credentials: 'include',
       })
       if (res.ok) { setEnviado(true); return }
@@ -607,7 +607,7 @@ export default function BuscarPage() {
     const q = buildParams(c, p, overrides)
     setSearchParams(Object.fromEntries(q), { replace: true })
     try {
-      const res  = await fetch(`http://localhost:3000/api/publicaciones?${q}`, { credentials: 'include' })
+      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/publicaciones?${q}`, { credentials: 'include' })
       const data = await res.json()
       if (!res.ok) { setError(data.message ?? 'Error al buscar'); return }
       setResultados(data.publicaciones)
@@ -625,18 +625,18 @@ export default function BuscarPage() {
     buscar(ciudad, page)
 
     // Cargar catálogo de intereses agrupado por categoría
-    fetch('http://localhost:3000/api/perfil/intereses')
+    fetch(`${import.meta.env.VITE_API_URL}/api/perfil/intereses`)
       .then(r => r.json())
       .then(d => { if (d.categorias) setTodosIntereses(d.categorias) })
       .catch(() => {})
 
     if (user) {
-      fetch('http://localhost:3000/api/favoritos', { credentials: 'include' })
+      fetch(`${import.meta.env.VITE_API_URL}/api/favoritos`, { credentials: 'include' })
         .then(r => r.json())
         .then(d => { if (d.favoritos) setFavoritosIds(new Set(d.favoritos)) })
         .catch(() => {})
 
-      fetch('http://localhost:3000/api/perfil/convivencia', { credentials: 'include' })
+      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/convivencia`, { credentials: 'include' })
         .then(r => r.json())
         .then(d => {
           const p = d.perfil

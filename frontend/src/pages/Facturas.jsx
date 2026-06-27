@@ -101,7 +101,7 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId }) {
       if (archivo) fd.append('documento', archivo)
       if (grupoId) fd.append('grupo_id', grupoId)
 
-      const r = await fetch('http://localhost:3000/api/facturas', {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/facturas`, {
         method: 'POST', credentials: 'include', body: fd,
       })
       const data = await r.json()
@@ -249,7 +249,7 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
       if (archivo) fd.append('documento', archivo)
       if (grupoId) fd.append('grupo_id', grupoId)
 
-      const r = await fetch(`http://localhost:3000/api/facturas/${factura.id}`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/facturas/${factura.id}`, {
         method: 'PUT', credentials: 'include', body: fd,
       })
       const data = await r.json()
@@ -624,7 +624,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
 
   const handleEliminar = async (id) => {
     try {
-      const r = await fetch(`http://localhost:3000/api/facturas/${id}?grupo_id=${grupoId}`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/facturas/${id}?grupo_id=${grupoId}`, {
         method: 'DELETE', credentials: 'include',
       })
       if (!r.ok) { const d = await r.json(); setError(d.message); return }
@@ -642,7 +642,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
   const handleMarcarPagada = async (facturaId) => {
     try {
       const r = await fetch(
-        `http://localhost:3000/api/facturas/${facturaId}/pagada?grupo_id=${grupoId}`,
+        `${import.meta.env.VITE_API_URL}/api/facturas/${facturaId}/pagada?grupo_id=${grupoId}`,
         { method: 'PATCH', credentials: 'include' }
       )
       if (!r.ok) { const d = await r.json(); setError(d.message); return }
@@ -656,7 +656,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
   const handleTogglePago = async (facturaId, usuarioId) => {
     try {
       const r = await fetch(
-        `http://localhost:3000/api/facturas/${facturaId}/pagos/${usuarioId}?grupo_id=${grupoId}`,
+        `${import.meta.env.VITE_API_URL}/api/facturas/${facturaId}/pagos/${usuarioId}?grupo_id=${grupoId}`,
         { method: 'PATCH', credentials: 'include' }
       )
       if (!r.ok) { const d = await r.json(); setError(d.message); return }
@@ -837,7 +837,7 @@ function SelectorGrupo({ grupos, grupoActivo, onChange, onVincular }) {
     if (cod.length !== 6) { setErrorCod('El código debe tener 6 caracteres'); return }
     setEnviando(true); setErrorCod(null)
     try {
-      const r = await fetch('http://localhost:3000/api/grupos/unirse', {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/unirse`, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ codigo_acceso: cod }),
@@ -926,7 +926,7 @@ function Gastos({ onLogout }) {
 
   // Carga inicial: todos los grupos del usuario
   useEffect(() => {
-    fetch('http://localhost:3000/api/grupos/mis-grupos', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mis-grupos`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         const grupos = data.grupos ?? []
@@ -942,8 +942,8 @@ function Gastos({ onLogout }) {
     if (!grupoActivo) return
     setCargandoFacturas(true)
     Promise.all([
-      fetch(`http://localhost:3000/api/grupos/mi-grupo?grupo_id=${grupoActivo.id}`, { credentials: 'include' }).then(r => r.json()),
-      fetch(`http://localhost:3000/api/facturas?grupo_id=${grupoActivo.id}`, { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo?grupo_id=${grupoActivo.id}`, { credentials: 'include' }).then(r => r.json()),
+      fetch(`${import.meta.env.VITE_API_URL}/api/facturas?grupo_id=${grupoActivo.id}`, { credentials: 'include' }).then(r => r.json()),
     ]).then(([grupoData, facturasData]) => {
       setMiembros(grupoData.miembros ?? [])
       setFacturas(facturasData.facturas ?? [])
@@ -961,7 +961,7 @@ function Gastos({ onLogout }) {
     // Pedir los miembros del grupo recién vinculado para obtener num_inquilinos
     let nInquilinos = 0
     try {
-      const r = await fetch(`http://localhost:3000/api/grupos/mi-grupo?grupo_id=${grupoNuevo.id}`, { credentials: 'include' })
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo?grupo_id=${grupoNuevo.id}`, { credentials: 'include' })
       const data = await r.json()
       nInquilinos = (data.miembros ?? []).filter(m => !m.es_casero).length
     } catch { /* no crítico */ }

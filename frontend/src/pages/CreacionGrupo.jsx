@@ -81,7 +81,7 @@ function CreacionGrupo() {
   const [checking, setChecking]       = useState(true)
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/grupos/mi-grupo', { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => { if (data.grupo) navigate('/grupo', { replace: true }) })
       .catch(() => {})
@@ -96,7 +96,7 @@ function CreacionGrupo() {
   const onSubmit = async (data) => {
     setServerError('')
     try {
-      const res = await fetch('http://localhost:3000/api/grupos/crear', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/crear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

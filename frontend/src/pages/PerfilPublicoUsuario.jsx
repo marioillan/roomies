@@ -14,7 +14,7 @@ export default function PerfilPublicoUsuario() {
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/perfil/publico/${id}`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/perfil/publico/${id}`)
       .then(r => r.json())
       .then(d => setDatos(d))
       .catch(() => setDatos(null))

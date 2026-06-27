@@ -107,7 +107,7 @@ function Calendario() {
 
   async function cargarEventos() {
     try {
-      const r = await fetch('http://localhost:3000/api/grupos/eventos', { credentials: 'include' })
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/eventos`, { credentials: 'include' })
       const data = await r.json()
       if (r.ok) setEventos(data.eventos ?? [])
     } catch { /* no crítico */ }
@@ -130,7 +130,7 @@ function Calendario() {
     if (!eventoAEliminar) return
     setEliminando(eventoAEliminar.id)
     try {
-      const r = await fetch(`http://localhost:3000/api/grupos/eventos/${eventoAEliminar.id}`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/eventos/${eventoAEliminar.id}`, {
         method: 'DELETE', credentials: 'include',
       })
       if (r.ok) {

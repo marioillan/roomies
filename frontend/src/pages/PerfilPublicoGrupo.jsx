@@ -14,7 +14,7 @@ export default function PerfilPublicoGrupo() {
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/publicaciones/${id}`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/publicaciones/${id}`)
       .then(r => r.json())
       .then(d => setDatos(d))
       .catch(() => setDatos(null))
