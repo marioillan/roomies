@@ -25,6 +25,7 @@ import PerfilPublicoUsuario from './pages/PerfilPublicoUsuario.jsx'
 import MisFacturas from './pages/MisFacturas.jsx'
 import Tareas from './pages/Tareas.jsx'
 import Calendario from './pages/Calendario.jsx'
+import FAQ from './pages/FAQ.jsx'
 
 
 function App() {
@@ -85,6 +86,7 @@ function App() {
       <Route path="/anuncio/:id" element={<AnuncioPublico />} />
       <Route path="/anuncio/:id/convivencia" element={<PerfilPublicoGrupo />} />
       <Route path="/usuario/:id" element={<PerfilPublicoUsuario />} />
+      <Route path="/faq" element={<FAQ />} />
       <Route path="/" element={
         <Home tieneGrupo={tieneGrupo} setTieneGrupo={setTieneGrupo} />
       } />

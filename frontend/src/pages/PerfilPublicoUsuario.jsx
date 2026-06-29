@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Heart, MessageCircle } from 'lucide-react'
+import { ArrowLeft, Heart, MessageCircle, House } from 'lucide-react'
 import DonutChart from '../components/DonutChart.jsx'
 import { CARD_SHADOW, DONUTS_CONFIG_USUARIO, calcEdad, calcChips, calcPct } from '../lib/convivencia.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function PerfilPublicoUsuario() {
-  const { user } = useAuth()
+  const { user, tieneGrupo } = useAuth()
   const { id }    = useParams()
   const navigate  = useNavigate()
 
@@ -61,17 +61,26 @@ export default function PerfilPublicoUsuario() {
           <div className='flex items-center gap-2'>
             {user ? (
               <>
-                <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
-                  className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                  <Heart size={20} />
-                </button>
-                <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
-                  className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                  <MessageCircle size={20} />
-                </button>
+                {tieneGrupo ? (
+                  <button onClick={() => navigate('/grupo')} title='Mi grupo'
+                    className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                    <House size={20} />
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
+                      className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                      <Heart size={20} />
+                    </button>
+                    <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
+                      className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                      <MessageCircle size={20} />
+                    </button>
+                  </>
+                )}
                 {user.foto_perfil
                   ? <img src={user.foto_perfil} alt={user.nombre}
-                      className='w-10 h-10 rounded-full object-cover ring-2 ring-emerald-500 ring-offset-2 ring-offset-white cursor-pointer'
+                      className='w-10 h-10 rounded-full object-cover cursor-pointer'
                       onClick={() => navigate('/perfil/usuario')} />
                   : <button onClick={() => navigate('/perfil/usuario')}
                       className='cursor-pointer! w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center ring-2 ring-emerald-500 ring-offset-2 ring-offset-white'>
@@ -124,7 +133,6 @@ export default function PerfilPublicoUsuario() {
 
           {/* Identidad */}
           <div className='flex flex-col justify-center gap-4'>
-            <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Identidad</p>
             <h2 className='font-display text-[2.75rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
               {usuario.nombre ?? '—'}{edad != null ? `, ${edad}` : ''}
             </h2>
@@ -229,15 +237,6 @@ export default function PerfilPublicoUsuario() {
                   />
                 ))}
               </div>
-              {chips.length > 0 && (
-                <div className='flex flex-wrap gap-2 pt-2 border-t border-dashed border-slate-200'>
-                  {chips.map(chip => (
-                    <span key={chip} className='bg-slate-100 text-slate-600 rounded-full text-[0.8125rem] font-medium px-3.5 py-[7px]'>
-                      {chip}
-                    </span>
-                  ))}
-                </div>
-              )}
             </>
           )}
         </div>

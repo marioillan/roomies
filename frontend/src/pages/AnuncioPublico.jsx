@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
   Heart, MessageCircle, ArrowLeft, MapPin, Euro, Bed, Ruler,
-  Home, Layers, MoveUp, Wifi, WashingMachine, Wind, Flame, Car, Trees,
+  Home, House, Layers, MoveUp, Wifi, WashingMachine, Wind, Flame, Car, Trees,
   Cigarette, PawPrint, Phone, ChevronLeft, ChevronRight, ImageOff,
   Users, Check, Search, Link2,
 } from 'lucide-react'
@@ -372,6 +372,7 @@ function InputCiudad({ value, onChange, onBuscar }) {
       })
     }
     if (window.google?.maps?.places) { init(); return }
+    if (!import.meta.env.VITE_GOOGLE_PLACES_KEY) return
     if (!document.querySelector('script[data-places]')) {
       const s = document.createElement('script')
       s.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_PLACES_KEY}&libraries=places&language=es&region=ES&loading=async`
@@ -407,7 +408,7 @@ function InputCiudad({ value, onChange, onBuscar }) {
 // ── AnuncioPublico ────────────────────────────────────────────────────
 
 export default function AnuncioPublico() {
-  const { user } = useAuth()
+  const { user, tieneGrupo } = useAuth()
   const { id }     = useParams()
   const navigate   = useNavigate()
   const location   = useLocation()
@@ -521,14 +522,23 @@ export default function AnuncioPublico() {
           <div className='flex items-center gap-2 shrink-0'>
             {user ? (
               <>
-                <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
-                  className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                  <Heart size={20} />
-                </button>
-                <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
-                  className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                  <MessageCircle size={20} />
-                </button>
+                {tieneGrupo ? (
+                  <button onClick={() => navigate('/grupo')} title='Mi grupo'
+                    className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                    <House size={20} />
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
+                      className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                      <Heart size={20} />
+                    </button>
+                    <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
+                      className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                      <MessageCircle size={20} />
+                    </button>
+                  </>
+                )}
                 {user.foto_perfil
                   ? <img src={user.foto_perfil} alt={user.nombre}
                       className='w-10 h-10 rounded-full object-cover cursor-pointer'

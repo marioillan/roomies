@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
-  Search, MapPin, Euro, Bed, Wifi, Car, PawPrint, Home,
+  Search, MapPin, Euro, Bed, Wifi, Car, PawPrint, Home, House, Receipt,
   ChevronLeft, ChevronRight, X, ImageOff,
   Ruler, Building2, Heart, MessageCircle, Check, SlidersHorizontal,
   Phone, Users, Sparkles, ArrowRight,
@@ -185,12 +185,12 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito }) {
 
       {/* Footer: compatibilidad + botones */}
       <div
-        className='flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/60'
+        className='flex flex-wrap items-center justify-between gap-y-2 px-4 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/60'
         onClick={e => e.stopPropagation()}
       >
         {/* Compatibilidad + intereses en común */}
         <div className='flex flex-col gap-1'>
-          <div className='text-xs font-semibold'>
+          <div className='text-xs font-semibold mb-0.5'>
             {pub.compatibilidad !== null && pub.compatibilidad !== undefined ? (
               <span className={`flex items-center gap-1.5
                 ${pub.compatibilidad >= 75 ? 'text-emerald-600'
@@ -206,11 +206,18 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito }) {
               <span className='text-slate-300'>Sin datos de compatibilidad</span>
             )}
           </div>
-          {pub.intereses_comunes > 0 && (
-            <span className='flex items-center gap-1 text-[10px] font-semibold text-violet-600'>
-              <Sparkles size={9} className='shrink-0' />
-              {pub.intereses_comunes} {pub.intereses_comunes === 1 ? 'interés' : 'intereses'} en común
-            </span>
+          {pub.intereses_comunes?.length > 0 && (
+            <div className='flex items-center gap-1.5 flex-wrap'>
+              <span className='font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-slate-600 shrink-0'>
+                En común:
+              </span>
+              {pub.intereses_comunes.map(nombre => (
+                <span key={nombre} className='inline-flex items-center gap-1 bg-emerald-200 text-emerald-900 text-[0.6875rem] font-medium px-2 py-0.5 rounded-full'>
+                  <span className='w-1 h-1 rounded-full bg-emerald-400 shrink-0' />
+                  {nombre}
+                </span>
+              ))}
+            </div>
           )}
         </div>
 
@@ -270,6 +277,7 @@ function InputCiudad({ value, onChange, onBuscar }) {
       })
     }
     if (window.google?.maps?.places) { init(); return }
+    if (!import.meta.env.VITE_GOOGLE_PLACES_KEY) return
     if (!document.querySelector('script[data-places]')) {
       const s = document.createElement('script')
       s.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_PLACES_KEY}&libraries=places&language=es&region=ES&loading=async`
@@ -329,6 +337,7 @@ function FilterPanelContent({
   generoPref, setGeneroPref,
   filtIntereses, setFiltIntereses, todosIntereses,
   onAplicar, onLimpiar, filtrosActivos,
+  onClose,
 }) {
   const chipCls = (active) => `cursor-pointer! px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
     active
@@ -340,12 +349,20 @@ function FilterPanelContent({
     <>
       <div className='flex items-center justify-between px-5 py-4 border-b border-emerald-500'>
         <h2 className='font-bold text-white text-sm'>Filtros</h2>
-        {filtrosActivos && (
-          <button type='button' onClick={onLimpiar}
-            className='cursor-pointer! flex items-center gap-1 text-xs text-emerald-200 hover:text-white transition'>
-            <X size={11} /> Limpiar
-          </button>
-        )}
+        <div className='flex items-center gap-2'>
+          {filtrosActivos && (
+            <button type='button' onClick={onLimpiar}
+              className='cursor-pointer! flex items-center gap-1 text-xs text-emerald-200 hover:text-white transition'>
+              <X size={11} /> Limpiar
+            </button>
+          )}
+          {onClose && (
+            <button type='button' onClick={onClose}
+              className='cursor-pointer! p-1 text-emerald-200 hover:text-white transition'>
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className='px-5'>
@@ -497,6 +514,11 @@ function FilterPanelContent({
 }
 
 function FilterAside({ mobileOpen, onMobileClose, ...filterProps }) {
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
+
   return (
     <>
       {/* Desktop — siempre visible */}
@@ -513,18 +535,8 @@ function FilterAside({ mobileOpen, onMobileClose, ...filterProps }) {
             className='absolute inset-0 bg-black/40 backdrop-blur-sm'
             onClick={onMobileClose}
           />
-          <div className='absolute left-0 top-0 bottom-0 w-80 bg-white overflow-y-auto shadow-2xl'>
-            <div className='flex items-center justify-between px-5 py-4 border-b border-slate-100'>
-              <span className='font-bold text-slate-900'>Filtros</span>
-              <button
-                type='button'
-                onClick={onMobileClose}
-                className='cursor-pointer! p-1 text-slate-400 hover:text-slate-600 transition'
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <FilterPanelContent {...filterProps} />
+          <div className='absolute left-0 top-0 bottom-0 w-[min(20rem,100vw)] bg-emerald-600 overflow-y-auto shadow-2xl'>
+            <FilterPanelContent {...filterProps} onClose={onMobileClose} />
           </div>
         </div>
       )}
@@ -534,7 +546,7 @@ function FilterAside({ mobileOpen, onMobileClose, ...filterProps }) {
 
 // ── Página ─────────────────────────────────────────────────────────
 export default function BuscarPage() {
-  const { user } = useAuth()
+  const { user, tieneGrupo, cargando } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -624,11 +636,14 @@ export default function BuscarPage() {
   useEffect(() => {
     buscar(ciudad, page)
 
-    // Cargar catálogo de intereses agrupado por categoría
     fetch(`${import.meta.env.VITE_API_URL}/api/perfil/intereses`)
       .then(r => r.json())
       .then(d => { if (d.categorias) setTodosIntereses(d.categorias) })
       .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (cargando) return
 
     if (user) {
       fetch(`${import.meta.env.VITE_API_URL}/api/favoritos`, { credentials: 'include' })
@@ -645,11 +660,10 @@ export default function BuscarPage() {
           if (tienePerf && !searchParams.get('ordenar')) setOrdenar('compatibles')
         })
         .catch(() => setTienePerfilConvivencia(false))
-
     } else {
       setTienePerfilConvivencia(false)
     }
-  }, [])
+  }, [user, cargando])
 
   const handleCiudadBuscar = (c) => {
     setCiudad(c)
@@ -710,17 +724,18 @@ export default function BuscarPage() {
   }
 
   return (
-    <div className='min-h-screen bg-slate-200'>
+    <div className='min-h-screen bg-slate-200 overflow-x-hidden'>
 
       {/* ── Header ── */}
       <header className='sticky top-0 z-30 bg-white border-b border-slate-200'>
-        <div className='max-w-[80rem] mx-auto flex items-center gap-3 px-4 sm:px-10 py-3.5'>
+        <div className='max-w-[80rem] mx-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-6 lg:px-10 py-2.5'>
 
-          <button onClick={() => navigate('/')} className='cursor-pointer! font-display text-2xl font-bold -tracking-[0.02em] text-slate-900 shrink-0'>
-            Housie
+          <button onClick={() => navigate('/')} className='cursor-pointer! shrink-0 flex items-center'>
+            <img src='/housienegrologo.png' alt='Housie Logo' className='h-8 w-auto sm:hidden' />
+            <span className='hidden sm:block font-display text-2xl font-bold -tracking-[0.02em] text-slate-900'>Housie</span>
           </button>
 
-          <div className='flex-1 flex items-center gap-2 max-w-[34rem] mx-auto'>
+          <div className='flex-1 min-w-0 flex items-center gap-2 sm:max-w-[34rem] sm:mx-auto'>
             <InputCiudad value={ciudad} onChange={setCiudad} onBuscar={handleCiudadBuscar} />
           </div>
 
@@ -739,24 +754,39 @@ export default function BuscarPage() {
           </button>
 
           {/* Nav usuario */}
-          <div className='flex items-center gap-2 shrink-0'>
+          <div className='flex items-center gap-1.5 sm:gap-2 shrink-0'>
             {user ? (
               <>
-                <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
-                  className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                  <Heart size={20} />
-                </button>
-                <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
-                  className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                  <MessageCircle size={20} />
-                </button>
+                {user.es_casero ? (
+                  <button onClick={() => navigate('/casero/facturas')}
+                    className='cursor-pointer! hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-600 transition'>
+                    <Receipt size={15} />
+                    Mis facturas
+                  </button>
+                ) : tieneGrupo ? (
+                  <button onClick={() => navigate('/grupo')} title='Mi grupo'
+                    className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                    <House size={20} />
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => navigate('/perfil/favoritos')} title='Favoritos'
+                      className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                      <Heart size={20} />
+                    </button>
+                    <button onClick={() => navigate('/perfil/chat')} title='Mensajes'
+                      className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                      <MessageCircle size={20} />
+                    </button>
+                  </>
+                )}
                 {user.foto_perfil
                   ? <img src={user.foto_perfil} alt={user.nombre}
-                      className='w-10 h-10 rounded-full object-cover cursor-pointer'
+                      className='w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover cursor-pointer shrink-0'
                       onClick={() => navigate('/perfil/usuario')} />
                   : <button onClick={() => navigate('/perfil/usuario')}
-                      className='cursor-pointer! w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center'>
-                      <span className='text-sm font-bold text-emerald-700'>{user.nombre?.[0]?.toUpperCase()}</span>
+                      className='cursor-pointer! w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0'>
+                      <span className='text-xs sm:text-sm font-bold text-emerald-700'>{user.nombre?.[0]?.toUpperCase()}</span>
                     </button>
                 }
               </>
@@ -806,8 +836,8 @@ export default function BuscarPage() {
 
             {/* Resumen + ordenar */}
             {!loading && total > 0 && (
-              <div className='flex items-center justify-between mb-5'>
-                <p className='text-lg text-slate-500'>
+              <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 sm:mb-5'>
+                <p className='text-sm sm:text-base lg:text-lg text-slate-500'>
                   <span className='font-bold text-slate-800'>{total}</span> anuncio{total !== 1 ? 's' : ''}{ciudad ? <> en <span className='font-bold text-slate-800'>{ciudad}</span></> : ' disponibles'}
                   {filtrosActivos && <span className='text-slate-400'> · con filtros activos</span>}
                 </p>
@@ -829,7 +859,7 @@ export default function BuscarPage() {
 
             {/* Banner perfil de convivencia */}
             {tienePerfilConvivencia === false && (
-              <div className='mb-5 flex items-center gap-4 px-5 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl'>
+              <div className='mb-5 flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl'>
                 <div className='w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0'>
                   <Sparkles size={18} className='text-emerald-600' />
                 </div>

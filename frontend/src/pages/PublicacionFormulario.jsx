@@ -148,6 +148,7 @@ function DireccionAutocomplete({ setValue, defaultValue = '' }) {
       return
     }
 
+    if (!import.meta.env.VITE_GOOGLE_PLACES_KEY) return
     if (!document.querySelector('script[data-places]')) {
       const script = document.createElement('script')
       script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_PLACES_KEY}&libraries=places&language=es&region=ES&loading=async`

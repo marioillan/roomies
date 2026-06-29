@@ -108,6 +108,39 @@ function FavCard({ pub, onQuitar }) {
           </div>
         )}
 
+        {/* Compatibilidad + Intereses comunes */}
+        {(pub.compatibilidad != null || pub.intereses_comunes?.length > 0) && (
+          <div className='flex flex-col gap-1.5 mt-3'>
+            {pub.compatibilidad != null && (
+              <div className='flex items-center gap-1.5'>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${
+                  pub.compatibilidad >= 70 ? 'bg-emerald-500' :
+                  pub.compatibilidad >= 40 ? 'bg-amber-400' : 'bg-rose-400'
+                }`} />
+                <span className={`font-mono text-[0.6875rem] font-semibold ${
+                  pub.compatibilidad >= 70 ? 'text-emerald-600' :
+                  pub.compatibilidad >= 40 ? 'text-amber-500' : 'text-rose-500'
+                }`}>
+                  {pub.compatibilidad}% de compatibilidad
+                </span>
+              </div>
+            )}
+            {pub.intereses_comunes?.length > 0 && (
+              <div className='flex items-center gap-1.5 flex-wrap'>
+                <span className='font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-slate-600 shrink-0'>
+                  En común:
+                </span>
+                {pub.intereses_comunes.map(nombre => (
+                  <span key={nombre} className='inline-flex items-center gap-1 bg-emerald-200 text-emerald-900 text-[0.6875rem] font-medium px-2 py-0.5 rounded-full'>
+                    <span className='w-1 h-1 rounded-full bg-emerald-400 shrink-0' />
+                    {nombre}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Footer */}
         <div className='flex items-center justify-between mt-auto pt-4'>
           {/* Avatar + nombre + guardado */}

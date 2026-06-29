@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Heart, MessageCircle } from 'lucide-react'
+import { ArrowLeft, Heart, MessageCircle, House } from 'lucide-react'
 import DonutChart from '../components/DonutChart.jsx'
 import { CARD_SHADOW, DONUTS_CONFIG_GRUPO, PASTEL } from '../lib/convivencia.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function PerfilPublicoGrupo() {
-  const { user } = useAuth()
+  const { user, tieneGrupo } = useAuth()
   const { id }   = useParams()
   const navigate = useNavigate()
 
@@ -65,17 +65,26 @@ export default function PerfilPublicoGrupo() {
           <div className='flex items-center gap-2'>
             {user ? (
               <>
-                <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
-                  className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                  <Heart size={20} />
-                </button>
-                <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
-                  className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                  <MessageCircle size={20} />
-                </button>
+                {tieneGrupo ? (
+                  <button onClick={() => navigate('/grupo')} title='Mi grupo'
+                    className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                    <House size={20} />
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
+                      className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                      <Heart size={20} />
+                    </button>
+                    <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
+                      className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
+                      <MessageCircle size={20} />
+                    </button>
+                  </>
+                )}
                 {user.foto_perfil
                   ? <img src={user.foto_perfil} alt={user.nombre}
-                      className='w-10 h-10 rounded-full object-cover  cursor-pointer'
+                      className='w-10 h-10 rounded-full object-cover cursor-pointer'
                       onClick={() => navigate('/perfil/usuario')} />
                   : <button onClick={() => navigate('/perfil/usuario')}
                       className='cursor-pointer! w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center ring-2 ring-emerald-500 ring-offset-2 ring-offset-white'>

@@ -63,21 +63,19 @@ function PerfilUsuario() {
 
       {/* ── Hero card — spec §6: grid 21.25rem 1fr, gap 1.25rem, p 1.75rem ── */}
       <div
-        className='bg-white border border-slate-100 rounded-3xl p-7 grid grid-cols-[21.25rem_1fr] gap-5'
+        className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 md:grid-cols-[21.25rem_1fr] gap-5'
         style={CARD_SHADOW}
       >
-        {/* Columna izq: foto 284px centrada + VISIBLE */}
-        <div className='relative flex justify-center items-center'>
+        {/* Columna izq: foto centrada */}
+        <div className='flex justify-center items-center'>
           {user?.foto_perfil
             ? <img
                 src={user.foto_perfil}
                 alt='Foto de perfil'
-                className='rounded-full object-cover'
-                style={{ width: 284, height: 284 }}
+                className='rounded-full object-cover w-36 h-36 sm:w-48 sm:h-48 md:w-[284px] md:h-[284px]'
               />
             : <div
-                className='rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-6xl font-bold'
-                style={{ width: 284, height: 284 }}
+                className='rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold w-36 h-36 sm:w-48 sm:h-48 md:w-[284px] md:h-[284px] text-5xl'
               >
                 {user?.nombre?.[0]?.toUpperCase() ?? '?'}
               </div>
@@ -86,10 +84,7 @@ function PerfilUsuario() {
 
         {/* Columna der: identidad */}
         <div className='flex flex-col justify-center gap-4'>
-          {/* eyebrow IDENTIDAD — spec §6 */}
-          <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Identidad</p>
-          {/* nombre — spec: 2.75rem, tracking -0.02em */}
-          <h2 className='font-display text-[2.75rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
+          <h2 className='font-display text-[1.75rem] sm:text-[2.25rem] md:text-[2.75rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
             {user?.nombre ?? '—'}{edad != null ? `, ${edad}` : ''}
           </h2>
           {/* chips género + país — spec §10 */}
@@ -118,7 +113,7 @@ function PerfilUsuario() {
       </div>
 
       {/* ── Datos personales + Intereses*/}
-      <div className='grid grid-cols-2 gap-5'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
 
         {/* Datos personales */}
         <div className='bg-white border border-slate-100 rounded-3xl p-7 flex flex-col gap-4' style={CARD_SHADOW}>
@@ -203,7 +198,7 @@ function PerfilUsuario() {
             </button>
           </div>
         ) : perfilConvivencia ? (
-          <div className='grid grid-cols-4 gap-6'>
+          <div className='grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6'>
             {DONUTS_CONFIG_USUARIO.map(cfg => (
               <DonutChart
                 key={cfg.campo}

@@ -133,6 +133,7 @@ function BuscadorCiudad({ onBuscar }) {
       return
     }
 
+    if (!import.meta.env.VITE_GOOGLE_PLACES_KEY) return
     if (!document.querySelector('script[data-places]')) {
       const script = document.createElement('script')
       script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_PLACES_KEY}&libraries=places&language=es&region=ES&loading=async`
@@ -292,7 +293,7 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
           <div className="absolute bottom-8 right-8 w-96 h-96 bg-teal-500 rounded-full blur-[130px]" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 sm:px-10 pt-20 pb-28 flex flex-col lg:flex-row items-center justify-between gap-14">
+        <div className="relative max-w-7xl mx-auto px-6 sm:px-10 pt-12 pb-16 sm:pt-20 sm:pb-28 flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-14">
 
           {/* Texto */}
           <div className="max-w-xl" style={{ animation: 'heroFadeUp 0.7s ease both' }}>
@@ -301,13 +302,13 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
               La plataforma para encontrar tu piso compartido
             </div>
 
-            <h1 className="font-display font-bold text-5xl sm:text-6xl leading-tight">
+            <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight">
               El piso perfecto<br />
               <span style={{ color: '#34d399' }}>empieza por</span><br />
               el compañero perfecto
             </h1>
 
-            <p className="mt-5 text-slate-300 text-lg leading-relaxed max-w-lg">
+            <p className="mt-5 text-slate-300 text-base sm:text-lg leading-relaxed max-w-lg">
               Busca habitación, conecta con compañeros compatibles y gestiona la convivencia. Todo en un solo lugar.
             </p>
 
@@ -368,14 +369,14 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
       {/* ─────────────────────────────────────────── */}
       {/* CÓMO FUNCIONA — editorial table              */}
       {/* ─────────────────────────────────────────── */}
-      <section aria-labelledby="como-funciona-heading" className="bg-white py-24 px-6 sm:px-10">
+      <section aria-labelledby="como-funciona-heading" className="bg-white py-16 sm:py-24 px-6 sm:px-10">
         <div className="max-w-5xl mx-auto">
 
           <Reveal className="mb-12">
             <p className="font-mono text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
               Cómo funciona
             </p>
-            <h2 id="como-funciona-heading" className="font-display text-4xl sm:text-5xl font-bold text-slate-900 leading-tight">
+            <h2 id="como-funciona-heading" className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
               Tres situaciones,<br />una plataforma
             </h2>
           </Reveal>
@@ -390,7 +391,7 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
             />
 
             {pasos.map(({ n, icon: Icono, title, descripcion, destacado }, i) => (
-              <Reveal key={n} delay={i * 130} className="flex flex-row sm:flex-col items-start sm:items-center gap-5 sm:gap-0 text-left sm:text-center px-0 sm:px-6">
+              <Reveal key={n} delay={i * 130} className="flex flex-col sm:items-center gap-3 sm:gap-0 text-left sm:text-center sm:px-6">
 
                 {/* Círculo numerado */}
                 <div
@@ -408,7 +409,7 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
 
                 {/* Icono */}
                 <div
-                  className={`mt-0 sm:mt-7 mb-0 sm:mb-4 w-11 h-11 rounded-2xl flex-shrink-0 sm:flex-shrink flex items-center justify-center ${
+                  className={`mt-1 sm:mt-7 mb-1 sm:mb-4 w-11 h-11 rounded-2xl shrink-0 flex items-center justify-center ${
                     destacado ? 'bg-emerald-50' : 'bg-slate-50'
                   }`}
                 >
@@ -445,14 +446,14 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
         </div>
       </section>
 
-      <section aria-labelledby="features-heading" className="bg-slate-50 py-24 px-6 sm:px-10">
+      <section aria-labelledby="features-heading" className="bg-slate-50 py-16 sm:py-24 px-6 sm:px-10">
         <div className="max-w-5xl mx-auto">
 
           <Reveal className="mb-12 text-right">
             <p className="font-mono text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
               La plataforma
             </p>
-            <h2 id="features-heading" className="font-display text-4xl sm:text-5xl font-bold text-slate-900 leading-tight">
+            <h2 id="features-heading" className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
               Todo lo que necesitas<br />lo tenemos cubierto
             </h2>
           </Reveal>
@@ -488,10 +489,10 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
 
             {user?.es_casero ? (
               <>
-                <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4 leading-tight text-slate-900">
+                <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight text-slate-900">
                   Todo listo para<br /><span style={{ color: ESMERALDA }}>gestionar</span> tus facturas
                 </h2>
-                <p className="text-slate-500 text-lg mb-10 max-w-lg mx-auto">
+                <p className="text-slate-500 text-base sm:text-lg mb-10 max-w-lg mx-auto">
                   Accede a tu panel de gestión y mantén el control de los pagos de tus inquilinos en tiempo real.
                 </p>
                 <div className="flex flex-wrap gap-4 justify-center">
@@ -509,12 +510,12 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
               </>
             ) : (
               <>
-                <h2 className="font-display text-4xl sm:text-5xl font-bold mb-4 leading-tight text-slate-900">
+                <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight text-slate-900">
                   {user && !tieneGrupo
                     ? <>¿Ya tienes piso?<br /><span style={{ color: ESMERALDA }}>Únete</span> o crea tu grupo</>
                     : <>¿Listo para <span style={{ color: ESMERALDA }}>encontrar</span> tu<br />piso y compañeros ideales?</>}
                 </h2>
-                <p className="text-slate-500 text-lg mb-10 max-w-lg mx-auto">
+                <p className="text-slate-500 text-base sm:text-lg mb-10 max-w-lg mx-auto">
                   {user && !tieneGrupo
                     ? 'Introduce el código que te ha dado tu compañero de piso, o crea tú el grupo y comparte el código.'
                     : 'Entra a tu perfil para completar tu información de convivencia, encuentra pisos compatibles y conecta con tus futuros compañeros.'}
@@ -586,11 +587,46 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
 
       <footer className="bg-slate-900 text-white pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-6 sm:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 mb-12">
             <div className="md:col-span-2">
-              <div className="flex items-center gap-2">
-                <span className="font-display font-bold text-white text-2xl">Housie</span>
-              </div>
+              <span className="font-display font-bold text-white text-2xl">Housie</span>
+              <p className="mt-3 text-slate-400 text-sm max-w-xs leading-relaxed">
+                La plataforma para encontrar compañeros de piso compatibles y gestionar la convivencia.
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Plataforma</p>
+              <ul className="flex flex-col gap-2.5">
+                <li>
+                  <button onClick={() => navigate('/buscar')}
+                    className="cursor-pointer! text-slate-400 hover:text-white text-sm transition">
+                    Buscar habitación
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => navigate('/acceso-grupo')}
+                    className="cursor-pointer! text-slate-400 hover:text-white text-sm transition">
+                    Mi grupo
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Ayuda</p>
+              <ul className="flex flex-col gap-2.5">
+                <li>
+                  <button onClick={() => navigate('/faq')}
+                    className="cursor-pointer! text-slate-400 hover:text-white text-sm transition">
+                    Preguntas frecuentes
+                  </button>
+                </li>
+                <li>
+                  <a href="mailto:housie.app@gmail.com"
+                    className="text-slate-400 hover:text-white text-sm transition">
+                    Contacto
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
           <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">

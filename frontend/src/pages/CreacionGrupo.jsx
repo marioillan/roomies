@@ -126,7 +126,7 @@ function CreacionGrupo() {
           <p className='text-sm font-semibold text-slate-700'>Grupo creado</p>
         </div>
 
-        <div className='max-w-lg mx-auto px-6 py-10'>
+        <div className='max-w-lg mx-auto px-4 sm:px-6 py-6 sm:py-10'>
           <div className='bg-white rounded-2xl border border-slate-100 shadow-md overflow-hidden'>
             <div className='bg-emerald-50 px-6 py-5 border-b border-slate-100 flex items-center gap-4'>
               <div className='w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0'>

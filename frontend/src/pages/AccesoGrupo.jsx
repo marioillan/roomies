@@ -117,7 +117,7 @@ export default function AccesoGrupo({ setTieneGrupo }) {
         <p className="text-sm font-semibold text-slate-700">Mi grupo</p>
       </div>
 
-      <div className="max-w-lg mx-auto px-6 py-10 flex flex-col gap-4">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col gap-4">
 
         {/* Tarjeta — Unirse con código */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-md overflow-hidden">

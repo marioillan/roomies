@@ -527,7 +527,7 @@ function Paso3({ control }) {
               options={[
                 { value: 'SI',      label: 'Sí' },
                 { value: 'NO',      label: 'No' },
-                { value: 'DEPENDE', label: 'Depende' },
+                { value: 'INDIFERENTE', label: 'Indiferente' },
               ]}
             />
           )} />
@@ -788,7 +788,7 @@ function EditarUsuario() {
         </span>
       </div>
 
-      <div className='max-w-2xl mx-auto px-6 py-10'>
+      <div className='max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-10'>
 
         {/* Step bar */}
         <StepBar current={step} steps={STEPS} stepMeta={STEP_META} />
