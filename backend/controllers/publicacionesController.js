@@ -92,7 +92,7 @@ export const buscarPublicaciones = async (req, res, next) => {
       for (const [campoPref, campoGrupo] of camposOrdinales) {
         if (pref[campoPref] && pref[`${campoPref}_req`] === true) {
           params.push(pref[campoPref]);
-          conditions.push(`(pcg.${campoGrupo} IS NULL OR pcg.${campoGrupo} = $${params.length})`);
+          conditions.push(`(pcg.${campoGrupo} IS NULL OR pcg.${campoGrupo}::text = $${params.length})`);
         }
       }
       if (pref.fumador !== null && pref.fumador !== undefined && pref.fumador_req === true) {
@@ -160,9 +160,10 @@ export const buscarPublicaciones = async (req, res, next) => {
       (SELECT json_agg(f.url ORDER BY f.orden ASC)
        FROM fotos_publicacion f
        WHERE f.publicacion_id = p.id) AS fotos,
-      (SELECT json_agg(gi.interes_id)
-       FROM grupo_intereses gi
-       WHERE gi.grupo_id = g.id) AS intereses_grupo_ids
+      (SELECT json_agg(json_build_object('id', gii.interes_id, 'nombre', ii.nombre))
+       FROM grupo_intereses gii
+       JOIN intereses ii ON ii.id = gii.interes_id
+       WHERE gii.grupo_id = g.id) AS intereses_grupo
       ${tieneMatching ? `,
       pcg.horario            AS pcg_horario,
       pcg.ambiente           AS pcg_ambiente,
@@ -175,9 +176,11 @@ export const buscarPublicaciones = async (req, res, next) => {
     WHERE ${where}`;
 
   const calcComunes = (pub) => {
-    if (!tieneUsuario) return null;
-    const ids = pub.intereses_grupo_ids ?? [];
-    return ids.filter(id => interesesUsuarioSet.has(Number(id))).length || null;
+    if (!tieneUsuario) return [];
+    const items = pub.intereses_grupo ?? [];
+    return items
+      .filter(item => interesesUsuarioSet.has(Number(item.id)))
+      .map(item => item.nombre);
   };
 
   try {
@@ -186,11 +189,13 @@ export const buscarPublicaciones = async (req, res, next) => {
 
       const conScore = rows.map(pub => {
         const score = calcularScore(perfilUsuario, pub);
-        const { intereses_grupo_ids, pcg_horario, pcg_ambiente, pcg_frecuencia_visitas, pcg_tolerancia_fiestas, pcg_ocupacion, ...resto } = pub;
+        const { intereses_grupo, pcg_horario, pcg_ambiente, pcg_frecuencia_visitas, pcg_tolerancia_fiestas, pcg_ocupacion, ...resto } = pub;
         return { ...resto, compatibilidad: score, intereses_comunes: calcComunes(pub) };
       });
 
-      conScore.sort((a, b) => b.compatibilidad - a.compatibilidad);
+      if (ordenar === 'precio_asc')  conScore.sort((a, b) => a.precio - b.precio);
+      else if (ordenar === 'precio_desc') conScore.sort((a, b) => b.precio - a.precio);
+      else conScore.sort((a, b) => b.compatibilidad - a.compatibilidad);
 
       const total     = conScore.length;
       const paginadas = conScore.slice(offset, offset + limit);
@@ -225,7 +230,7 @@ export const buscarPublicaciones = async (req, res, next) => {
 
     res.json({
       publicaciones: rows.map(pub => {
-        const { intereses_grupo_ids, ...resto } = pub;
+        const { intereses_grupo, ...resto } = pub;
         return { ...resto, compatibilidad: null, intereses_comunes: calcComunes(pub) };
       }),
       total,

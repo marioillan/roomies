@@ -77,7 +77,7 @@ Monorepo con dos carpetas independientes: `backend/` y `frontend/`. Sin workspac
 ### Frontend — React + Vite + Tailwind
 
 - **Entrada:** `frontend/src/main.jsx` → `App.jsx`.
-- **Estado global:** El objeto `user` vive en el estado de `App.jsx` y se pasa como prop. No hay Context ni store.
+- **Estado global:** `AuthContext` (`frontend/src/context/AuthContext.jsx`) es la fuente de verdad para `user`, `tieneGrupo` y `cargando`. Exporta `{ user, setUser, tieneGrupo, setTieneGrupo, recargarUsuario, cargando }`. `cargando` empieza en `true` y pasa a `false` cuando la llamada inicial a `/api/auth/me` termina — úsalo para evitar race conditions al decidir si hay sesión (ej. `if (cargando) return` al inicio de efectos que dependan de `user`). Páginas públicas con header propio usan `const { user, tieneGrupo } = useAuth()`.
 - **Routing:** React Router v7. Layouts anidados por sección.
 - **Formularios:** `react-hook-form` + `zodResolver`. Schemas en `frontend/src/lib/schemas.js`.
 - **Componentes:** `frontend/src/components/` — `CustomSelect`, `LoginModal`, `RegistroModal`, `DonutChart`, `ui/chart.jsx` (wrapper recharts), `FormPrimitivos.jsx` (primitivos de formulario compartidos).
@@ -161,7 +161,7 @@ POST   /api/grupos/transferir-admin              # admin transfiere el rol ADMIN
 DELETE /api/grupos/salir                         # sale del grupo (body: { grupo_id? }). Si admin con otros miembros, devuelve 400
 
 GET    /api/favoritos
-GET    /api/favoritos/publicaciones
+GET    /api/favoritos/publicaciones              # devuelve compatibilidad (number|null) e intereses_comunes (string[]) igual que /api/publicaciones
 POST   /api/favoritos/:publicacionId
 
 POST   /api/chats/solicitar/:publicacionId       # crea solicitud; si estaba RECHAZADA hace UPDATE en lugar de INSERT; envía emails al usuario y al admin
@@ -179,6 +179,8 @@ GET    /api/publicaciones                        # búsqueda paginada con filtro
                                                # Filtros: ciudad, precio_min, precio_max, habitaciones_min, tipo_piso,
                                                # amueblado, wifi, mascotas, parking, lavadora, aire_acondicionado,
                                                # calefaccion, ascensor, permite_fumar, genero_preferido, ordenar
+                                               # Si el usuario tiene sesión: devuelve compatibilidad + intereses_comunes por pub
+                                               # ordenar=precio_asc|precio_desc se respeta incluso cuando tieneMatching=true
 
 GET    /api/compra                               # lista de productos del grupo (pendientes primero)
 POST   /api/compra                               # añadir producto
@@ -332,6 +334,8 @@ Implementado en: `Tareas.jsx` (eliminar zona), `Calendario.jsx` (eliminar evento
 - **`AnuncioPublico` — bloqueo por pertenencia:** `perteneceAlGrupo = user && miembros.some(m => m.id === user.id)`. Si el usuario ya pertenece al grupo: botón "Guardar" deshabilitado (muestra "Ya eres miembro"), botón de contacto reemplazado por "Ya perteneces a este grupo", teléfono oculto.
 - **`AnuncioPublico` — mapa:** iframe al final de la columna izquierda con `https://maps.google.com/maps?q=ENCODED_ADDRESS&output=embed&hl=es&z=15`. No requiere API key. Enlace "Ver en Google Maps →" abre en nueva pestaña. Solo se muestra si hay `pub.direccion` o `pub.ciudad`.
 - **`BuscarPage` — filtros:** aside emerald sticky en desktop; en mobile, drawer (izquierda) activado por botón `SlidersHorizontal` (`md:hidden`) en la cabecera. El `FilterAside` ya gestiona ambos casos internamente.
+- **`BuscarPage` — race condition auth:** el check del perfil de convivencia y favoritos vive en un `useEffect([user, cargando])` separado (no en el `useEffect([])` de la búsqueda inicial). El patrón `if (cargando) return` al inicio evita que `user === null` transitorio active el `else { setTienePerfilConvivencia(false) }`. Aplicar este mismo patrón en cualquier página que tome decisiones basadas en `user` al montar.
+- **Intereses en común — display estándar:** etiqueta `"En común:"` en `font-mono text-[0.6rem] uppercase tracking-[0.12em] text-slate-600` + chips `bg-emerald-200 text-emerald-900 rounded-full` con dot `bg-emerald-400`. Usado igual en `BuscarPage` y `Favoritos`.
 - **`PublicacionFormulario` — visibilidad:** campo `visible` (boolean, default `true`) al final del paso 1. Dos pill buttons: "Publicado" (emerald) → aparece en búsquedas; "Borrador" (slate) → no aparece. Guardado en `publicaciones.visible`.
 - **`MisFacturas` — histórico:** el `AreaChart` solo muestra la serie `pagado` (sin `pendiente`). El diff de tendencia compara `pagado` del último mes vs el anterior.
 - **Emails fire-and-forget:** Siempre `.then(() => {}).catch(() => {})` al llamar a `sendMail`. Nunca `await` en el handler de la ruta si el email no es crítico para la respuesta.
@@ -359,8 +363,10 @@ EMAIL_PASS=
 
 ### Frontend (`.env`)
 ```
+VITE_API_URL=http://localhost:3000
 VITE_GOOGLE_PLACES_KEY=
 ```
+`VITE_GOOGLE_PLACES_KEY` debe estar en `frontend/.env` (no en `backend/.env`) porque el SDK de Google Maps se carga directamente en el navegador. Si la variable está vacía, los scripts de Google Places no se inyectan y los campos de ciudad funcionan como inputs de texto libre. Requiere activar **Maps JavaScript API** y **Places API** en Google Cloud Console.
 
 ## Estado de implementación
 
