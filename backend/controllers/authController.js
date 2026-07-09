@@ -22,20 +22,41 @@ const calendarClient = new OAuth2Client(
 );
 
 // ── Helpers de token ──────────────────────────────────────────
-const generateToken = (userId) =>
-  jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  });
+const ACCESS_TOKEN_TTL = '15m';
+const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 días en ms
 
-const COOKIE_OPTIONS = {
+const generarAccessToken = (userId) =>
+  jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL });
+
+const ACCESS_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+  sameSite: 'lax',
+  maxAge: 15 * 60 * 1000, // 15 min
 };
 
-const setTokenCookie = (res, userId) => {
-  res.cookie('token', generateToken(userId), COOKIE_OPTIONS);
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge: REFRESH_TOKEN_TTL_MS,
+};
+
+const setAuthCookies = async (res, userId) => {
+  const nuevoRefreshToken = randomUUID();
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
+
+  await prisma.refreshToken.create({
+    data: {
+      id: randomUUID(),
+      token: nuevoRefreshToken,
+      usuario_id: userId,
+      expires_at: expiresAt,
+    },
+  });
+
+  res.cookie('token', generarAccessToken(userId), ACCESS_COOKIE_OPTIONS);
+  res.cookie('refresh_token', nuevoRefreshToken, REFRESH_COOKIE_OPTIONS);
 };
 
 // ── POST /api/auth/registro ───────────────────────────────────
@@ -69,7 +90,7 @@ export const registro = async (req, res, next) => {
       },
     });
 
-    setTokenCookie(res, id);
+    await setAuthCookies(res, id);
     res.status(201).json({ user: nuevoUsuario });
   } catch (err) {
     next(err);
@@ -110,7 +131,7 @@ export const login = async (req, res, next) => {
       return res.status(400).json({ message: 'Credenciales inválidas' });
     }
 
-    setTokenCookie(res, usuario.id);
+    await setAuthCookies(res, usuario.id);
     res.status(200).json({
       user: {
         id: usuario.id,
@@ -120,6 +141,49 @@ export const login = async (req, res, next) => {
         fecha_registro: usuario.fecha_registro,
       },
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── POST /api/auth/refresh ────────────────────────────────────
+export const refreshToken = async (req, res, next) => {
+  const tokenRecibido = req.cookies?.refresh_token;
+  if (!tokenRecibido) {
+    return res.status(401).json({ message: 'No autenticado' });
+  }
+
+  try {
+    const registro = await prisma.refreshToken.findUnique({
+      where: { token: tokenRecibido },
+    });
+
+    if (!registro || registro.expires_at < new Date()) {
+      // Token no existe o expirado: limpiar cookies
+      res.clearCookie('token', ACCESS_COOKIE_OPTIONS);
+      res.clearCookie('refresh_token', REFRESH_COOKIE_OPTIONS);
+      return res.status(401).json({ message: 'Sesión expirada' });
+    }
+
+    // Rotación: borrar el token actual y emitir uno nuevo
+    const nuevoRefreshToken = randomUUID();
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
+
+    await prisma.$transaction([
+      prisma.refreshToken.delete({ where: { id: registro.id } }),
+      prisma.refreshToken.create({
+        data: {
+          id: randomUUID(),
+          token: nuevoRefreshToken,
+          usuario_id: registro.usuario_id,
+          expires_at: expiresAt,
+        },
+      }),
+    ]);
+
+    res.cookie('token', generarAccessToken(registro.usuario_id), ACCESS_COOKIE_OPTIONS);
+    res.cookie('refresh_token', nuevoRefreshToken, REFRESH_COOKIE_OPTIONS);
+    res.status(200).json({ ok: true });
   } catch (err) {
     next(err);
   }
@@ -179,7 +243,7 @@ export const googleCallback = async (req, res) => {
       }
     }
 
-    setTokenCookie(res, userId);
+    await setAuthCookies(res, userId);
     res.redirect(`${frontendUrl}?auth=${esNuevo ? 'google_new' : 'success'}`);
   } catch (err) {
     console.error('Error en /google/callback:', err);
@@ -240,10 +304,17 @@ export const me = async (req, res, next) => {
   try {
     // BOOL_OR requiere SQL raw porque Prisma no soporta agregaciones booleanas directas
     const rows = await prisma.$queryRaw`
-      SELECT u.id, u.nombre, u.email, u.foto_perfil, u.fecha_registro, u.google_calendar_token,
-             BOOL_OR(mg.es_casero) AS es_casero
+      SELECT u.id, u.nombre, u.email, u.foto_perfil, u.foto_1, u.foto_2, u.fecha_registro, u.google_calendar_token,
+             BOOL_OR(mg.es_casero) AS es_casero,
+             (BOOL_OR(mg.es_casero) OR BOOL_OR(
+               p.sobre_mi IS NOT NULL AND p.genero IS NOT NULL AND p.pais IS NOT NULL AND p.fecha_nacimiento IS NOT NULL
+               AND p.ocupacion IS NOT NULL AND p.horario IS NOT NULL AND p.frecuencia_visitas IS NOT NULL
+               AND p.ambiente IS NOT NULL AND p.tolerancia_fiestas IS NOT NULL AND p.limpieza_orden IS NOT NULL
+               AND p.nivel_ruido IS NOT NULL
+             )) AS perfil_completo
       FROM usuarios u
       LEFT JOIN miembros_grupo mg ON mg.usuario_id = u.id AND mg.activo = TRUE
+      LEFT JOIN perfiles_convivencia_usuario p ON p.usuario_id = u.id
       WHERE u.id = ${req.userId}
       GROUP BY u.id
     `;
@@ -256,9 +327,12 @@ export const me = async (req, res, next) => {
         nombre: u.nombre,
         email: u.email,
         foto_perfil: u.foto_perfil,
+        foto_1: u.foto_1 ?? null,
+        foto_2: u.foto_2 ?? null,
         fecha_registro: u.fecha_registro,
         tiene_calendar: !!u.google_calendar_token,
         es_casero: !!u.es_casero,
+        perfil_completo: !!u.perfil_completo,
       },
     });
   } catch (err) {
@@ -267,7 +341,17 @@ export const me = async (req, res, next) => {
 };
 
 // ── POST /api/auth/logout ─────────────────────────────────────
-export const logout = (req, res) => {
-  res.clearCookie('token', COOKIE_OPTIONS);
-  res.status(200).json({ message: 'Sesión cerrada' });
+export const logout = async (req, res, next) => {
+  const tokenRecibido = req.cookies?.refresh_token;
+
+  try {
+    if (tokenRecibido) {
+      await prisma.refreshToken.deleteMany({ where: { token: tokenRecibido } });
+    }
+    res.clearCookie('token', ACCESS_COOKIE_OPTIONS);
+    res.clearCookie('refresh_token', REFRESH_COOKIE_OPTIONS);
+    res.status(200).json({ message: 'Sesión cerrada' });
+  } catch (err) {
+    next(err);
+  }
 };

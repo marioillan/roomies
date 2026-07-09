@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
 import {
   MessageCircle, Send, CheckCircle2, XCircle,
   Clock, Trash2, X, ArrowLeft,
@@ -89,7 +90,7 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
   const refSocket  = useRef(null)
 
   const cargarMensajes = useCallback(async () => {
-    const res = await fetch(`${API}/api/chats/${chatId}/mensajes`, { credentials: 'include' })
+    const res = await apiFetch(`/api/chats/${chatId}/mensajes`)
     if (!res.ok) return
     const data = await res.json()
     setMensajes(data.mensajes)
@@ -111,7 +112,7 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
   const cerrarChat = async () => {
     setCerrando(true)
     try {
-      const res = await fetch(`${API}/api/chats/${chatId}`, { method: 'DELETE', credentials: 'include' })
+      const res = await apiFetch(`/api/chats/${chatId}`, { method: 'DELETE' })
       if (res.ok) onCerrar(chatId)
     } finally { setCerrando(false) }
   }
@@ -121,9 +122,8 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
     if (!texto.trim() || enviando) return
     setEnviando(true)
     try {
-      const res = await fetch(`${API}/api/chats/${chatId}/mensajes`, {
-        method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await apiFetch(`/api/chats/${chatId}/mensajes`, {
+        method: 'POST',
         body: JSON.stringify({ contenido: texto.trim() }),
       })
       if (res.ok) setTexto('')
@@ -131,13 +131,14 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
   }
 
   return (
-    <div className='flex flex-col h-full'>
+    <div className='flex flex-col h-full min-h-0'>
 
       {/* Cabecera */}
       <div className='flex items-center gap-3 px-5 py-3.5 border-b border-slate-100 shrink-0'>
         {onVolver && (
-          <button type='button' onClick={onVolver} className='cursor-pointer! sm:hidden w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 transition'>
+          <button type='button' onClick={onVolver} className='cursor-pointer! sm:hidden flex items-center gap-1 h-8 pl-1 pr-2 -ml-1 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition shrink-0'>
             <ArrowLeft size={18} />
+            <span className='text-xs font-semibold'>Volver</span>
           </button>
         )}
         <Avatar foto={fotoOtro} nombre={nombreOtro} size='md' />
@@ -170,7 +171,7 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
       </div>
 
       {/* Mensajes */}
-      <div className='flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-3 bg-slate-50'>
+      <div className='flex-1 min-h-0 overflow-y-auto px-5 py-5 flex flex-col gap-3 bg-slate-50'>
         {mensajes.length === 0 && (
           <p className='text-center text-xs text-slate-400 py-8'>Sé el primero en escribir</p>
         )}
@@ -213,8 +214,9 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
         <input
           value={texto}
           onChange={e => setTexto(e.target.value)}
+          onFocus={() => setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 300)}
           placeholder='Escribe un mensaje...'
-          className='flex-1 text-sm bg-slate-50 border border-slate-200 rounded-full px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition'
+          className='flex-1 text-base sm:text-sm bg-slate-50 border border-slate-200 rounded-full px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition'
         />
         <button
           type='submit'
@@ -245,9 +247,8 @@ function DetalleSolicitud({ solicitud, onAccion }) {
 
   const accion = async (a) => {
     setCargando(a)
-    const res  = await fetch(`${API}/api/chats/solicitudes/${solicitud.id}`, {
-      method: 'PUT', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+    const res  = await apiFetch(`/api/chats/solicitudes/${solicitud.id}`, {
+      method: 'PUT',
       body: JSON.stringify({ accion: a }),
     })
     const data = await res.json()
@@ -339,8 +340,8 @@ export default function Chat({ modo }) {
       const endpointSol   = esAdmin ? '/api/chats/solicitudes'    : '/api/chats/mis-solicitudes'
       const endpointChats = esAdmin ? '/api/chats/como-admin'     : '/api/chats/como-solicitante'
       const [resSol, resChats] = await Promise.all([
-        fetch(`${API}${endpointSol}`,   { credentials: 'include' }),
-        fetch(`${API}${endpointChats}`, { credentials: 'include' }),
+        apiFetch(endpointSol),
+        apiFetch(endpointChats),
       ])
       if (resSol.ok)   { const d = await resSol.json();   setSolicitudes(d.solicitudes) }
       if (resChats.ok) { const d = await resChats.json(); setChats(d.chats) }
@@ -397,18 +398,18 @@ export default function Chat({ modo }) {
 
       {/* Shell */}
       <div
-        className='bg-white border border-slate-100 rounded-[1.25rem] overflow-hidden sm:grid'
+        className='bg-white border border-slate-100 rounded-[1.25rem] overflow-hidden flex flex-col sm:grid'
         style={{
           gridTemplateColumns: '20rem 1fr',
-          height: 'calc(100vh - 13rem)',
+          height: 'calc(100dvh - 13rem)',
           minHeight: '480px',
           boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)',
         }}
       >
 
         {/* Panel izquierdo — lista */}
-        <div className={`border-r border-slate-100 flex flex-col overflow-hidden ${mostrandoConversacion ? 'hidden sm:flex' : 'flex'}`}>
-          <div className='flex-1 overflow-y-auto'>
+        <div className={`border-r border-slate-100 flex flex-col overflow-hidden min-h-0 ${mostrandoConversacion ? 'hidden sm:flex' : 'flex'}`}>
+          <div className='flex-1 min-h-0 overflow-y-auto'>
             {!hayContenido && (
               <div className='flex flex-col items-center justify-center h-full gap-3 px-6 text-center'>
                 <MessageCircle size={28} className='text-slate-200' />
@@ -491,7 +492,7 @@ export default function Chat({ modo }) {
         </div>
 
         {/* Panel derecho */}
-        <div className={`flex flex-col overflow-hidden ${mostrandoConversacion ? 'flex' : 'hidden sm:flex'}`}>
+        <div className={`flex flex-col overflow-hidden min-h-0 ${mostrandoConversacion ? 'flex' : 'hidden sm:flex'}`}>
           {!seleccion && (
             <div className='flex flex-col items-center justify-center h-full gap-3 text-center px-8 bg-slate-50'>
               <div className='w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm'>
@@ -503,14 +504,15 @@ export default function Chat({ modo }) {
           )}
 
           {seleccion?.tipo === 'solicitud' && solicitudActiva && (
-            <div className='flex flex-col h-full overflow-hidden'>
+            <div className='flex flex-col h-full min-h-0 overflow-hidden'>
               <div className='sm:hidden flex items-center gap-2 px-5 py-3 border-b border-slate-100 shrink-0'>
-                <button type='button' onClick={() => setMostrandoConversacion(false)} className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 transition'>
+                <button type='button' onClick={() => setMostrandoConversacion(false)} className='cursor-pointer! flex items-center gap-1 h-8 pl-1 pr-2 -ml-1 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition'>
                   <ArrowLeft size={18} />
+                  <span className='text-xs font-semibold'>Volver</span>
                 </button>
                 <span className='text-sm font-semibold text-slate-700'>Solicitud</span>
               </div>
-              <div className='flex-1 overflow-hidden'>
+              <div className='flex-1 min-h-0 overflow-hidden'>
                 <DetalleSolicitud solicitud={solicitudActiva} onAccion={handleAccionSolicitud} />
               </div>
             </div>

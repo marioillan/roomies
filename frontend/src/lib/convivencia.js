@@ -8,26 +8,98 @@ export const PASTEL = [
   { bg: '#dbeafe', icon: '#3b82f6' },
 ]
 
+export const labelsUsuario = {
+  horario: {
+    MADRUGADOR: 'Me levanto temprano',
+    INTERMEDIO:  'Horario flexible',
+    NOCTURNO:    'Me acuesto tarde',
+  },
+  ambiente: {
+    TRANQUILO:   'Prefiero ambiente tranquilo',
+    EQUILIBRADO: 'Me adapto a cualquier ambiente',
+    SOCIAL:      'Me gusta que haya vida en casa',
+  },
+  frecuencia_visitas: {
+    CASI_NUNCA: 'Raramente tengo visitas',
+    A_VECES:    'Tengo visitas de vez en cuando',
+    FRECUENTE:  'Casa abierta para los amigos',
+  },
+  tolerancia_fiestas: {
+    NUNCA:     'No me gustan las fiestas en casa',
+    OCASIONAL: 'De vez en cuando está bien',
+    FRECUENTE: 'El finde es para celebrarlo',
+  },
+  ocupacion: {
+    ESTUDIO:           'Soy estudiante',
+    TRABAJO:           'Trabajo',
+    ESTUDIO_Y_TRABAJO: 'Estudio y trabajo',
+  },
+  limpieza_orden: {
+    DESPREOCUPADO: 'No me preocupa demasiado el orden',
+    FLEXIBLE:      'Soy flexible con la limpieza',
+    ORDENADO:      'Me gusta tener todo ordenado',
+  },
+  nivel_ruido: {
+    SILENCIO_TOTAL: 'Prefiero silencio en casa',
+    MODERADO:       'Tolero un nivel moderado de ruido',
+    INDIFERENTE:    'El ruido no me molesta',
+  },
+}
+
+export const labelsGrupo = {
+  horario: {
+    MADRUGADOR: 'El piso madruga',
+    INTERMEDIO:  'Horario flexible',
+    NOCTURNO:    'El piso es nocturno',
+  },
+  ambiente: {
+    TRANQUILO:   'Ambiente tranquilo',
+    EQUILIBRADO: 'Ambiente equilibrado',
+    SOCIAL:      'Nos gusta que haya vida en casa',
+  },
+  frecuencia_visitas: {
+    CASI_NUNCA: 'Raramente tenemos visitas',
+    A_VECES:    'Visitas de vez en cuando',
+    FRECUENTE:  'Casa abierta para los amigos',
+  },
+  tolerancia_fiestas: {
+    NUNCA:     'No nos gustan las fiestas en casa',
+    OCASIONAL: 'De vez en cuando está bien',
+    FRECUENTE: 'El finde es para celebrarlo',
+  },
+  ocupacion: {
+    ESTUDIO:           'Somos estudiantes',
+    TRABAJO:           'Trabajamos',
+    ESTUDIO_Y_TRABAJO: 'Estudiamos y trabajamos',
+  },
+  limpieza_orden: {
+    DESPREOCUPADO: 'No nos preocupa demasiado el orden',
+    FLEXIBLE:      'Somos flexibles con la limpieza',
+    ORDENADO:      'Nos gusta tener todo ordenado',
+  },
+  nivel_ruido: {
+    SILENCIO_TOTAL: 'Preferimos silencio en casa',
+    MODERADO:       'Toleramos un nivel moderado de ruido',
+    INDIFERENTE:    'El ruido no nos molesta',
+  },
+}
+
 export const DONUTS_CONFIG_USUARIO = [
-  { campo: 'frecuencia_salidas', sublabel: 'Sociable',    color: '#ec4899', labels: { NUNCA: 'Reservada',  OCASIONAL: 'Equilibrada', FRECUENTE: 'Sociable'  } },
-  { campo: 'tolerancia_fiestas', sublabel: 'Fiestera',    color: '#8b5cf6', labels: { NUNCA: 'Tranquila',  OCASIONAL: 'A veces',     FRECUENTE: 'Fiestera'  } },
-  { campo: 'frecuencia_visitas', sublabel: 'Visitas',     color: '#06b6d4', labels: { CASI_NUNCA: 'Solo yo', A_VECES: 'A veces',     FRECUENTE: 'Open house'} },
-  { campo: 'ambiente',           sublabel: 'Orden',       color: '#10b981', labels: { TRANQUILO: 'Caótica', EQUILIBRADO: 'Ordenada', SOCIAL: 'Impecable'    } },
-  { campo: 'horario',            sublabel: 'Madrugadora', color: '#f59e0b', labels: { MADRUGADOR: 'Alondra', INTERMEDIO: 'Flexible',  NOCTURNO: 'Búho'       } },
-  { campo: 'ocupacion',          sublabel: 'Cocina',      color: '#3b82f6', labels: { ESTUDIO: 'Delivery',  TRABAJO: 'A veces',      ESTUDIO_Y_TRABAJO: 'Chef'} },
-  { campo: 'tiene_mascotas',     sublabel: 'Mascotas',    color: '#f97316', labels: { true: 'Amo animales', false: 'Mejor no'        } },
-  { campo: 'fumador',            sublabel: 'Fuma',        color: '#64748b', labels: { true: 'A diario',     false: 'Nunca'           } },
+  { campo: 'horario',            sublabel: 'Horario',  color: '#f59e0b' },
+  { campo: 'ambiente',           sublabel: 'Ambiente', color: '#10b981' },
+  { campo: 'frecuencia_visitas', sublabel: 'Visitas',  color: '#06b6d4' },
+  { campo: 'tolerancia_fiestas', sublabel: 'Fiestas',  color: '#8b5cf6' },
+  { campo: 'limpieza_orden',     sublabel: 'Limpieza', color: '#14b8a6' },
+  { campo: 'nivel_ruido',        sublabel: 'Ruido',    color: '#f97316' },
 ]
 
 export const DONUTS_CONFIG_GRUPO = [
-  { campo: 'horario',            sublabel: 'Ritmo del piso',   color: '#f59e0b', labels: { MADRUGADOR: 'Tempraneros', INTERMEDIO: 'Flexible',    NOCTURNO: 'Nocturnos'     } },
-  { campo: 'ambiente',           sublabel: 'Ambiente',         color: '#10b981', labels: { TRANQUILO: 'Tranquilo',   EQUILIBRADO: 'Equilibrado', SOCIAL: 'Animado'         } },
-  { campo: 'frecuencia_visitas', sublabel: 'Visitas',          color: '#06b6d4', labels: { CASI_NUNCA: 'Pocas',      A_VECES: 'A veces',         FRECUENTE: 'Open house'   } },
-  { campo: 'tolerancia_fiestas', sublabel: 'Fiestas en casa',  color: '#8b5cf6', labels: { NUNCA: 'Sin fiestas',    OCASIONAL: 'A veces',       FRECUENTE: 'Fiesteros'    } },
-  { campo: 'frecuencia_salidas', sublabel: 'Salidas',          color: '#ec4899', labels: { NUNCA: 'En casa',        OCASIONAL: 'A veces',       FRECUENTE: 'Muy activos'  } },
-  { campo: 'ocupacion',          sublabel: 'Ocupación',        color: '#3b82f6', labels: { ESTUDIO: 'Estudiantes',  TRABAJO: 'Trabajadores',    ESTUDIO_Y_TRABAJO: 'Ambas'} },
-  { campo: 'acepta_fumadores',   sublabel: 'Fumar en casa',    color: '#64748b', labels: { SI: 'Se permite',        NO: 'No se fuma',           INDIFERENTE: 'Indiferente'} },
-  { campo: 'acepta_mascotas',    sublabel: 'Mascotas',         color: '#f97316', labels: { SI: 'Bienvenidas',       NO: 'Sin mascotas',         DEPENDE: 'Depende'        } },
+  { campo: 'horario',            sublabel: 'Ritmo',    color: '#f59e0b' },
+  { campo: 'ambiente',           sublabel: 'Ambiente', color: '#10b981' },
+  { campo: 'frecuencia_visitas', sublabel: 'Visitas',  color: '#06b6d4' },
+  { campo: 'tolerancia_fiestas', sublabel: 'Fiestas',  color: '#8b5cf6' },
+  { campo: 'limpieza_orden',     sublabel: 'Limpieza', color: '#14b8a6' },
+  { campo: 'nivel_ruido',        sublabel: 'Ruido',    color: '#f97316' },
 ]
 
 export const CHIPS_META = {
@@ -48,6 +120,7 @@ const CAMPOS_CONVIVENCIA = [
   'ocupacion', 'horario', 'frecuencia_visitas', 'ambiente',
   'tolerancia_fiestas', 'frecuencia_salidas', 'fumador',
   'acepta_fumadores', 'tiene_mascotas', 'acepta_mascotas', 'lgbtq_friendly',
+  'limpieza_orden', 'nivel_ruido',
 ]
 
 export function calcEdad(fecha) {

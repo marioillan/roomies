@@ -54,7 +54,7 @@ export const getFacturas = async (req, res, next) => {
       const data = await prisma.factura.findMany({
         where: { grupo_id: req.grupoId },
         select: {
-          id: true, tipo: true, descripcion: true, importe_total: true,
+          id: true, tipo: true, descripcion: true, importe_total: true, tipo_division: true,
           fecha_emision: true, fecha_vencimiento: true, url_documento: true, created_at: true,
           pagos: {
             select: {
@@ -76,7 +76,7 @@ export const getFacturas = async (req, res, next) => {
       const data = await prisma.factura.findMany({
         where: { grupo_id: req.grupoId },
         select: {
-          id: true, tipo: true, descripcion: true, importe_total: true,
+          id: true, tipo: true, descripcion: true, importe_total: true, tipo_division: true,
           fecha_emision: true, fecha_vencimiento: true, url_documento: true, created_at: true,
           pagos: {
             where: { usuario_id: req.userId },
@@ -111,27 +111,45 @@ export const crearFactura = async (req, res, next) => {
       return res.status(400).json({ message: 'No hay inquilinos en el grupo para dividir la factura' });
     }
 
-    const importePorPersona = +(d.importe_total / inquilinos.length).toFixed(2);
     const facturaId = randomUUID();
+
+    let pagosAInsertar;
+    if (d.tipo_division === 'PERSONALIZADA') {
+      const idsInquilinos = new Set(inquilinos.map(i => i.usuario_id));
+      const idsRecibidos  = d.importes_personalizados.map(i => i.usuario_id);
+      const invalidos     = idsRecibidos.filter(id => !idsInquilinos.has(id));
+      if (invalidos.length) {
+        return res.status(400).json({ message: 'Alguno de los importes personalizados no corresponde a un inquilino del grupo' });
+      }
+      if (new Set(idsRecibidos).size !== idsRecibidos.length) {
+        return res.status(400).json({ message: 'No puede haber importes duplicados para el mismo inquilino' });
+      }
+      pagosAInsertar = d.importes_personalizados.map(({ usuario_id, importe }) => ({
+        id: randomUUID(), factura_id: facturaId, usuario_id, importe_asignado: importe,
+      }));
+    } else {
+      const importePorPersona = +(d.importe_total / inquilinos.length).toFixed(2);
+      pagosAInsertar = inquilinos.map(({ usuario_id }) => ({
+        id: randomUUID(), factura_id: facturaId, usuario_id, importe_asignado: importePorPersona,
+      }));
+    }
 
     const [factura] = await prisma.$transaction([
       prisma.factura.create({
         data: {
           id: facturaId, grupo_id: req.grupoId, casero_id: req.userId,
           tipo: d.tipo, descripcion: d.descripcion ?? null, importe_total: d.importe_total,
-          tipo_division: 'EQUITATIVA',
+          tipo_division: d.tipo_division,
           fecha_emision: new Date(d.fecha_emision), fecha_vencimiento: new Date(d.fecha_vencimiento),
           url_documento: urlDocumento,
         },
         select: {
-          id: true, tipo: true, descripcion: true, importe_total: true,
+          id: true, tipo: true, descripcion: true, importe_total: true, tipo_division: true,
           fecha_emision: true, fecha_vencimiento: true, url_documento: true, created_at: true,
         },
       }),
       prisma.pagoFactura.createMany({
-        data: inquilinos.map(({ usuario_id }) => ({
-          id: randomUUID(), factura_id: facturaId, usuario_id, importe_asignado: importePorPersona,
-        })),
+        data: pagosAInsertar,
       }),
     ]);
 
@@ -168,17 +186,41 @@ export const editarFactura = async (req, res, next) => {
     const urlDocumento    = req.file ? await subirDocumento(req.file.buffer) : existing.url_documento;
     const importeCambiado = Number(existing.importe_total) !== d.importe_total;
 
+    if (d.tipo_division === 'PERSONALIZADA') {
+      const pagosActuales = await prisma.pagoFactura.findMany({
+        where: { factura_id: req.params.id },
+        select: { usuario_id: true },
+      });
+      const idsActuales  = new Set(pagosActuales.map(p => p.usuario_id));
+      const idsRecibidos = d.importes_personalizados.map(i => i.usuario_id);
+
+      if (new Set(idsRecibidos).size !== idsRecibidos.length) {
+        return res.status(400).json({ message: 'No puede haber importes duplicados para el mismo inquilino' });
+      }
+      if (idsRecibidos.length !== idsActuales.size || idsRecibidos.some(id => !idsActuales.has(id))) {
+        return res.status(400).json({ message: 'Los importes personalizados deben cubrir exactamente a los inquilinos de la factura' });
+      }
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.factura.update({
         where: { id: req.params.id },
         data: {
           tipo: d.tipo, descripcion: d.descripcion ?? null, importe_total: d.importe_total,
+          tipo_division: d.tipo_division,
           fecha_emision: new Date(d.fecha_emision), fecha_vencimiento: new Date(d.fecha_vencimiento),
           url_documento: urlDocumento,
         },
       });
 
-      if (importeCambiado) {
+      if (d.tipo_division === 'PERSONALIZADA') {
+        await Promise.all(d.importes_personalizados.map(({ usuario_id, importe }) =>
+          tx.pagoFactura.updateMany({
+            where: { factura_id: req.params.id, usuario_id },
+            data: { importe_asignado: importe },
+          })
+        ));
+      } else if (importeCambiado) {
         const numPagos = await tx.pagoFactura.count({ where: { factura_id: req.params.id } });
         if (numPagos > 0) {
           const importePorPersona = +(d.importe_total / numPagos).toFixed(2);
@@ -194,7 +236,7 @@ export const editarFactura = async (req, res, next) => {
       prisma.factura.findFirst({
         where: { id: req.params.id },
         select: {
-          id: true, tipo: true, descripcion: true, importe_total: true,
+          id: true, tipo: true, descripcion: true, importe_total: true, tipo_division: true,
           fecha_emision: true, fecha_vencimiento: true, url_documento: true, created_at: true,
         },
       }),
@@ -249,10 +291,21 @@ export const togglePagada = async (req, res, next) => {
 // ── DELETE /api/facturas/:id ──────────────────────────────────
 export const eliminarFactura = async (req, res, next) => {
   try {
-    const deleted = await prisma.factura.deleteMany({
+    const existente = await prisma.factura.findFirst({
       where: { id: req.params.id, grupo_id: req.grupoId },
+      select: { id: true },
     });
-    if (deleted.count === 0) return res.status(404).json({ message: 'Factura no encontrada' });
+    if (!existente) return res.status(404).json({ message: 'Factura no encontrada' });
+
+    const tienePagoConfirmado = await prisma.pagoFactura.findFirst({
+      where: { factura_id: req.params.id, pagado: true },
+      select: { id: true },
+    });
+    if (tienePagoConfirmado) {
+      return res.status(400).json({ message: 'No se puede eliminar una factura que ya tiene pagos confirmados' });
+    }
+
+    await prisma.factura.delete({ where: { id: req.params.id } });
     res.json({ ok: true });
   } catch (err) {
     next(err);

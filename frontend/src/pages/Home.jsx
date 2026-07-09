@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
 import {
   ArrowRight, Bed, Users, CalendarCheck,
   ShoppingCart, Receipt, MessageCircle, House,
@@ -196,10 +197,8 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
     setErrorHome('')
     setLoadingHome(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/unirse`, {
+      const res = await apiFetch('/api/grupos/unirse', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ codigo_acceso: codigoLimpio }),
       })
       const json = await res.json()
@@ -229,11 +228,8 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
             {user ? (
               <>
                 {user.es_casero ? (
-                  <button
-                    onClick={() => navigate('/casero/facturas')}
-                    className="cursor-pointer! inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition hover:opacity-90 active:scale-95"
-                    style={{ backgroundColor: ESMERALDA }}>
-                    <Receipt size={15} />
+                  <button onClick={() => navigate('/casero/facturas')}
+                    className="cursor-pointer! hidden sm:inline-flex px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:underline underline-offset-4 decoration-2 transition">
                     Gestión de facturas
                   </button>
                 ) : (
@@ -317,8 +313,8 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-4 text-sm text-slate-400">
-              <span className="flex items-center gap-1.5"><Shield size={14} className="text-emerald-400" /> Sin cuotas</span>
-              <span className="flex items-center gap-1.5"><Zap size={14} className="text-emerald-400" /> Registro en 30 segundos</span>
+              <span className="flex items-center gap-1.5"><Shield size={14} className="text-emerald-400" /> Gratuita</span>
+              <span className="flex items-center gap-1.5"><Zap size={14} className="text-emerald-400" /> Registro en segundos</span>
               <span className="flex items-center gap-1.5"><MapPin size={14} className="text-emerald-400" /> Disponible en España</span>
             </div>
           </div>
@@ -686,7 +682,7 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
       {registroOpen && (
         <RegistroModal
           onClose={() => setRegistroOpen(false)}
-          onSuccess={(u) => { setUser(u); setRegistroOpen(false); navigate('/perfil/usuario/editar') }}
+          onSuccess={(u, esCasero) => { setUser(u); setRegistroOpen(false); navigate(esCasero ? '/acceso-grupo' : '/perfil/usuario/editar') }}
           onSwitchToLogin={() => { setRegistroOpen(false); setLoginOpen(true) }}
         />
       )}

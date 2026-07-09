@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
+import LoginModal from '../components/LoginModal.jsx'
+import RegistroModal from '../components/RegistroModal.jsx'
 import {
   Search, MapPin, Euro, Bed, Wifi, Car, PawPrint, Home, House, Receipt,
   ChevronLeft, ChevronRight, X, ImageOff,
@@ -47,9 +50,7 @@ function FotoCarrusel({ fotos, titulo, publicacionId, user, esFavorito, onToggle
     if (!user || guardando) return
     setGuardando(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/favoritos/${publicacionId}`, {
-        method: 'POST', credentials: 'include',
-      })
+      const res = await apiFetch(`/api/favoritos/${publicacionId}`, { method: 'POST' })
       const data = await res.json()
       if (res.ok) onToggleFavorito(publicacionId, data.guardado)
     } finally {
@@ -119,9 +120,7 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito }) {
     if (!user) { navigate('/'); return }
     setEnviando(true)
     try {
-      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/chats/solicitar/${pub.id}`, {
-        method: 'POST', credentials: 'include',
-      })
+      const res = await apiFetch(`/api/chats/solicitar/${pub.id}`, { method: 'POST' })
       if (res.ok) { setEnviado(true); return }
       const data = await res.json()
       if (data.yaEnviada) navigate('/perfil/chat')
@@ -190,8 +189,8 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito }) {
       >
         {/* Compatibilidad + intereses en común */}
         <div className='flex flex-col gap-1'>
-          <div className='text-xs font-semibold mb-0.5'>
-            {pub.compatibilidad !== null && pub.compatibilidad !== undefined ? (
+          {pub.compatibilidad !== null && pub.compatibilidad !== undefined && (
+            <div className='text-xs font-semibold mb-0.5'>
               <span className={`flex items-center gap-1.5
                 ${pub.compatibilidad >= 75 ? 'text-emerald-600'
                 : pub.compatibilidad >= 50 ? 'text-amber-500'
@@ -202,10 +201,8 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito }) {
                   : 'bg-slate-300'}`} />
                 {pub.compatibilidad}% de compatibilidad
               </span>
-            ) : (
-              <span className='text-slate-300'>Sin datos de compatibilidad</span>
-            )}
-          </div>
+            </div>
+          )}
           {pub.intereses_comunes?.length > 0 && (
             <div className='flex items-center gap-1.5 flex-wrap'>
               <span className='font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-slate-600 shrink-0'>
@@ -546,9 +543,11 @@ function FilterAside({ mobileOpen, onMobileClose, ...filterProps }) {
 
 // ── Página ─────────────────────────────────────────────────────────
 export default function BuscarPage() {
-  const { user, tieneGrupo, cargando } = useAuth()
+  const { user, setUser, tieneGrupo, cargando } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+  const [loginOpen, setLoginOpen] = useState(false)
+  const [registroOpen, setRegistroOpen] = useState(false)
 
   const [ciudad, setCiudad]                         = useState(searchParams.get('ciudad') ?? '')
   const [precioMin, setPrecioMin]                   = useState(searchParams.get('precio_min') ?? '')
@@ -619,7 +618,7 @@ export default function BuscarPage() {
     const q = buildParams(c, p, overrides)
     setSearchParams(Object.fromEntries(q), { replace: true })
     try {
-      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/publicaciones?${q}`, { credentials: 'include' })
+      const res = await apiFetch(`/api/publicaciones?${q}`)
       const data = await res.json()
       if (!res.ok) { setError(data.message ?? 'Error al buscar'); return }
       setResultados(data.publicaciones)
@@ -636,7 +635,7 @@ export default function BuscarPage() {
   useEffect(() => {
     buscar(ciudad, page)
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/perfil/intereses`)
+    apiFetch('/api/perfil/intereses')
       .then(r => r.json())
       .then(d => { if (d.categorias) setTodosIntereses(d.categorias) })
       .catch(() => {})
@@ -646,12 +645,12 @@ export default function BuscarPage() {
     if (cargando) return
 
     if (user) {
-      fetch(`${import.meta.env.VITE_API_URL}/api/favoritos`, { credentials: 'include' })
+      apiFetch('/api/favoritos')
         .then(r => r.json())
         .then(d => { if (d.favoritos) setFavoritosIds(new Set(d.favoritos)) })
         .catch(() => {})
 
-      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/convivencia`, { credentials: 'include' })
+      apiFetch('/api/perfil/convivencia')
         .then(r => r.json())
         .then(d => {
           const p = d.perfil
@@ -792,7 +791,7 @@ export default function BuscarPage() {
               </>
             ) : (
               <button
-                onClick={() => navigate('/')}
+                onClick={() => setLoginOpen(true)}
                 className='cursor-pointer! text-sm font-semibold text-slate-700 hover:text-slate-900 transition px-4 py-2'
               >
                 Iniciar sesión
@@ -864,28 +863,17 @@ export default function BuscarPage() {
                   <Sparkles size={18} className='text-emerald-600' />
                 </div>
                 <div className='flex-1 min-w-0'>
-                  {user ? (
-                    <>
-                      <p className='text-sm font-semibold text-slate-800'>Activa el % de compatibilidad</p>
-                      <p className='text-xs text-slate-500 mt-0.5'>
-                        Rellena tu perfil de convivencia y ordena los anuncios por afinidad contigo.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className='text-sm font-semibold text-slate-800'>Encuentra tu piso ideal</p>
-                      <p className='text-xs text-slate-500 mt-0.5'>
-                        Inicia sesión y completa tu perfil para ver qué anuncios encajan mejor contigo.
-                      </p>
-                    </>
-                  )}
+                  <p className='text-sm font-semibold text-slate-800'>Encuentra tu piso ideal</p>
+                  <p className='text-xs text-slate-500 mt-0.5'>
+                    Regístrate y completa tu perfil para ver qué anuncios encajan mejor contigo.
+                  </p>
                 </div>
                 <button
                   type='button'
-                  onClick={() => navigate(user ? '/perfil/usuario/editar' : '/')}
+                  onClick={() => setRegistroOpen(true)}
                   className='cursor-pointer! shrink-0 flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-xl transition'
                 >
-                  {user ? 'Rellenar perfil' : 'Iniciar sesión'}
+                  Registrarse
                   <ArrowRight size={13} />
                 </button>
               </div>
@@ -980,6 +968,21 @@ export default function BuscarPage() {
           </main>
         </div>
       </div>
+
+      {loginOpen && (
+        <LoginModal
+          onClose={() => setLoginOpen(false)}
+          onSuccess={(u) => { setUser(u); setLoginOpen(false) }}
+          onSwitchToRegistro={() => { setLoginOpen(false); setRegistroOpen(true) }}
+        />
+      )}
+      {registroOpen && (
+        <RegistroModal
+          onClose={() => setRegistroOpen(false)}
+          onSuccess={(u, esCasero) => { setUser(u); setRegistroOpen(false); navigate(esCasero ? '/acceso-grupo' : '/perfil/usuario/editar') }}
+          onSwitchToLogin={() => { setRegistroOpen(false); setLoginOpen(true) }}
+        />
+      )}
     </div>
   )
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { apiFetch } from '../lib/apiFetch'
 import {
   ShoppingCart, Plus, Trash2, Check, Package,
-  ChevronDown, ChevronUp, AlertCircle, Loader2, Pencil, X,
+  AlertCircle, Loader2, Pencil, X,
 } from 'lucide-react'
 
 // ── Constantes ────────────────────────────────────────────────────
@@ -22,13 +23,6 @@ function labelCategoria(cat) {
   return CATEGORIAS.find(c => c.value === cat)?.label ?? 'Otros'
 }
 
-// ── Helpers ───────────────────────────────────────────────────────
-
-function etiquetaCantidad(cantidad, unidad) {
-  if (!unidad) return `×${Number(cantidad)}`
-  return `${Number(cantidad)} ${unidad}`
-}
-
 // ── Componente fila de producto ───────────────────────────────────
 
 function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
@@ -37,15 +31,12 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
   const [editando, setEditando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [nombre, setNombre] = useState(producto.nombre)
-  const [cantidad, setCantidad] = useState(String(producto.cantidad ?? ''))
-  const [unidad, setUnidad] = useState(producto.unidad_medida ?? '')
   const [categoria, setCategoria] = useState(producto.categoria ?? 'otros')
   const inputRef = useRef(null)
 
   const abrirEdicion = () => {
     setNombre(producto.nombre)
-    setCantidad(String(producto.cantidad ?? ''))
-    setUnidad(producto.unidad_medida ?? '')
+    setCategoria(producto.categoria ?? 'otros')
     setEditando(true)
     setTimeout(() => inputRef.current?.focus(), 0)
   }
@@ -69,11 +60,7 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
     const nombreTrim = nombre.trim()
     if (!nombreTrim) return
     setGuardando(true)
-    const body = { nombre: nombreTrim, categoria }
-    if (cantidad && !isNaN(Number(cantidad))) body.cantidad = Number(cantidad)
-    if (unidad) body.unidad_medida = unidad
-    else body.unidad_medida = null
-    const ok = await onEditar(producto.id, body)
+    const ok = await onEditar(producto.id, { nombre: nombreTrim, categoria })
     if (ok) setEditando(false)
     setGuardando(false)
   }
@@ -82,57 +69,42 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
     return (
       <form
         onSubmit={handleGuardar}
-        className='flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-emerald-200 shadow-sm'
+        className='flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 rounded-xl bg-white border border-emerald-200 shadow-sm'
       >
-        <div className='w-5 h-5 rounded-md border-2 border-dashed border-slate-300 shrink-0' />
-        <input
-          ref={inputRef}
-          value={nombre}
-          onChange={e => setNombre(e.target.value)}
-          className='flex-1 min-w-0 text-sm text-slate-800 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition'
-        />
-        <input
-          type='number'
-          min='0.1'
-          step='any'
-          value={cantidad}
-          onChange={e => setCantidad(e.target.value)}
-          className='w-16 text-sm text-slate-800 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition'
-          placeholder='1'
-        />
-        <select
-          value={unidad}
-          onChange={e => setUnidad(e.target.value)}
-          className='w-16 text-sm text-slate-800 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition bg-white'
-        >
-          <option value=''>—</option>
-          <option value='kg'>kg</option>
-          <option value='L'>L</option>
-          <option value='uds'>uds</option>
-        </select>
-        <select
-          value={categoria}
-          onChange={e => setCategoria(e.target.value)}
-          className='w-24 text-sm text-slate-800 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition bg-white'
-        >
-          {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-        </select>
-        <button
-          type='submit'
-          disabled={guardando || !nombre.trim()}
-          className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white transition shrink-0'
-          title='Guardar'
-        >
-          {guardando ? <Loader2 size={13} className='animate-spin' /> : <Check size={13} strokeWidth={3} />}
-        </button>
-        <button
-          type='button'
-          onClick={cancelarEdicion}
-          className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'
-          title='Cancelar'
-        >
-          <X size={13} />
-        </button>
+        <div className='flex items-center gap-2'>
+          <div className='w-5 h-5 rounded-md border-2 border-dashed border-slate-300 shrink-0' />
+          <input
+            ref={inputRef}
+            value={nombre}
+            onChange={e => setNombre(e.target.value)}
+            className='flex-1 min-w-0 text-sm text-slate-800 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition'
+          />
+        </div>
+        <div className='flex items-center gap-2 sm:contents'>
+          <select
+            value={categoria}
+            onChange={e => setCategoria(e.target.value)}
+            className='flex-1 sm:flex-none sm:w-24 min-w-0 text-sm text-slate-800 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition bg-white'
+          >
+            {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+          <button
+            type='submit'
+            disabled={guardando || !nombre.trim()}
+            className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white transition shrink-0'
+            title='Guardar'
+          >
+            {guardando ? <Loader2 size={13} className='animate-spin' /> : <Check size={13} strokeWidth={3} />}
+          </button>
+          <button
+            type='button'
+            onClick={cancelarEdicion}
+            className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'
+            title='Cancelar'
+          >
+            <X size={13} />
+          </button>
+        </div>
       </form>
     )
   }
@@ -160,24 +132,20 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
 
       {/* Nombre + metadatos */}
       <div className='flex-1 min-w-0'>
-        <div className='flex items-center gap-1.5'>
+        <div className='flex items-center gap-1.5 min-w-0'>
           <span
             className='w-2 h-2 rounded-full shrink-0'
             style={{ backgroundColor: colorCategoria(producto.categoria) }}
           />
-          <span className={`text-sm font-medium leading-tight ${
+          <span className={`text-sm font-medium leading-tight truncate ${
             producto.comprado ? 'line-through text-slate-400' : 'text-slate-800'
           }`}>
             {producto.nombre}
           </span>
         </div>
-        <div className='flex items-center gap-2 mt-0.5 pl-3.5'>
-          <span className='text-[11px] text-slate-400 font-mono'>
-            {etiquetaCantidad(producto.cantidad, producto.unidad_medida)}
-          </span>
-          <span className='text-[11px] text-slate-300'>·</span>
-          <span className='text-[11px] text-slate-400'>
-            {producto.comprado
+        <div className='mt-0.5 pl-3.5 min-w-0'>
+          <span className='text-[11px] text-slate-400 truncate block'>
+            {labelCategoria(producto.categoria)} · {producto.comprado
               ? `Comprado por ${producto.comprado_por ?? 'alguien'}`
               : `Añadido por ${producto.anadido_por}`}
           </span>
@@ -185,10 +153,10 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
       </div>
 
       {/* Acciones */}
-      <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition'>
+      <div className='flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition'>
         <button
           onClick={abrirEdicion}
-          className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition'
+          className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition'
           title='Editar'
         >
           <Pencil size={13} />
@@ -196,7 +164,7 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
         <button
           onClick={handleEliminar}
           disabled={eliminando}
-          className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition'
+          className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition'
           title='Eliminar'
         >
           {eliminando
@@ -212,12 +180,9 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
 
 function FormularioAnadir({ onAnadir }) {
   const [nombre, setNombre] = useState('')
-  const [cantidad, setCantidad] = useState('')
-  const [unidad, setUnidad] = useState('')
   const [categoria, setCategoria] = useState('otros')
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState(null)
-  const [expandido, setExpandido] = useState(false)
   const inputRef = useRef(null)
 
   const enviar = async (e) => {
@@ -226,16 +191,10 @@ function FormularioAnadir({ onAnadir }) {
     if (!nombreTrim) return
     setEnviando(true)
     setError(null)
-    const body = { nombre: nombreTrim, categoria }
-    if (cantidad && !isNaN(Number(cantidad))) body.cantidad = Number(cantidad)
-    if (unidad.trim()) body.unidad_medida = unidad.trim()
-    const ok = await onAnadir(body)
+    const ok = await onAnadir({ nombre: nombreTrim, categoria })
     if (ok) {
       setNombre('')
-      setCantidad('')
-      setUnidad('')
       setCategoria('otros')
-      setExpandido(false)
       inputRef.current?.focus()
     } else {
       setError('No se pudo añadir el producto')
@@ -246,72 +205,34 @@ function FormularioAnadir({ onAnadir }) {
   return (
     <form onSubmit={enviar} className='bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden'>
       {/* Fila principal */}
-      <div className='flex items-center gap-3 px-4 py-3'>
-        <div className='w-5 h-5 rounded-md border-2 border-dashed border-slate-300 shrink-0' />
-        <input
-          ref={inputRef}
-          value={nombre}
-          onChange={e => setNombre(e.target.value)}
-          placeholder='Añadir producto...'
-          className='flex-1 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent'
-        />
-        <button
-          type='button'
-          onClick={() => setExpandido(v => !v)}
-          title='Más opciones'
-          className='cursor-pointer! text-slate-300 hover:text-slate-500 transition'
-        >
-          {expandido ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-        </button>
-        <button
-          type='submit'
-          disabled={enviando || !nombre.trim()}
-          className='cursor-pointer! shrink-0 w-8 h-8 flex items-center justify-center rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white transition'
-        >
-          {enviando ? <Loader2 size={14} className='animate-spin' /> : <Plus size={14} />}
-        </button>
-      </div>
-
-      {/* Opciones extra */}
-      {expandido && (
-        <div className='px-4 pb-4 flex gap-3 border-t border-slate-50 pt-3'>
-          <div className='flex flex-col gap-1 flex-1'>
-            <label className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider'>Cantidad</label>
-            <input
-              type='number'
-              min='0.1'
-              step='any'
-              value={cantidad}
-              onChange={e => setCantidad(e.target.value)}
-              placeholder='1'
-              className='border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition'
-            />
-          </div>
-          <div className='flex flex-col gap-1 flex-1'>
-            <label className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider'>Unidad</label>
-            <select
-              value={unidad}
-              onChange={e => setUnidad(e.target.value)}
-              className='border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition bg-white'
-            >
-              <option value=''>—</option>
-              <option value='kg'>kg</option>
-              <option value='L'>L</option>
-              <option value='uds'>uds</option>
-            </select>
-          </div>
-          <div className='flex flex-col gap-1 flex-1'>
-            <label className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider'>Categoría</label>
-            <select
-              value={categoria}
-              onChange={e => setCategoria(e.target.value)}
-              className='border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition bg-white'
-            >
-              {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
-          </div>
+      <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-4 py-3'>
+        <div className='flex items-center gap-3'>
+          <div className='w-5 h-5 rounded-md border-2 border-dashed border-slate-300 shrink-0' />
+          <input
+            ref={inputRef}
+            value={nombre}
+            onChange={e => setNombre(e.target.value)}
+            placeholder='Añadir producto...'
+            className='flex-1 min-w-0 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent'
+          />
         </div>
-      )}
+        <div className='flex items-center gap-2 sm:contents'>
+          <select
+            value={categoria}
+            onChange={e => setCategoria(e.target.value)}
+            className='flex-1 sm:flex-none sm:w-28 min-w-0 text-sm text-slate-800 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition bg-white'
+          >
+            {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+          <button
+            type='submit'
+            disabled={enviando || !nombre.trim()}
+            className='cursor-pointer! shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white transition'
+          >
+            {enviando ? <Loader2 size={14} className='animate-spin' /> : <Plus size={14} />}
+          </button>
+        </div>
+      </div>
 
       {error && (
         <p className='px-4 pb-3 text-xs text-red-500 flex items-center gap-1.5'>
@@ -331,7 +252,7 @@ function ListaCompra() {
   const [filtro,    setFiltro]    = useState('pendientes')
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/compra`, { credentials: 'include' })
+    apiFetch('/api/compra')
       .then(r => r.json())
       .then(d => setProductos(d.productos ?? []))
       .catch(() => { setProductos([]); setError('No se pudieron cargar los productos') })
@@ -347,9 +268,8 @@ function ListaCompra() {
 
   const handleAnadir = async (body) => {
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/compra`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', body: JSON.stringify(body),
+      const r = await apiFetch('/api/compra', {
+        method: 'POST', body: JSON.stringify(body),
       })
       const data = await r.json()
       if (!r.ok) return false
@@ -360,7 +280,7 @@ function ListaCompra() {
 
   const handleToggle = async (id) => {
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/compra/${id}/comprado`, { method: 'PATCH', credentials: 'include' })
+      const r = await apiFetch(`/api/compra/${id}/comprado`, { method: 'PATCH' })
       const data = await r.json()
       if (!r.ok) return
       setProductos(prev => {
@@ -372,9 +292,8 @@ function ListaCompra() {
 
   const handleEditar = async (id, body) => {
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/compra/${id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', body: JSON.stringify(body),
+      const r = await apiFetch(`/api/compra/${id}`, {
+        method: 'PUT', body: JSON.stringify(body),
       })
       const data = await r.json()
       if (!r.ok) return false
@@ -385,20 +304,20 @@ function ListaCompra() {
 
   const handleEliminar = async (id) => {
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/compra/${id}`, { method: 'DELETE', credentials: 'include' })
+      const r = await apiFetch(`/api/compra/${id}`, { method: 'DELETE' })
       if (!r.ok) return
       setProductos(prev => (prev ?? []).filter(p => p.id !== id))
     } catch {}
   }
 
   return (
-    <div className='flex flex-col gap-6 pb-8'>
+    <div className='flex flex-col gap-6'>
 
       {/* Cabecera */}
-      <div className='flex items-end justify-between'>
-        <h1 className='font-display text-5xl font-bold text-slate-900'>Lista de la compra</h1>
+      <div className='flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between'>
+        <h1 className='font-display text-3xl sm:text-5xl font-bold text-slate-900'>Lista de la compra</h1>
         {pendientes.length > 0 && (
-          <div className='bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 text-right'>
+          <div className='hidden lg:block bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 text-right'>
             <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-amber-500'>Pendientes</p>
             <p className='font-display text-[1.5rem] font-bold text-amber-700 leading-none mt-0.5'>{pendientes.length}</p>
           </div>
@@ -415,7 +334,7 @@ function ListaCompra() {
       <div className='bg-white border border-slate-100 rounded-3xl' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
 
         {/* Header: label + filtros */}
-        <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
+        <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between px-4 sm:px-6 py-4 border-b border-slate-100'>
           <h3 className='font-display text-base font-bold text-slate-900'>Productos</h3>
           <div className='flex gap-1'>
             {[['pendientes','Pendientes'],['comprados','Comprados'],['todos','Todos']].map(([val, lbl]) => (
@@ -429,7 +348,7 @@ function ListaCompra() {
         </div>
 
         {/* Formulario añadir */}
-        <div className='px-6 py-4 border-b border-slate-50'>
+        <div className='px-4 sm:px-6 py-4 border-b border-slate-50'>
           <FormularioAnadir onAnadir={handleAnadir} />
         </div>
 
@@ -452,7 +371,7 @@ function ListaCompra() {
             </p>
           </div>
         ) : (
-          <div className='flex flex-col gap-2 px-6 py-4'>
+          <div className='flex flex-col gap-2 px-4 sm:px-6 py-4'>
             {productosFiltrados.map(p => (
               <FilaProducto
                 key={p.id}

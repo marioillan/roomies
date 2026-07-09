@@ -1,10 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Pencil, Link, Check, LogOut, AlertCircle } from 'lucide-react'
-import DonutChart from '../components/DonutChart.jsx'
-import { CARD_SHADOW, DONUTS_CONFIG_GRUPO, PASTEL, calcEdad } from '../lib/convivencia.js'
+import { CARD_SHADOW, DONUTS_CONFIG_GRUPO, PASTEL, labelsGrupo, calcEdad } from '../lib/convivencia.js'
+import { apiFetch } from '../lib/apiFetch'
 
 // ── Componente principal ───────────────────────────────────────────
+
+function TraitCard({ cfg, valor }) {
+  const frase = labelsGrupo[cfg.campo]?.[valor]
+  return (
+    <div className='bg-white border border-slate-100 rounded-2xl p-5 flex flex-col gap-2'
+      style={{ ...CARD_SHADOW, borderTop: `3px solid ${cfg.color}` }}>
+      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em]' style={{ color: cfg.color }}>
+        {cfg.sublabel}
+      </span>
+      {frase
+        ? <p className='text-[0.9375rem] font-medium text-slate-800 leading-snug'>{frase}</p>
+        : <p className='text-[0.9375rem] text-slate-300 italic'>Sin rellenar</p>
+      }
+    </div>
+  )
+}
 
 function GrupoPerfil() {
   const navigate = useNavigate()
@@ -24,9 +40,9 @@ function GrupoPerfil() {
 
   useEffect(() => {
     Promise.allSettled([
-      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/convivencia`,   { credentials: 'include' }).then(r => r.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mis-intereses`, { credentials: 'include' }).then(r => r.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion`,   { credentials: 'include' }).then(r => r.json()),
+      apiFetch('/api/grupos/convivencia').then(r => r.json()),
+      apiFetch('/api/grupos/mis-intereses').then(r => r.json()),
+      apiFetch('/api/grupos/publicacion').then(r => r.json()),
     ]).then(([convRes, interesesRes, pubRes]) => {
       if (convRes.status      === 'fulfilled') setConvivencia(convRes.value.perfil ?? null)
       if (interesesRes.status === 'fulfilled') setIntereses(interesesRes.value.intereses ?? [])
@@ -53,10 +69,8 @@ function GrupoPerfil() {
     setSaliendo(true)
     setErrorSalir('')
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/salir`, {
+      const res = await apiFetch('/api/grupos/salir', {
         method: 'DELETE',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ grupo_id: grupo.id }),
       })
       if (!res.ok) {
@@ -77,10 +91,8 @@ function GrupoPerfil() {
     setSaliendo(true)
     setErrorSalir('')
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/transferir-admin`, {
+      const res = await apiFetch('/api/grupos/transferir-admin', {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nuevo_admin_id: nuevoAdminId }),
       })
       if (!res.ok) {
@@ -116,45 +128,52 @@ function GrupoPerfil() {
     </div>
   )
 
+  const botonesAccion = (
+    <>
+      <button
+        onClick={() => copiarCodigo('miembro')}
+        className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-white text-slate-900 border border-slate-200 hover:border-slate-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
+      >
+        {copiadoTipo === 'miembro' ? <Check size={14} className='text-emerald-500' /> : <Link size={14} />}
+        {copiadoTipo === 'miembro' ? '¡Copiado!' : 'Invitar miembro'}
+      </button>
+      {esAdmin && (
+        <button
+          onClick={() => copiarCodigo('casero')}
+          className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-white text-slate-900 border border-slate-200 hover:border-slate-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
+        >
+          {copiadoTipo === 'casero' ? <Check size={14} className='text-emerald-500' /> : <Link size={14} />}
+          {copiadoTipo === 'casero' ? '¡Copiado!' : 'Código casero'}
+        </button>
+      )}
+      {esAdmin && (
+        <button
+          onClick={() => navigate('/grupo/perfil/editar')}
+          className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
+        >
+          <Pencil size={14} /> Editar grupo
+        </button>
+      )}
+      {!esCasero && (
+        <button
+          onClick={handleSalirClick}
+          className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 hover:border-red-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
+        >
+          <LogOut size={14} /> Salir del grupo
+        </button>
+      )}
+    </>
+  )
+
   return (
     <div className='max-w-7xl mx-auto flex flex-col gap-5 '>
 
       {/* ── Header ── */}
-      <div className='flex items-center justify-between'>
-        <h1 className='font-display text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>Mi grupo</h1>
-        <div className='flex items-center gap-2'>
-          <button
-            onClick={() => copiarCodigo('miembro')}
-            className='cursor-pointer! inline-flex items-center gap-1.5 bg-slate-100 hover:bg-white text-slate-900 border border-slate-200 hover:border-slate-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
-          >
-            {copiadoTipo === 'miembro' ? <Check size={14} className='text-emerald-500' /> : <Link size={14} />}
-            {copiadoTipo === 'miembro' ? '¡Copiado!' : 'Invitar miembro'}
-          </button>
-          {esAdmin && (
-            <button
-              onClick={() => copiarCodigo('casero')}
-              className='cursor-pointer! inline-flex items-center gap-1.5 bg-slate-100 hover:bg-white text-slate-900 border border-slate-200 hover:border-slate-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
-            >
-              {copiadoTipo === 'casero' ? <Check size={14} className='text-emerald-500' /> : <Link size={14} />}
-              {copiadoTipo === 'casero' ? '¡Copiado!' : 'Código casero'}
-            </button>
-          )}
-          {esAdmin && (
-            <button
-              onClick={() => navigate('/grupo/perfil/editar')}
-              className='cursor-pointer! inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
-            >
-              <Pencil size={14} /> Editar grupo
-            </button>
-          )}
-          {!esCasero && (
-            <button
-              onClick={handleSalirClick}
-              className='cursor-pointer! inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 hover:border-red-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
-            >
-              <LogOut size={14} /> Salir del grupo
-            </button>
-          )}
+      <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between'>
+        <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>Mi grupo</h1>
+        {/* Botones de acción — solo escritorio; en móvil se muestran al final de la página */}
+        <div className='hidden sm:flex items-center flex-wrap gap-2'>
+          {botonesAccion}
         </div>
       </div>
 
@@ -266,8 +285,44 @@ function GrupoPerfil() {
         className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 sm:grid-cols-2'
         style={CARD_SHADOW}
       >
-        {/* Columna izq: miembros */}
-        <div className='flex flex-col gap-4 sm:pr-8 sm:border-r border-dashed border-slate-200'>
+        {/* Columna izq: identidad del grupo */}
+        <div className='flex flex-col justify-center gap-4 sm:pr-8 sm:border-r border-dashed border-slate-200 min-w-0'>
+          <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Grupo de convivencia</p>
+          <h2 className='font-display text-[2rem] sm:text-[3rem] font-bold text-slate-900 leading-none -tracking-[0.02em] break-words'>
+            {grupo?.nombre ?? '—'}
+          </h2>
+          <div className='flex flex-wrap gap-2'>
+            {grupo?.ciudad && (
+              <span className='inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
+                <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0' />
+                {grupo.ciudad}
+              </span>
+            )}
+            {anioDesde && (
+              <span className='inline-flex items-center gap-2 bg-amber-50 text-amber-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
+                <span className='w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0' />
+                Conviviendo desde {anioDesde}
+              </span>
+            )}
+            {grupo?.buscar_companero && (
+              <span className='inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
+                <span className='w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0' />
+                Buscando compañero
+              </span>
+            )}
+          </div>
+          {grupo?.descripcion
+            ? <p className='font-display text-[1.0625rem] font-normal text-slate-700 leading-[1.6] bg-slate-50 rounded-2xl px-4 py-4 break-words'>
+                {grupo.descripcion}
+              </p>
+            : <p className='font-display text-[1.0625rem] font-normal text-slate-400 italic leading-[1.4]'>
+                Sin descripción todavía.
+              </p>
+          }
+        </div>
+
+        {/* Columna der: miembros */}
+        <div className='flex flex-col gap-4 pt-6 sm:pt-0 sm:pl-8'>
           <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Miembros</p>
           <div className='flex flex-col divide-y divide-dashed divide-slate-200'>
             {[...miembros].sort((a, b) => (a.es_casero === b.es_casero ? 0 : a.es_casero ? 1 : -1)).map((m, i) => {
@@ -314,42 +369,6 @@ function GrupoPerfil() {
               )
             })}
           </div>
-        </div>
-
-        {/* Columna der: identidad del grupo */}
-        <div className='flex flex-col justify-center gap-4 pt-6 sm:pt-0 sm:pl-8 min-w-0'>
-          <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Grupo de convivencia</p>
-          <h2 className='font-display text-[3rem] font-bold text-slate-900 leading-none -tracking-[0.02em] break-words'>
-            {grupo?.nombre ?? '—'}
-          </h2>
-          <div className='flex flex-wrap gap-2'>
-            {grupo?.ciudad && (
-              <span className='inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
-                <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0' />
-                {grupo.ciudad}
-              </span>
-            )}
-            {anioDesde && (
-              <span className='inline-flex items-center gap-2 bg-amber-50 text-amber-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
-                <span className='w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0' />
-                Conviviendo desde {anioDesde}
-              </span>
-            )}
-            {grupo?.buscar_companero && (
-              <span className='inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
-                <span className='w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0' />
-                Buscando compañero
-              </span>
-            )}
-          </div>
-          {grupo?.descripcion
-            ? <p className='font-display text-[1.0625rem] font-normal text-slate-700 leading-[1.6] bg-slate-50 rounded-2xl px-4 py-4 break-words'>
-                {grupo.descripcion}
-              </p>
-            : <p className='font-display text-[1.0625rem] font-normal text-slate-400 italic leading-[1.4]'>
-                Sin descripción todavía.
-              </p>
-          }
         </div>
       </div>
 
@@ -404,39 +423,63 @@ function GrupoPerfil() {
         </div>
 
         {/* Intereses */}
-        <div className='bg-slate-900 text-slate-200 rounded-3xl p-7 flex flex-col gap-4 min-w-0 overflow-hidden' style={CARD_SHADOW}>
-          <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Intereses del grupo</p>
-          {intereses.length === 0 ? (
-            <div className='flex-1 flex flex-col justify-center gap-2'>
-              <p className='text-[0.8125rem] font-medium text-slate-500'>Sin intereses todavía.</p>
-              {esAdmin && (
-                <button
-                  onClick={() => navigate('/grupo/perfil/editar')}
-                  className='cursor-pointer! text-[0.8125rem] font-semibold text-emerald-400 hover:text-emerald-300 transition text-left'
-                >
-                  Añadir intereses →
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className='flex flex-wrap gap-2'>
-              {intereses.map(({ id, nombre }) => (
-                <span key={id} className='bg-slate-700 text-slate-100 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>
-                  {nombre}
-                </span>
-              ))}
+        <div className='bg-slate-900 text-slate-200 rounded-3xl p-5 sm:p-7 flex flex-col gap-5 min-w-0 overflow-hidden' style={CARD_SHADOW}>
+
+          {/* Estilo de vida */}
+          {convivencia && (convivencia.ocupacion || convivencia.acepta_fumadores || convivencia.acepta_mascotas || convivencia.lgbtq_friendly === true) && (
+            <div className='flex flex-col gap-2'>
+              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Estilo de vida</p>
+              <div className='flex flex-wrap gap-2'>
+                {convivencia.ocupacion === 'ESTUDIO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Estudiantes</span>}
+                {convivencia.ocupacion === 'TRABAJO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Trabajadores</span>}
+                {convivencia.ocupacion === 'ESTUDIO_Y_TRABAJO' && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Estudiamos y trabajamos</span>}
+                {convivencia.acepta_fumadores === 'SI'          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Se puede fumar</span>}
+                {convivencia.acepta_fumadores === 'NO'          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>No se fuma</span>}
+                {convivencia.acepta_fumadores === 'INDIFERENTE' && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Indiferente al tabaco</span>}
+                {convivencia.acepta_mascotas  === 'SI'          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Mascotas bienvenidas</span>}
+                {convivencia.acepta_mascotas  === 'NO'          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Sin mascotas</span>}
+                {convivencia.acepta_mascotas  === 'DEPENDE'     && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Mascotas: depende</span>}
+                {convivencia.lgbtq_friendly   === true          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>LGBTQ+ friendly</span>}
+              </div>
             </div>
           )}
+
+          {/* Intereses del grupo */}
+          <div className='flex flex-col gap-2'>
+            <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Intereses del grupo</p>
+            {intereses.length === 0 ? (
+              <div className='flex flex-col gap-2'>
+                <p className='text-[0.8125rem] font-medium text-slate-500'>Sin intereses todavía.</p>
+                {esAdmin && (
+                  <button
+                    onClick={() => navigate('/grupo/perfil/editar')}
+                    className='cursor-pointer! text-[0.8125rem] font-semibold text-emerald-400 hover:text-emerald-300 transition text-left'
+                  >
+                    Añadir intereses →
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className='flex flex-wrap gap-2'>
+                {intereses.map(({ id, nombre }) => (
+                  <span key={id} className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>
+                    {nombre}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
 
       </div>
 
       {/* ── Perfil de convivencia ── */}
-      <div className='bg-white border border-slate-100 rounded-3xl p-7 flex flex-col gap-6' style={CARD_SHADOW}>
-        <div className='flex items-start justify-between'>
+      <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-6' style={CARD_SHADOW}>
+        <div className='flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between'>
           <div>
             <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500 mb-1.5'>Convivencia</p>
-            <h3 className='font-display text-[2rem] font-normal text-slate-900 leading-none'>¿Cómo se vive aquí?</h3>
+            <h3 className='font-display text-2xl sm:text-[2rem] font-normal text-slate-900 leading-none'>¿Cómo se vive aquí?</h3>
           </div>
           {esAdmin && !convivencia && (
             <button
@@ -456,18 +499,17 @@ function GrupoPerfil() {
             </p>
           </div>
         ) : (
-          <div className='grid grid-cols-4 gap-6'>
+          <div className='grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4'>
             {DONUTS_CONFIG_GRUPO.map(cfg => (
-              <DonutChart
-                key={cfg.campo}
-                sublabel={cfg.sublabel}
-                color={cfg.color}
-                labels={cfg.labels}
-                valor={convivencia[cfg.campo]}
-              />
+              <TraitCard key={cfg.campo} cfg={cfg} valor={convivencia[cfg.campo]} />
             ))}
           </div>
         )}
+      </div>
+
+      {/* Botones de acción — solo móvil, al final de la página */}
+      <div className='sm:hidden bg-white border border-slate-100 rounded-3xl p-4 grid grid-cols-2 gap-2' style={CARD_SHADOW}>
+        {botonesAccion}
       </div>
 
     </div>

@@ -1,9 +1,25 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Heart, MessageCircle, House } from 'lucide-react'
-import DonutChart from '../components/DonutChart.jsx'
-import { CARD_SHADOW, DONUTS_CONFIG_GRUPO, PASTEL } from '../lib/convivencia.js'
+import { CARD_SHADOW, DONUTS_CONFIG_GRUPO, labelsGrupo, PASTEL } from '../lib/convivencia.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
+
+function TraitCard({ cfg, valor }) {
+  const frase = labelsGrupo[cfg.campo]?.[valor]
+  return (
+    <div className='bg-white border border-slate-100 rounded-2xl p-5 flex flex-col gap-2'
+      style={{ ...CARD_SHADOW, borderTop: `3px solid ${cfg.color}` }}>
+      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em]' style={{ color: cfg.color }}>
+        {cfg.sublabel}
+      </span>
+      {frase
+        ? <p className='text-[0.9375rem] font-medium text-slate-800 leading-snug'>{frase}</p>
+        : <p className='text-[0.9375rem] text-slate-300 italic'>Sin rellenar</p>
+      }
+    </div>
+  )
+}
 
 export default function PerfilPublicoGrupo() {
   const { user, tieneGrupo } = useAuth()
@@ -14,7 +30,7 @@ export default function PerfilPublicoGrupo() {
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/publicaciones/${id}`)
+    apiFetch(`/api/publicaciones/${id}`)
       .then(r => r.json())
       .then(d => setDatos(d))
       .catch(() => setDatos(null))
@@ -250,19 +266,43 @@ export default function PerfilPublicoGrupo() {
           </div>
 
           {/* Intereses */}
-          <div className='bg-slate-900 text-slate-200 rounded-3xl p-7 flex flex-col gap-4 min-w-0 overflow-hidden' style={CARD_SHADOW}>
-            <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Intereses del grupo</p>
-            {intereses.length === 0 ? (
-              <p className='text-[0.8125rem] font-medium text-slate-500'>Sin intereses todavía.</p>
-            ) : (
-              <div className='flex flex-wrap gap-2'>
-                {intereses.map(({ id: interesId, nombre }) => (
-                  <span key={interesId} className='bg-slate-700 text-slate-100 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>
-                    {nombre}
-                  </span>
-                ))}
+          <div className='bg-slate-900 text-slate-200 rounded-3xl p-7 flex flex-col gap-5 min-w-0 overflow-hidden' style={CARD_SHADOW}>
+
+            {/* Estilo de vida */}
+            {convivencia && (convivencia.ocupacion || convivencia.acepta_fumadores || convivencia.acepta_mascotas || convivencia.lgbtq_friendly === true) && (
+              <div className='flex flex-col gap-2'>
+                <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Estilo de vida</p>
+                <div className='flex flex-wrap gap-2'>
+                  {convivencia.ocupacion === 'ESTUDIO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Estudiantes</span>}
+                  {convivencia.ocupacion === 'TRABAJO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Trabajadores</span>}
+                  {convivencia.ocupacion === 'ESTUDIO_Y_TRABAJO' && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Estudia y trabaja</span>}
+                  {convivencia.acepta_fumadores === 'SI'          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Se puede fumar</span>}
+                  {convivencia.acepta_fumadores === 'NO'          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>No se fuma</span>}
+                  {convivencia.acepta_fumadores === 'INDIFERENTE' && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Indiferente al tabaco</span>}
+                  {convivencia.acepta_mascotas  === 'SI'          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Mascotas bienvenidas</span>}
+                  {convivencia.acepta_mascotas  === 'NO'          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Sin mascotas</span>}
+                  {convivencia.acepta_mascotas  === 'DEPENDE'     && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Mascotas: depende</span>}
+                  {convivencia.lgbtq_friendly   === true          && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>LGBTQ+ friendly</span>}
+                </div>
               </div>
             )}
+
+            {/* Intereses del grupo */}
+            <div className='flex flex-col gap-2'>
+              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Intereses del grupo</p>
+              {intereses.length === 0 ? (
+                <p className='text-[0.8125rem] font-medium text-slate-500'>Sin intereses todavía.</p>
+              ) : (
+                <div className='flex flex-wrap gap-2'>
+                  {intereses.map(({ id: interesId, nombre }) => (
+                    <span key={interesId} className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>
+                      {nombre}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
 
         </div>
@@ -282,15 +322,9 @@ export default function PerfilPublicoGrupo() {
               </p>
             </div>
           ) : (
-            <div className='grid grid-cols-4 gap-6'>
+            <div className='grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4'>
               {DONUTS_CONFIG_GRUPO.map(cfg => (
-                <DonutChart
-                  key={cfg.campo}
-                  sublabel={cfg.sublabel}
-                  color={cfg.color}
-                  labels={cfg.labels}
-                  valor={convivencia[cfg.campo]}
-                />
+                <TraitCard key={cfg.campo} cfg={cfg} valor={convivencia[cfg.campo]} />
               ))}
             </div>
           )}

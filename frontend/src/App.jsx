@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useNavigate, useSearchParams, Routes, Route } from 'react-router-dom'
 import { useAuth } from './context/AuthContext.jsx'
+import { apiFetch } from './lib/apiFetch.js'
 import './App.css'
 import LayoutPerfil from './pages/LayoutPerfil.jsx'
 import LayoutGrupo from './pages/LayoutGrupo.jsx'
@@ -31,16 +32,7 @@ import FAQ from './pages/FAQ.jsx'
 function App() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { user, setUser, recargarUsuario } = useAuth()
-  const [tieneGrupo, setTieneGrupo] = useState(false)
-
-  useEffect(() => {
-    if (!user) { setTieneGrupo(false); return }
-    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(g => setTieneGrupo(!!g.grupo))
-      .catch(() => {})
-  }, [user?.id])
+  const { user, setUser, tieneGrupo, setTieneGrupo, recargarUsuario } = useAuth()
 
   useEffect(() => {
     // Limpiar parámetros de retorno de Google OAuth
@@ -54,7 +46,7 @@ function App() {
   }, [])
 
   const handleLogout = async () => {
-    await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' })
+    await apiFetch('/api/auth/logout', { method: 'POST' })
     setUser(null)
     navigate('/')
   }

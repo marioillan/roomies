@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X } from 'lucide-react'
 import { loginSchema } from '../lib/schemas'
+import { apiFetch } from '../lib/apiFetch'
 
 function GoogleIcon() {
   return (
@@ -27,10 +28,8 @@ function LoginModal({ onClose, onSuccess, onSwitchToRegistro }) {
   const onSubmit = async (data) => {
     setServerError('')
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(data),
       })
       const json = await res.json()
@@ -42,7 +41,7 @@ function LoginModal({ onClose, onSuccess, onSwitchToRegistro }) {
   }
 
   const handleGoogle = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`
+    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/google`
   }
 
   return (

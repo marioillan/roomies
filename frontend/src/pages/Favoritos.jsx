@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart, MapPin, MessageCircle, Phone, Search } from 'lucide-react'
+import { apiFetch } from '../lib/apiFetch'
 
 const AVATAR_COLORS = ['#ec4899', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b']
 
@@ -41,9 +42,7 @@ function FavCard({ pub, onQuitar }) {
     e.stopPropagation()
     setSolicitud('enviando')
     try {
-      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/chats/solicitar/${pub.id}`, {
-        method: 'POST', credentials: 'include',
-      })
+      const res = await apiFetch(`/api/chats/solicitar/${pub.id}`, { method: 'POST' })
       if (res.ok) { setSolicitud('enviada'); return }
       const data = await res.json()
       if (data.yaEnviada) navigate('/perfil/chat')
@@ -56,11 +55,11 @@ function FavCard({ pub, onQuitar }) {
   return (
     <div
       onClick={() => navigate(`/anuncio/${pub.id}`)}
-      className='cursor-pointer bg-white border border-slate-100 rounded-[1.25rem] overflow-hidden flex flex-col sm:flex-row transition-all duration-150 hover:-translate-y-px'
+      className='cursor-pointer bg-white border border-slate-100 rounded-[1.25rem] overflow-hidden flex flex-col sm:flex-row sm:h-56 transition-all duration-150 hover:-translate-y-px'
       style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}
     >
       {/* Foto */}
-      <div className='w-full h-52 sm:w-52 sm:h-44 shrink-0 self-stretch relative bg-slate-100 overflow-hidden'>
+      <div className='w-full h-52 sm:w-56 sm:h-56 shrink-0 relative bg-slate-100 overflow-hidden'>
         {foto
           ? <img src={foto} alt={pub.titulo} className='w-full h-full object-cover' />
           : <div className='w-full h-full' style={{ background: 'repeating-linear-gradient(135deg,#f1f5f9 0 14px,#e2e8f0 14px 28px)' }} />
@@ -77,7 +76,7 @@ function FavCard({ pub, onQuitar }) {
       </div>
 
       {/* Cuerpo */}
-      <div className='flex-1 min-w-0 flex flex-col px-4 sm:px-6 py-4 sm:py-5'>
+      <div className='flex-1 min-w-0 flex flex-col px-4 sm:px-6 py-4 sm:py-5 overflow-hidden'>
 
         {/* Título + precio */}
         <div className='flex items-start justify-between gap-4'>
@@ -227,16 +226,14 @@ export default function Favoritos() {
   const [orden, setOrden]                 = useState('recientes')
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/favoritos/publicaciones`, { credentials: 'include' })
+    apiFetch('/api/favoritos/publicaciones')
       .then(r => r.json())
       .then(d => { setPublicaciones(d.publicaciones ?? []); setLoading(false) })
       .catch(() => { setError('Error al cargar favoritos'); setLoading(false) })
   }, [])
 
   const quitarFavorito = async (publicacionId) => {
-    await fetch(`${import.meta.env.VITE_API_URL}/api/favoritos/${publicacionId}`, {
-      method: 'POST', credentials: 'include',
-    })
+    await apiFetch(`/api/favoritos/${publicacionId}`, { method: 'POST' })
     setPublicaciones(prev => prev.filter(p => p.id !== publicacionId))
   }
 
@@ -258,10 +255,7 @@ export default function Favoritos() {
       {/* Cabecera */}
       <div className='flex items-start justify-between gap-4'>
         <div>
-          <p className='font-mono text-[0.625rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>
-            {publicaciones.length} publicacion{publicaciones.length !== 1 ? 'es' : ''} guardada{publicaciones.length !== 1 ? 's' : ''}
-          </p>
-          <h1 className='font-display text-[2.25rem] font-medium -tracking-[0.02em] text-slate-900 leading-none mt-1'>
+          <h1 className='font-display text-[2.25rem] font-medium -tracking-[0.02em] text-slate-900 leading-none'>
             Tus favoritos
           </h1>
         </div>
@@ -288,20 +282,20 @@ export default function Favoritos() {
 
       {/* Estado vacío */}
       {publicaciones.length === 0 && (
-        <div className='flex flex-col items-center justify-center py-28 gap-4'>
-          <div className='w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center'>
-            <Heart size={28} className='text-slate-300' />
+        <div className='flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center'>
+          <div className='w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center'>
+            <Heart size={28} className='text-emerald-500' />
           </div>
-          <div className='text-center'>
-            <p className='text-sm font-semibold text-slate-600'>Aún no tienes favoritos</p>
-            <p className='text-xs text-slate-400 mt-1'>Explora habitaciones y guarda las que más te interesen</p>
+          <div>
+            <h2 className='font-display text-2xl font-bold text-slate-900'>Aún no tienes favoritos</h2>
+            <p className='text-slate-500 text-sm mt-2 max-w-xs mx-auto'>Explora habitaciones y guarda las que más te interesen</p>
           </div>
           <button
             type='button'
             onClick={() => navigate('/buscar')}
-            className='cursor-pointer! flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition'
+            className='cursor-pointer! inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition'
           >
-            <Search size={15} /> Buscar habitaciones
+            <Search size={16} /> Buscar habitaciones
           </button>
         </div>
       )}

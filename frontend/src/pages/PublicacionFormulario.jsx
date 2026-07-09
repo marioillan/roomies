@@ -14,13 +14,14 @@ import {
   IconInput, baseCls, textareaCls,
   Label, FieldError, Section, PillGroup, StepBar,
 } from '../components/FormPrimitivos'
+import { apiFetch } from '../lib/apiFetch'
 
 // ── Schema ────────────────────────────────────────────────────────
 const schema = z.object({
   titulo:               z.string().min(5, 'Mínimo 5 caracteres').max(255),
   descripcion:          z.string().min(10, 'Mínimo 10 caracteres').max(500, 'Máximo 500 caracteres'),
   ciudad:               z.string().min(2, 'La ciudad es obligatoria'),
-  direccion:            z.string().optional(),
+  direccion:            z.string().min(1, 'La dirección es obligatoria'),
   latitud:              z.number().nullable().optional(),
   longitud:             z.number().nullable().optional(),
   precio:               z.coerce.number({ invalid_type_error: 'Introduce un precio válido' }).positive('El precio debe ser positivo'),
@@ -52,7 +53,7 @@ const schema = z.object({
 
 const STEPS = ['Información general', 'Detalles', 'Fotos']
 const STEP_FIELDS = [
-  ['titulo', 'descripcion', 'ciudad', 'precio', 'habitaciones_libres', 'modo_contacto', 'telefono_contacto'],
+  ['titulo', 'descripcion', 'ciudad', 'direccion', 'precio', 'habitaciones_libres', 'modo_contacto', 'telefono_contacto'],
   ['tipo_piso', 'habitaciones_totales', 'tamano_piso', 'planta', 'ascensor',
    'wifi', 'lavadora', 'lavavajillas', 'aire_acondicionado', 'calefaccion', 'parking', 'terraza', 'amueblado',
    'permite_fumar', 'permite_mascotas', 'genero_preferido'],
@@ -106,7 +107,7 @@ function YesNo({ value, onChange }) {
 }
 
 // ── Dirección con Google Places Autocomplete ──────────────────────
-function DireccionAutocomplete({ setValue, defaultValue = '' }) {
+function DireccionAutocomplete({ setValue, defaultValue = '', error }) {
   const inputRef = useRef(null)
   const acRef    = useRef(null)
   const [texto, setTexto] = useState(defaultValue)
@@ -162,19 +163,19 @@ function DireccionAutocomplete({ setValue, defaultValue = '' }) {
   }, [setValue])
 
   return (
-    <IconInput icon={MapPin} error={false}>
+    <IconInput icon={MapPin} error={error}>
       <input
         ref={inputRef}
         type='text'
         value={texto}
         onChange={e => {
           setTexto(e.target.value)
-          setValue('direccion', e.target.value)
+          setValue('direccion', e.target.value, { shouldValidate: true })
           // Si el usuario edita manualmente, borra las coordenadas anteriores
           setValue('latitud', null)
           setValue('longitud', null)
         }}
-        className={baseCls(false)}
+        className={baseCls(error)}
         placeholder='Calle Mayor, 10, Madrid'
       />
     </IconInput>
@@ -233,8 +234,9 @@ function Paso1({ register, errors, descLength, control, watch, setValue }) {
             <FieldError message={errors.ciudad?.message} />
           </div>
           <div>
-            <Label>Dirección</Label>
-            <DireccionAutocomplete setValue={setValue} defaultValue={watch('direccion') ?? ''} />
+            <Label required>Dirección</Label>
+            <DireccionAutocomplete setValue={setValue} defaultValue={watch('direccion') ?? ''} error={errors.direccion} />
+            <FieldError message={errors.direccion?.message} />
           </div>
         </div>
         <div className='grid grid-cols-2 gap-3'>
@@ -578,7 +580,7 @@ function PublicacionFormPage() {
   const [fotosNuevas, setFotosNuevas]       = useState([])     // File[]
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion`, { credentials: 'include' })
+    apiFetch('/api/grupos/publicacion')
       .then(r => r.json())
       .then(d => {
         setPublicacion(d.publicacion ?? null)
@@ -643,10 +645,7 @@ function PublicacionFormPage() {
 
   const handleDeleteExistente = async (fotoId) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion/fotos/${fotoId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
+      const res = await apiFetch(`/api/grupos/publicacion/fotos/${fotoId}`, { method: 'DELETE' })
       if (res.ok) setFotosExistentes(prev => prev.filter(f => f.id !== fotoId))
     } catch { /* silencioso */ }
   }
@@ -658,10 +657,8 @@ function PublicacionFormPage() {
     }
     try {
       // 1. Guardar datos de la publicación
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion`, {
+      const res = await apiFetch('/api/grupos/publicacion', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(payload),
       })
       const json = await res.json()
@@ -671,9 +668,8 @@ function PublicacionFormPage() {
       if (fotosNuevas.length > 0) {
         const formData = new FormData()
         fotosNuevas.forEach(f => formData.append('fotos', f))
-        const fotosRes = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion/fotos`, {
+        const fotosRes = await apiFetch('/api/grupos/publicacion/fotos', {
           method: 'PUT',
-          credentials: 'include',
           body: formData,
         })
         if (!fotosRes.ok) {
@@ -738,6 +734,20 @@ function PublicacionFormPage() {
             <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
               <AlertCircle size={13} className='text-red-500 shrink-0' />
               <p className='text-xs text-red-700 font-medium'>{serverError}</p>
+            </div>
+          )}
+
+          {step === 0 && STEP_FIELDS[0].some(f => errors[f]) && (
+            <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+              <AlertCircle size={13} className='text-red-500 shrink-0' />
+              <p className='text-xs text-red-700 font-medium'>Debes rellenar todos los campos obligatorios.</p>
+            </div>
+          )}
+
+          {step === 1 && STEP_FIELDS[1].some(f => errors[f]) && (
+            <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+              <AlertCircle size={13} className='text-red-500 shrink-0' />
+              <p className='text-xs text-red-700 font-medium'>Debes rellenar todos los campos obligatorios.</p>
             </div>
           )}
 

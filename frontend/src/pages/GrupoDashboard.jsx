@@ -5,13 +5,9 @@ import { BarChart, Bar, XAxis, CartesianGrid } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import ModalEvento from '../components/ModalEvento.jsx'
 import { CARD_SHADOW } from '../lib/convivencia.js'
+import { apiFetch } from '../lib/apiFetch'
 
 const MESES_CORTO = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC']
-
-const DIA_JS = {
-  LUNES: 1, MARTES: 2, MIERCOLES: 3,
-  JUEVES: 4, VIERNES: 5, SABADO: 6, DOMINGO: 0,
-}
 
 function getSaludo() {
   const h = new Date().getHours()
@@ -25,25 +21,15 @@ function getSaludo() {
 function TareasCard({ grupo, navigate, datosTareas }) {
   const asignaciones = datosTareas?.asignaciones ?? []
   const tareasTotal  = asignaciones.length
-  const tareasHechas = asignaciones.filter(a => a.estado === 'COMPLETADA' || a.estado === 'VALIDADA').length
+  const tareasHechas = asignaciones.filter(a => a.estado === 'COMPLETADA').length
   const pct = tareasTotal > 0 ? Math.round(tareasHechas / tareasTotal * 100) : 0
 
-  const hoy = new Date()
-  const diaLimpiezaJS = grupo?.dia_limpieza ? DIA_JS[grupo.dia_limpieza] : null
-  let diasHastaLimpieza = null
-  if (diaLimpiezaJS !== null) {
-    const cursor = new Date(hoy)
-    for (let i = 0; i <= 7; i++) {
-      if (cursor.getDay() === diaLimpiezaJS) { diasHastaLimpieza = i; break }
-      cursor.setDate(cursor.getDate() + 1)
-    }
-  }
-
-  const mensajeLimpieza =
-    diasHastaLimpieza === 0 ? '¡Toca limpiar hoy!' :
-    diasHastaLimpieza === 1 ? 'Mañana toca limpiar' :
-    diasHastaLimpieza !== null ? 'Vais bien encaminados' :
-    'Sin día configurado'
+  const mensajeMotivacion =
+    tareasTotal === 0 ? null :
+    pct === 100 ? '¡Semana perfecta!' :
+    pct >= 50   ? 'Vais bien encaminados' :
+    pct >= 1    ? 'Empezando...' :
+    'Aún queda mucho por hacer...'
 
   const r = 36
   const circ = 2 * Math.PI * r
@@ -59,7 +45,9 @@ function TareasCard({ grupo, navigate, datosTareas }) {
           <p className='font-mono text-[0.8rem] font-semibold tracking-[0.18em] uppercase text-slate-400'>
             Limpieza de la semana
           </p>
-          <h3 className='font-display text-2xl font-bold text-white mt-1'>{mensajeLimpieza}</h3>
+          {mensajeMotivacion && (
+            <h3 className='font-display text-2xl font-bold text-white mt-1'>{mensajeMotivacion}</h3>
+          )}
         </div>
         <button
           onClick={() => navigate('/grupo/tareas')}
@@ -390,7 +378,7 @@ function HistoricoCard({ grupoId, navigate }) {
 
   useEffect(() => {
     if (!grupoId) return
-    fetch(`${import.meta.env.VITE_API_URL}/api/facturas/historial?grupo_id=${grupoId}`, { credentials: 'include' })
+    apiFetch(`/api/facturas/historial?grupo_id=${grupoId}`)
       .then(r => r.json())
       .then(d => setHistorial(d.historial ?? []))
       .catch(() => setHistorial([]))
@@ -484,19 +472,19 @@ function GrupoDashboard() {
   const esAdmin = miembros.find(m => m.id === user?.id)?.rol_en_grupo === 'ADMIN'
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/compra`, { credentials: 'include' })
+    apiFetch('/api/compra')
       .then(r => r.json()).then(d => setProductosCompra(d.productos ?? [])).catch(() => setProductosCompra([]))
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/eventos`, { credentials: 'include' })
+    apiFetch('/api/grupos/eventos')
       .then(r => r.json()).then(d => setEventos(d.eventos ?? [])).catch(() => setEventos([]))
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/tareas`, { credentials: 'include' })
+    apiFetch('/api/tareas')
       .then(r => r.json()).then(d => setDatosTareas(d)).catch(() => setDatosTareas({ configurado: false, asignaciones: [] }))
   }, [])
 
   useEffect(() => {
     if (!grupo?.id) return
-    fetch(`${import.meta.env.VITE_API_URL}/api/facturas?grupo_id=${grupo.id}`, { credentials: 'include' })
+    apiFetch(`/api/facturas?grupo_id=${grupo.id}`)
       .then(r => r.json()).then(d => setFacturas(d.facturas ?? [])).catch(() => setFacturas([]))
   }, [grupo?.id])
 
@@ -514,7 +502,7 @@ function GrupoDashboard() {
   const agregarEvento    = ev => setEventos(prev => [...(prev ?? []), ev].sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio)))
   const actualizarEvento = ev => setEventos(prev => (prev ?? []).map(e => e.id === ev.id ? { ...e, ...ev } : e).sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio)))
   const eliminarEvento   = async id => {
-    const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/eventos/${id}`, { method: 'DELETE', credentials: 'include' })
+    const r = await apiFetch(`/api/grupos/eventos/${id}`, { method: 'DELETE' })
     if (r.ok) setEventos(prev => (prev ?? []).filter(e => e.id !== id))
   }
 
@@ -531,15 +519,9 @@ function GrupoDashboard() {
 
       {/* Header */}
       <div className='flex items-start justify-between gap-4 mb-5 shrink-0'>
-        <div>
-          <p className='font-mono text-[0.7rem] font-semibold tracking-[0.18em] text-slate-400 uppercase'>
-            {grupo?.nombre ?? ''}
-            {grupo?.ciudad ? ` · ${grupo.ciudad}` : ''}
-          </p>
-          <h1 className='font-display text-3xl sm:text-[3.1rem] font-medium text-slate-900 leading-none -tracking-[0.02em] mt-0.5'>
-            {getSaludo()}, {user?.nombre?.split(' ')[0]}
-          </h1>
-        </div>
+        <h1 className='font-display text-3xl sm:text-[3.1rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
+          {getSaludo()}, {user?.nombre?.split(' ')[0]}
+        </h1>
         {esAdmin && (
           <span className='inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-full shrink-0'>
             <Crown size={11} /> Administrador

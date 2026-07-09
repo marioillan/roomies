@@ -3,6 +3,8 @@ const ORDEN = {
   ambiente:           { TRANQUILO: 0, EQUILIBRADO: 1, SOCIAL: 2 },
   frecuencia_visitas: { CASI_NUNCA: 0, A_VECES: 1, FRECUENTE: 2 },
   tolerancia_fiestas: { NUNCA: 0, OCASIONAL: 1, FRECUENTE: 2 },
+  limpieza_orden:     { DESPREOCUPADO: 0, FLEXIBLE: 1, ORDENADO: 2 },
+  nivel_ruido:        { SILENCIO_TOTAL: 0, MODERADO: 1, INDIFERENTE: 2 },
 }
 
 function matchOrdinal(valorUsuario, valorGrupo, campo) {
@@ -20,28 +22,34 @@ function matchOcupacion(u, g) {
 }
 
 export function calcularCompatibilidad(usuario, pcg) {
-  const mHorario  = matchOrdinal(usuario.horario,            pcg.horario,            'horario')
-  const mAmbiente = matchOrdinal(usuario.ambiente,           pcg.ambiente,           'ambiente')
-  const mVisitas  = matchOrdinal(usuario.frecuencia_visitas, pcg.frecuencia_visitas, 'frecuencia_visitas')
-  const mFiestas  = matchOrdinal(usuario.tolerancia_fiestas, pcg.tolerancia_fiestas, 'tolerancia_fiestas')
-  const mOcup     = matchOcupacion(usuario.ocupacion,        pcg.ocupacion)
+  const mHorario   = matchOrdinal(usuario.horario,            pcg.horario,            'horario')
+  const mLimpieza  = matchOrdinal(usuario.limpieza_orden,     pcg.limpieza_orden,     'limpieza_orden')
+  const mAmbiente  = matchOrdinal(usuario.ambiente,           pcg.ambiente,           'ambiente')
+  const mRuido     = matchOrdinal(usuario.nivel_ruido,        pcg.nivel_ruido,        'nivel_ruido')
+  const mVisitas   = matchOrdinal(usuario.frecuencia_visitas, pcg.frecuencia_visitas, 'frecuencia_visitas')
+  const mFiestas   = matchOrdinal(usuario.tolerancia_fiestas, pcg.tolerancia_fiestas, 'tolerancia_fiestas')
+  const mOcup      = matchOcupacion(usuario.ocupacion,        pcg.ocupacion)
 
   const score = Math.round(
-    (mHorario  * 0.25 +
-     mAmbiente * 0.25 +
-     mVisitas  * 0.20 +
-     mFiestas  * 0.20 +
+    (mHorario  * 0.20 +
+     mLimpieza * 0.20 +
+     mAmbiente * 0.15 +
+     mRuido    * 0.15 +
+     mVisitas  * 0.10 +
+     mFiestas  * 0.10 +
      mOcup     * 0.10) * 100
   )
 
   return {
     score,
     desglose: {
-      horario:   mHorario,
-      ambiente:  mAmbiente,
-      visitas:   mVisitas,
-      fiestas:   mFiestas,
-      ocupacion: mOcup,
+      horario:        mHorario,
+      limpieza_orden: mLimpieza,
+      ambiente:       mAmbiente,
+      nivel_ruido:    mRuido,
+      frecuencia_visitas: mVisitas,
+      tolerancia_fiestas: mFiestas,
+      ocupacion:      mOcup,
     },
   }
 }
@@ -53,5 +61,7 @@ export function calcularScore(usuario, grupo) {
     frecuencia_visitas: grupo.pcg_frecuencia_visitas,
     tolerancia_fiestas: grupo.pcg_tolerancia_fiestas,
     ocupacion:          grupo.pcg_ocupacion,
+    limpieza_orden:     grupo.pcg_limpieza_orden,
+    nivel_ruido:        grupo.pcg_nivel_ruido,
   }).score
 }

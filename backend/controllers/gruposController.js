@@ -284,7 +284,8 @@ export const editarConvivencia = async (req, res, next) => {
   const parsed = grupoConvivenciaSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
   const { horario, ambiente, frecuencia_visitas, tolerancia_fiestas, frecuencia_salidas,
-          ocupacion, acepta_fumadores, acepta_mascotas, lgbtq_friendly } = parsed.data;
+          ocupacion, acepta_fumadores, acepta_mascotas, lgbtq_friendly,
+          limpieza_orden, nivel_ruido } = parsed.data;
 
   const campos = {
     horario: horario ?? null, ambiente: ambiente ?? null,
@@ -292,6 +293,7 @@ export const editarConvivencia = async (req, res, next) => {
     frecuencia_salidas: frecuencia_salidas ?? null, ocupacion: ocupacion ?? null,
     acepta_fumadores: acepta_fumadores ?? null, acepta_mascotas: acepta_mascotas ?? null,
     lgbtq_friendly: lgbtq_friendly ?? null,
+    limpieza_orden: limpieza_orden ?? null, nivel_ruido: nivel_ruido ?? null,
   };
 
   try {
@@ -375,6 +377,38 @@ export const editarPublicacion = async (req, res, next) => {
         }),
       });
     }).catch(() => {});
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── PATCH /api/grupos/publicacion/visible ────────────────────
+export const actualizarVisibilidad = async (req, res, next) => {
+  try {
+    const { visible } = req.body;
+    if (typeof visible !== 'boolean') return res.status(400).json({ message: 'El campo visible debe ser un booleano' });
+
+    const pub = await prisma.publicacion.findFirst({ where: { grupo_id: req.grupoId } });
+    if (!pub) return res.status(404).json({ message: 'No existe ningún anuncio para este grupo' });
+
+    const actualizada = await prisma.publicacion.update({
+      where: { id: pub.id },
+      data: { visible },
+    });
+    res.json({ publicacion: actualizada });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── DELETE /api/grupos/publicacion ───────────────────────────
+export const eliminarPublicacion = async (req, res, next) => {
+  try {
+    const pub = await prisma.publicacion.findFirst({ where: { grupo_id: req.grupoId } });
+    if (!pub) return res.status(404).json({ message: 'No existe ningún anuncio para este grupo' });
+
+    await prisma.publicacion.delete({ where: { id: pub.id } });
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }

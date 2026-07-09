@@ -86,41 +86,45 @@ export const solicitarContacto = async (req, res) => {
 };
 
 // ── GET /api/chats/solicitudes ────────────────────────────────
-export const getSolicitudes = async (req, res) => {
-  const [solicitudesData, pcg] = await Promise.all([
-    prisma.solicitudContacto.findMany({
-      where: { grupo_id: req.grupoId },
-      select: {
-        id: true, estado: true, fecha_envio: true,
-        usuario: {
-          select: {
-            id: true, nombre: true, foto_perfil: true, email: true,
-            perfil_convivencia: {
-              select: { horario: true, ambiente: true, frecuencia_visitas: true, tolerancia_fiestas: true, ocupacion: true },
+export const getSolicitudes = async (req, res, next) => {
+  try {
+    const [solicitudesData, pcg] = await Promise.all([
+      prisma.solicitudContacto.findMany({
+        where: { grupo_id: req.grupoId },
+        select: {
+          id: true, estado: true, fecha_envio: true,
+          usuario: {
+            select: {
+              id: true, nombre: true, foto_perfil: true, email: true,
+              perfil_convivencia: {
+                select: { horario: true, ambiente: true, frecuencia_visitas: true, tolerancia_fiestas: true, ocupacion: true },
+              },
             },
           },
+          chat: { select: { id: true } },
         },
-        chat: { select: { id: true } },
-      },
-      orderBy: { fecha_envio: 'desc' },
-    }),
-    prisma.perfilConvivenciaGrupo.findFirst({ where: { grupo_id: req.grupoId } }),
-  ]);
+        orderBy: { fecha_envio: 'desc' },
+      }),
+      prisma.perfilConvivenciaGrupo.findFirst({ where: { grupo_id: req.grupoId } }),
+    ]);
 
-  const solicitudes = solicitudesData.map(sc => {
-    const pcu = sc.usuario.perfil_convivencia;
-    return {
-      id: sc.id, estado: sc.estado, fecha_envio: sc.fecha_envio,
-      usuario_id:     sc.usuario.id,
-      nombre:         sc.usuario.nombre,
-      foto_perfil:    sc.usuario.foto_perfil,
-      email:          sc.usuario.email,
-      chat_id:        sc.chat?.id ?? null,
-      compatibilidad: (pcg && pcu) ? calcularCompatibilidad(pcu, pcg).score : null,
-    };
-  });
+    const solicitudes = solicitudesData.map(sc => {
+      const pcu = sc.usuario.perfil_convivencia;
+      return {
+        id: sc.id, estado: sc.estado, fecha_envio: sc.fecha_envio,
+        usuario_id:     sc.usuario.id,
+        nombre:         sc.usuario.nombre,
+        foto_perfil:    sc.usuario.foto_perfil,
+        email:          sc.usuario.email,
+        chat_id:        sc.chat?.id ?? null,
+        compatibilidad: (pcg && pcu) ? calcularCompatibilidad(pcu, pcg).score : null,
+      };
+    });
 
-  res.json({ solicitudes });
+    res.json({ solicitudes });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // ── PUT /api/chats/solicitudes/:solicitudId ───────────────────
@@ -172,168 +176,192 @@ export const gestionarSolicitud = async (req, res) => {
 };
 
 // ── GET /api/chats/mis-solicitudes ───────────────────────────
-export const getMisSolicitudes = async (req, res) => {
-  const data = await prisma.solicitudContacto.findMany({
-    where: { usuario_id: req.userId },
-    select: {
-      id: true, grupo_id: true, estado: true, fecha_envio: true,
-      grupo: { select: { nombre: true, foto_perfil: true } },
-    },
-    orderBy: { fecha_envio: 'desc' },
-  });
+export const getMisSolicitudes = async (req, res, next) => {
+  try {
+    const data = await prisma.solicitudContacto.findMany({
+      where: { usuario_id: req.userId },
+      select: {
+        id: true, grupo_id: true, estado: true, fecha_envio: true,
+        grupo: { select: { nombre: true, foto_perfil: true } },
+      },
+      orderBy: { fecha_envio: 'desc' },
+    });
 
-  const solicitudes = data.map(sc => ({
-    id: sc.id, grupo_id: sc.grupo_id, estado: sc.estado, fecha_envio: sc.fecha_envio,
-    nombre_grupo: sc.grupo.nombre,
-    foto_grupo:   sc.grupo.foto_perfil,
-  }));
+    const solicitudes = data.map(sc => ({
+      id: sc.id, grupo_id: sc.grupo_id, estado: sc.estado, fecha_envio: sc.fecha_envio,
+      nombre_grupo: sc.grupo.nombre,
+      foto_grupo:   sc.grupo.foto_perfil,
+    }));
 
-  res.json({ solicitudes });
+    res.json({ solicitudes });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // ── GET /api/chats/como-solicitante ──────────────────────────
-export const getChatsComoSolicitante = async (req, res) => {
-  const chats = await prisma.$queryRaw`
-    SELECT
-      c.id, c.estado, c.created_at,
-      sc.grupo_id,
-      g.nombre      AS nombre_grupo,
-      g.foto_perfil AS foto_grupo,
-      (SELECT m.contenido  FROM mensajes m WHERE m.chat_id = c.id ORDER BY m.enviado_en DESC LIMIT 1) AS ultimo_mensaje,
-      (SELECT m.enviado_en FROM mensajes m WHERE m.chat_id = c.id ORDER BY m.enviado_en DESC LIMIT 1) AS ultimo_mensaje_en
-    FROM chats c
-    JOIN solicitudes_contacto sc ON sc.id = c.solicitud_id
-    JOIN grupos g ON g.id = sc.grupo_id
-    WHERE sc.usuario_id = ${req.userId}
-    ORDER BY ultimo_mensaje_en DESC NULLS LAST, c.created_at DESC
-  `;
-  res.json({ chats });
+export const getChatsComoSolicitante = async (req, res, next) => {
+  try {
+    const chats = await prisma.$queryRaw`
+      SELECT
+        c.id, c.estado, c.created_at,
+        sc.grupo_id,
+        g.nombre      AS nombre_grupo,
+        g.foto_perfil AS foto_grupo,
+        (SELECT m.contenido  FROM mensajes m WHERE m.chat_id = c.id ORDER BY m.enviado_en DESC LIMIT 1) AS ultimo_mensaje,
+        (SELECT m.enviado_en FROM mensajes m WHERE m.chat_id = c.id ORDER BY m.enviado_en DESC LIMIT 1) AS ultimo_mensaje_en
+      FROM chats c
+      JOIN solicitudes_contacto sc ON sc.id = c.solicitud_id
+      JOIN grupos g ON g.id = sc.grupo_id
+      WHERE sc.usuario_id = ${req.userId}
+      ORDER BY ultimo_mensaje_en DESC NULLS LAST, c.created_at DESC
+    `;
+    res.json({ chats });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // ── GET /api/chats/como-admin ─────────────────────────────────
-export const getChatsComoAdmin = async (req, res) => {
-  const membresia = await prisma.miembroGrupo.findFirst({
-    where: { usuario_id: req.userId, activo: true },
-    select: { grupo_id: true, rol: true },
-  });
-  if (!membresia || membresia.rol !== 'ADMIN') return res.json({ chats: [] });
+export const getChatsComoAdmin = async (req, res, next) => {
+  try {
+    const membresia = await prisma.miembroGrupo.findFirst({
+      where: { usuario_id: req.userId, activo: true },
+      select: { grupo_id: true, rol: true },
+    });
+    if (!membresia || membresia.rol !== 'ADMIN') return res.json({ chats: [] });
 
-  const chats = await prisma.$queryRaw`
-    SELECT
-      c.id, c.estado, c.created_at,
-      sc.usuario_id  AS solicitante_id,
-      sc.grupo_id,
-      g.nombre       AS nombre_grupo,
-      g.foto_perfil  AS foto_grupo,
-      u.nombre       AS nombre_solicitante,
-      u.foto_perfil  AS foto_solicitante,
-      (SELECT m2.contenido  FROM mensajes m2 WHERE m2.chat_id = c.id ORDER BY m2.enviado_en DESC LIMIT 1) AS ultimo_mensaje,
-      (SELECT m2.enviado_en FROM mensajes m2 WHERE m2.chat_id = c.id ORDER BY m2.enviado_en DESC LIMIT 1) AS ultimo_mensaje_en
-    FROM chats c
-    JOIN solicitudes_contacto sc ON sc.id = c.solicitud_id
-    JOIN grupos g ON g.id = sc.grupo_id
-    JOIN usuarios u ON u.id = sc.usuario_id
-    WHERE sc.grupo_id = ${membresia.grupo_id}
-    ORDER BY ultimo_mensaje_en DESC NULLS LAST, c.created_at DESC
-  `;
-  res.json({ chats });
+    const chats = await prisma.$queryRaw`
+      SELECT
+        c.id, c.estado, c.created_at,
+        sc.usuario_id  AS solicitante_id,
+        sc.grupo_id,
+        g.nombre       AS nombre_grupo,
+        g.foto_perfil  AS foto_grupo,
+        u.nombre       AS nombre_solicitante,
+        u.foto_perfil  AS foto_solicitante,
+        (SELECT m2.contenido  FROM mensajes m2 WHERE m2.chat_id = c.id ORDER BY m2.enviado_en DESC LIMIT 1) AS ultimo_mensaje,
+        (SELECT m2.enviado_en FROM mensajes m2 WHERE m2.chat_id = c.id ORDER BY m2.enviado_en DESC LIMIT 1) AS ultimo_mensaje_en
+      FROM chats c
+      JOIN solicitudes_contacto sc ON sc.id = c.solicitud_id
+      JOIN grupos g ON g.id = sc.grupo_id
+      JOIN usuarios u ON u.id = sc.usuario_id
+      WHERE sc.grupo_id = ${membresia.grupo_id}
+      ORDER BY ultimo_mensaje_en DESC NULLS LAST, c.created_at DESC
+    `;
+    res.json({ chats });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // ── GET /api/chats/:chatId/mensajes ──────────────────────────
-export const getMensajes = async (req, res) => {
-  const acceso = await prisma.chat.findFirst({
-    where: {
-      id: req.params.chatId,
-      solicitud: {
-        OR: [
-          { usuario_id: req.userId },
-          { grupo: { miembros: { some: { usuario_id: req.userId, activo: true } } } },
-        ],
+export const getMensajes = async (req, res, next) => {
+  try {
+    const acceso = await prisma.chat.findFirst({
+      where: {
+        id: req.params.chatId,
+        solicitud: {
+          OR: [
+            { usuario_id: req.userId },
+            { grupo: { miembros: { some: { usuario_id: req.userId, activo: true } } } },
+          ],
+        },
       },
-    },
-    select: { id: true },
-  });
-  if (!acceso) return res.status(403).json({ message: 'Sin acceso' });
+      select: { id: true },
+    });
+    if (!acceso) return res.status(403).json({ message: 'Sin acceso' });
 
-  // Traer los últimos 50 en DESC y revertir para orden ASC
-  const mensajesDesc = await prisma.mensaje.findMany({
-    where: { chat_id: req.params.chatId },
-    select: {
-      id: true, contenido: true, enviado_en: true,
-      remitente: { select: { id: true, nombre: true, foto_perfil: true } },
-    },
-    orderBy: { enviado_en: 'desc' },
-    take: 50,
-  });
+    // Traer los últimos 50 en DESC y revertir para orden ASC
+    const mensajesDesc = await prisma.mensaje.findMany({
+      where: { chat_id: req.params.chatId },
+      select: {
+        id: true, contenido: true, enviado_en: true,
+        remitente: { select: { id: true, nombre: true, foto_perfil: true } },
+      },
+      orderBy: { enviado_en: 'desc' },
+      take: 50,
+    });
 
-  const mensajes = mensajesDesc.reverse().map(m => ({
-    id: m.id, contenido: m.contenido, enviado_en: m.enviado_en,
-    remitente_id:     m.remitente.id,
-    remitente_nombre: m.remitente.nombre,
-    remitente_foto:   m.remitente.foto_perfil,
-  }));
+    const mensajes = mensajesDesc.reverse().map(m => ({
+      id: m.id, contenido: m.contenido, enviado_en: m.enviado_en,
+      remitente_id:     m.remitente.id,
+      remitente_nombre: m.remitente.nombre,
+      remitente_foto:   m.remitente.foto_perfil,
+    }));
 
-  res.json({ mensajes });
+    res.json({ mensajes });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // ── DELETE /api/chats/:chatId ─────────────────────────────────
-export const cerrarChat = async (req, res) => {
-  const acceso = await prisma.chat.findFirst({
-    where: {
-      id: req.params.chatId,
-      solicitud: {
-        OR: [
-          { usuario_id: req.userId },
-          { grupo: { miembros: { some: { usuario_id: req.userId, activo: true, rol: 'ADMIN' } } } },
-        ],
+export const cerrarChat = async (req, res, next) => {
+  try {
+    const acceso = await prisma.chat.findFirst({
+      where: {
+        id: req.params.chatId,
+        solicitud: {
+          OR: [
+            { usuario_id: req.userId },
+            { grupo: { miembros: { some: { usuario_id: req.userId, activo: true, rol: 'ADMIN' } } } },
+          ],
+        },
       },
-    },
-    select: { solicitud_id: true },
-  });
-  if (!acceso) return res.status(403).json({ message: 'Sin acceso' });
+      select: { solicitud_id: true },
+    });
+    if (!acceso) return res.status(403).json({ message: 'Sin acceso' });
 
-  // CASCADE: eliminar solicitud borra también el chat y los mensajes
-  await prisma.solicitudContacto.delete({ where: { id: acceso.solicitud_id } });
-  res.json({ ok: true });
+    // CASCADE: eliminar solicitud borra también el chat y los mensajes
+    await prisma.solicitudContacto.delete({ where: { id: acceso.solicitud_id } });
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // ── POST /api/chats/:chatId/mensajes ─────────────────────────
-export const enviarMensaje = async (req, res) => {
-  const { contenido } = req.body;
-  if (!contenido?.trim()) return res.status(400).json({ message: 'Mensaje vacío' });
+export const enviarMensaje = async (req, res, next) => {
+  try {
+    const { contenido } = req.body;
+    if (!contenido?.trim()) return res.status(400).json({ message: 'Mensaje vacío' });
 
-  const acceso = await prisma.chat.findFirst({
-    where: {
-      id: req.params.chatId,
-      solicitud: {
-        OR: [
-          { usuario_id: req.userId },
-          { grupo: { miembros: { some: { usuario_id: req.userId, activo: true } } } },
-        ],
+    const acceso = await prisma.chat.findFirst({
+      where: {
+        id: req.params.chatId,
+        solicitud: {
+          OR: [
+            { usuario_id: req.userId },
+            { grupo: { miembros: { some: { usuario_id: req.userId, activo: true } } } },
+          ],
+        },
       },
-    },
-    select: { estado: true },
-  });
-  if (!acceso) return res.status(403).json({ message: 'Sin acceso' });
-  if (acceso.estado !== 'ACTIVO') return res.status(400).json({ message: 'Chat cerrado' });
+      select: { estado: true },
+    });
+    if (!acceso) return res.status(403).json({ message: 'Sin acceso' });
+    if (acceso.estado !== 'ACTIVO') return res.status(400).json({ message: 'Chat cerrado' });
 
-  const remitente = await prisma.usuario.findFirst({
-    where: { id: req.userId },
-    select: { nombre: true, foto_perfil: true },
-  });
+    const remitente = await prisma.usuario.findFirst({
+      where: { id: req.userId },
+      select: { nombre: true, foto_perfil: true },
+    });
 
-  const mensajeCreado = await prisma.mensaje.create({
-    data: { id: randomUUID(), chat_id: req.params.chatId, remitente_id: req.userId, contenido: contenido.trim() },
-    select: { id: true, contenido: true, enviado_en: true },
-  });
+    const mensajeCreado = await prisma.mensaje.create({
+      data: { id: randomUUID(), chat_id: req.params.chatId, remitente_id: req.userId, contenido: contenido.trim() },
+      select: { id: true, contenido: true, enviado_en: true },
+    });
 
-  const mensaje = {
-    ...mensajeCreado,
-    remitente_id:     req.userId,
-    remitente_nombre: remitente?.nombre,
-    remitente_foto:   remitente?.foto_perfil,
-  };
+    const mensaje = {
+      ...mensajeCreado,
+      remitente_id:     req.userId,
+      remitente_nombre: remitente?.nombre,
+      remitente_foto:   remitente?.foto_perfil,
+    };
 
-  req.app.get('io')?.to(`chat:${req.params.chatId}`).emit('nuevo_mensaje', mensaje);
-  res.json({ mensaje });
+    req.app.get('io')?.to(`chat:${req.params.chatId}`).emit('nuevo_mensaje', mensaje);
+    res.json({ mensaje });
+  } catch (err) {
+    next(err);
+  }
 };

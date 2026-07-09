@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X } from 'lucide-react'
 import { registroSchema } from '../lib/schemas'
+import { apiFetch } from '../lib/apiFetch'
 
 function GoogleIcon() {
   return (
@@ -17,6 +18,7 @@ function GoogleIcon() {
 
 function RegistroModal({ onClose, onSuccess, onSwitchToLogin }) {
   const [serverError, setServerError] = useState('')
+  const [esCasero, setEsCasero] = useState(false)
 
   const {
     register,
@@ -27,22 +29,20 @@ function RegistroModal({ onClose, onSuccess, onSwitchToLogin }) {
   const onSubmit = async (data) => {
     setServerError('')
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/registro`, {
+      const res = await apiFetch('/api/auth/registro', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(data),
       })
       const json = await res.json()
       if (!res.ok) return setServerError(json.message)
-      onSuccess(json.user)
+      onSuccess(json.user, esCasero)
     } catch {
       setServerError('Error de conexión con el servidor')
     }
   }
 
   const handleGoogle = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`
+    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/google`
   }
 
   const fieldClass = (hasError) =>
@@ -83,6 +83,34 @@ function RegistroModal({ onClose, onSuccess, onSwitchToLogin }) {
           <div className="flex-1 h-px bg-slate-200" />
           <span className="text-xs text-slate-400">o con email</span>
           <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">¿Qué te trae por aquí?</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setEsCasero(false)}
+              className={`cursor-pointer! flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${
+                !esCasero
+                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-200'
+                  : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              Busco piso
+            </button>
+            <button
+              type="button"
+              onClick={() => setEsCasero(true)}
+              className={`cursor-pointer! flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${
+                esCasero
+                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-200'
+                  : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              Soy casero
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">

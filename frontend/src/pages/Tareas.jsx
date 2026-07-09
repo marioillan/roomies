@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { apiFetch } from '../lib/apiFetch'
 import {
   UtensilsCrossed, Droplets, Sofa, DoorOpen, Sparkles,
   Check, Plus, X, Trash2, AlertCircle, RefreshCw, Calendar,
@@ -129,9 +130,8 @@ function ModalAñadirZona({ onClose, onAñadida }) {
     if (!nom) { setError('El nombre es obligatorio'); return }
     setEnviando(true); setError(null)
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas/zonas`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', body: JSON.stringify({ nombre: nom }),
+      const r = await apiFetch('/api/tareas/zonas', {
+        method: 'POST', body: JSON.stringify({ nombre: nom }),
       })
       const data = await r.json()
       if (!r.ok) { setError(data.message ?? 'Error al añadir la zona'); return }
@@ -180,9 +180,9 @@ function ModalAñadirZona({ onClose, onAñadida }) {
 
 // ── Vista sin configurar ──────────────────────────────────────────────
 
-function VistaNoConfigurada({ esAdmin, onIniciar, iniciando, errorInit }) {
+function VistaNoConfigurada({ esAdmin, onSolicitarIniciar, iniciando, errorInit }) {
   return (
-    <div className='flex flex-col items-center justify-center py-24 gap-6 text-center'>
+    <div className='flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center'>
       <div className='w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center'>
         <RefreshCw size={28} className='text-emerald-500' />
       </div>
@@ -197,7 +197,7 @@ function VistaNoConfigurada({ esAdmin, onIniciar, iniciando, errorInit }) {
       {esAdmin && (
         <>
           <button
-            onClick={onIniciar} disabled={iniciando}
+            onClick={onSolicitarIniciar} disabled={iniciando}
             className='cursor-pointer! inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition disabled:opacity-50'
           >
             {iniciando
@@ -208,6 +208,51 @@ function VistaNoConfigurada({ esAdmin, onIniciar, iniciando, errorInit }) {
           {errorInit && <p className='text-sm text-red-600'>{errorInit}</p>}
         </>
       )}
+    </div>
+  )
+}
+
+// ── Modal confirmar inicio de rotación ─────────────────────────────────
+
+function ModalConfirmarIniciar({ iniciando, errorInit, onConfirmar, onCancelar }) {
+  return (
+    <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm' onClick={onCancelar}>
+      <div className='bg-white rounded-2xl shadow-xl w-full max-w-sm' onClick={e => e.stopPropagation()}>
+        <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
+          <h3 className='font-display text-base font-bold text-slate-900'>Iniciar rotación</h3>
+          <button onClick={onCancelar} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'>
+            <X size={16} />
+          </button>
+        </div>
+        <div className='px-6 py-5 flex flex-col gap-4'>
+          <div className='flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3'>
+            <AlertCircle size={16} className='text-amber-500 shrink-0 mt-0.5' />
+            <p className='text-sm text-amber-700 leading-relaxed'>
+              Asegúrate de que todos los miembros del grupo ya se han unido antes de continuar. Los miembros que se unan más tarde no entrarán automáticamente en el reparto de zonas de esta semana.
+            </p>
+          </div>
+          <p className='text-sm text-slate-500 leading-relaxed'>
+            ¿Están todos los miembros del grupo ya en la app y quieres iniciar la rotación ahora?
+          </p>
+          {errorInit && <p className='text-sm text-red-600'>{errorInit}</p>}
+          <div className='flex gap-2 justify-end'>
+            <button type='button' onClick={onCancelar} className='cursor-pointer! px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition'>
+              Cancelar
+            </button>
+            <button
+              type='button'
+              onClick={onConfirmar}
+              disabled={iniciando}
+              className='cursor-pointer! inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition disabled:opacity-50'
+            >
+              {iniciando
+                ? <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                : <Check size={14} />}
+              Sí, iniciar rotación
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -224,6 +269,7 @@ function Tareas() {
   const [modalZona, setModalZona] = useState(false)
   const [iniciando, setIniciando] = useState(false)
   const [errorInit, setErrorInit] = useState(null)
+  const [mostrarModalIniciar, setMostrarModalIniciar] = useState(false)
   const [eliminando, setEliminando] = useState(null)
   const [zonaAEliminar, setZonaAEliminar] = useState(null)
 
@@ -236,7 +282,7 @@ function Tareas() {
   async function cargar() {
     setCargando(true)
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas`, { credentials: 'include' })
+      const r = await apiFetch('/api/tareas')
       const data = await r.json()
       if (!r.ok) { setError(data.message); return }
       setDatos(data)
@@ -247,23 +293,25 @@ function Tareas() {
   async function iniciar() {
     setIniciando(true); setErrorInit(null)
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas/iniciar`, {
-        method: 'POST', credentials: 'include',
-      })
+      const r = await apiFetch('/api/tareas/iniciar', { method: 'POST' })
       const data = await r.json()
-      if (!r.ok) { setErrorInit(data.message); return }
+      if (!r.ok) { setErrorInit(data.message); return false }
       await cargar()
-    } catch { setErrorInit('Error de conexión') }
+      return true
+    } catch { setErrorInit('Error de conexión'); return false }
     finally { setIniciando(false) }
+  }
+
+  async function confirmarIniciar() {
+    const ok = await iniciar()
+    if (ok) setMostrarModalIniciar(false)
   }
 
   async function toggleEstado(asignacionId) {
     if (toggling) return
     setToggling(asignacionId)
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas/turnos/${asignacionId}/estado`, {
-        method: 'PATCH', credentials: 'include',
-      })
+      const r = await apiFetch(`/api/tareas/turnos/${asignacionId}/estado`, { method: 'PATCH' })
       const data = await r.json()
       if (!r.ok) { setError(data.message); return }
       setDatos(prev => ({
@@ -280,9 +328,7 @@ function Tareas() {
     if (!zonaAEliminar) return
     setEliminando(zonaAEliminar.id)
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/tareas/zonas/${zonaAEliminar.id}`, {
-        method: 'DELETE', credentials: 'include',
-      })
+      const r = await apiFetch(`/api/tareas/zonas/${zonaAEliminar.id}`, { method: 'DELETE' })
       const data = await r.json()
       if (!r.ok) { setError(data.message); return }
       setDatos(prev => ({ ...prev, zonas: prev.zonas.filter(z => z.id !== zonaAEliminar.id) }))
@@ -309,7 +355,24 @@ function Tareas() {
   }
 
   if (!datos?.configurado) {
-    return <VistaNoConfigurada esAdmin={esAdmin} onIniciar={iniciar} iniciando={iniciando} errorInit={errorInit} />
+    return (
+      <>
+        <VistaNoConfigurada
+          esAdmin={esAdmin}
+          onSolicitarIniciar={() => setMostrarModalIniciar(true)}
+          iniciando={iniciando}
+          errorInit={errorInit}
+        />
+        {mostrarModalIniciar && (
+          <ModalConfirmarIniciar
+            iniciando={iniciando}
+            errorInit={errorInit}
+            onConfirmar={confirmarIniciar}
+            onCancelar={() => setMostrarModalIniciar(false)}
+          />
+        )}
+      </>
+    )
   }
 
   const { zonas, miembros, asignaciones, semana_rotacion: semanaRotacion, lunes_actual: lunesActual } = datos
@@ -322,20 +385,20 @@ function Tareas() {
   const pct = total > 0 ? Math.round(hechas / total * 100) : 0
 
   return (
-    <div className='flex flex-col gap-6 pb-12'>
+    <div className='flex flex-col gap-6'>
 
       {/* Header */}
       <div className='flex items-end justify-between gap-4'>
         <div>
-          <h1 className='font-display text-5xl font-bold text-slate-900'>Tareas</h1>
+          <h1 className='font-display text-3xl sm:text-5xl font-bold text-slate-900'>Tareas</h1>
         </div>
       </div>
 
       {/* Hero grid */}
-      <div className='grid gap-4' style={{ gridTemplateColumns: '1.6fr 1fr' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-4'>
 
         {/* Card "Esta semana te toca" */}
-        <div className='bg-slate-900 text-white rounded-3xl p-7 flex flex-col gap-5'>
+        <div className='bg-slate-900 text-white rounded-3xl p-5 sm:p-7 flex flex-col gap-5'>
           <div className='flex items-center justify-between'>
             <p className='font-mono text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-slate-400'>
               Esta semana te toca
@@ -360,16 +423,16 @@ function Tareas() {
                   <div className='w-14 h-14 rounded-2xl flex items-center justify-center shrink-0' style={{ backgroundColor: cfg.color + '26' }}>
                     <Icon size={26} style={{ color: cfg.color }} />
                   </div>
-                  <div>
-                    <p className='font-display text-[2.25rem] font-bold text-white leading-none'>{miAsignacion.zona_nombre}</p>
+                  <div className='min-w-0'>
+                    <p className='font-display text-2xl sm:text-[2.25rem] font-bold text-white leading-none truncate'>{miAsignacion.zona_nombre}</p>
                     <p className='text-slate-400 text-sm mt-1'>Tu zona asignada esta semana</p>
                   </div>
                 </div>
-                <div className='flex items-center gap-3'>
+                <div className='flex flex-wrap items-center gap-3'>
                   <button
                     onClick={() => toggleEstado(miAsignacion.id)}
                     disabled={toggling === miAsignacion.id}
-                    className={`cursor-pointer! inline-flex items-center gap-2 font-semibold text-sm px-5 py-2.5 rounded-xl transition disabled:opacity-50
+                    className={`cursor-pointer! inline-flex items-center gap-2 font-semibold text-sm px-5 py-3 rounded-xl transition disabled:opacity-50
                       ${miAsignacion.estado === 'COMPLETADA'
                         ? 'bg-white/15 hover:bg-white/25 text-white'
                         : 'bg-emerald-500 hover:bg-emerald-400 text-white'}`}
@@ -393,7 +456,7 @@ function Tareas() {
         </div>
 
         {/* Card "Cómo funciona" */}
-        <div className='bg-white border border-slate-100 rounded-3xl p-7 flex flex-col gap-5' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
+        <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-5' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
           <p className='font-mono text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-slate-500'>
             Cómo funciona la rotación
           </p>
@@ -433,7 +496,7 @@ function Tareas() {
 
       {/* Tabla quién limpia qué */}
       <div className='bg-white border border-slate-100 rounded-3xl overflow-hidden' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
-        <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
+        <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between px-4 sm:px-6 py-4 border-b border-slate-100'>
           <div>
             <p className='font-mono text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-slate-400'>Turnos · semana actual</p>
             <h2 className='font-display text-lg font-bold text-slate-900 mt-0.5'>Quién limpia qué</h2>
@@ -446,7 +509,8 @@ function Tareas() {
           </div>
         </div>
 
-        <table className='w-full'>
+        {/* Tabla — sm y superior */}
+        <table className='hidden sm:table w-full'>
           <thead>
             <tr className='border-b border-slate-100'>
               <th className='font-mono text-[0.6rem] font-semibold tracking-[0.12em] uppercase text-slate-400 px-6 py-3 text-left'>Miembro</th>
@@ -506,6 +570,55 @@ function Tareas() {
             })}
           </tbody>
         </table>
+
+        {/* Tarjetas — mobile */}
+        <div className='sm:hidden flex flex-col'>
+          {miembros.map((miembro, idx) => {
+            const asign = asignaciones.find(a => a.usuario_id === miembro.id)
+            const esYo = miembro.id === user?.id
+            const cfg = asign ? getZonaCfg(asign.zona_nombre) : ZONA_DEFAULT
+            const { Icon } = cfg
+            return (
+              <div
+                key={miembro.id}
+                className={`px-4 py-4 border-b border-dashed border-slate-100 last:border-0 ${esYo ? 'bg-pink-50' : ''}`}
+              >
+                <div className='flex items-center justify-between gap-2'>
+                  <div className='flex items-center gap-2.5 min-w-0'>
+                    <AvatarMiembro foto={miembro.foto_perfil} nombre={miembro.nombre} />
+                    <span className='text-sm font-semibold text-slate-900 truncate'>{miembro.nombre}</span>
+                    {esYo && (
+                      <span className='font-mono text-[0.625rem] font-bold text-pink-700 bg-pink-50 border border-pink-200 px-1.5 py-0.5 rounded shrink-0'>TÚ</span>
+                    )}
+                  </div>
+                  {asign ? (
+                    <span className={`inline-flex items-center gap-1.5 font-mono text-[0.625rem] font-semibold tracking-[0.08em] uppercase px-2.5 py-1 rounded-full shrink-0
+                      ${asign.estado === 'COMPLETADA' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-100 text-amber-800'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${asign.estado === 'COMPLETADA' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      {asign.estado === 'COMPLETADA' ? 'Hecha' : 'Pendiente'}
+                    </span>
+                  ) : (
+                    <span className='text-slate-300 text-sm shrink-0'>—</span>
+                  )}
+                </div>
+
+                <div className='flex items-center justify-between gap-2 mt-3 pl-9'>
+                  {asign ? (
+                    <div className='inline-flex items-center gap-2 min-w-0'>
+                      <div className='w-6 h-6 rounded-md flex items-center justify-center shrink-0' style={{ backgroundColor: cfg.color + '1a' }}>
+                        <Icon size={12} style={{ color: cfg.color }} />
+                      </div>
+                      <span className='text-sm font-medium text-slate-700 truncate'>{asign.zona_nombre}</span>
+                    </div>
+                  ) : (
+                    <span className='text-slate-300 text-sm'>—</span>
+                  )}
+                  <ProximaSemanaZona miembros={miembros} zonas={zonas} miembroIdx={idx} semanaRotacion={semanaRotacion} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Zonas en rotación */}
@@ -542,11 +655,12 @@ function Tareas() {
                   <button
                     onClick={() => setZonaAEliminar(zona)}
                     disabled={eliminando === zona.id}
-                    className='cursor-pointer! ml-1 text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100 disabled:opacity-30'
+                    aria-label={`Eliminar zona ${zona.nombre}`}
+                    className='cursor-pointer! -mr-1 ml-0.5 w-8 h-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition opacity-100 sm:opacity-0 sm:group-hover:opacity-100 disabled:opacity-30'
                   >
                     {eliminando === zona.id
                       ? <div className='w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin' />
-                      : <Trash2 size={12} />}
+                      : <Trash2 size={13} />}
                   </button>
                 )}
               </div>

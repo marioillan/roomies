@@ -2,6 +2,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
 import { useState, useRef, useEffect } from 'react'
 import { z } from 'zod'
 import {
@@ -14,6 +15,12 @@ import {
   Label, FieldError, Section, PillGroup, BoolPillGroup, StepBar,
 } from '../components/FormPrimitivos'
 
+// ── Helpers ───────────────────────────────────────────────────────
+const enumReq = (values) =>
+  z.string({ required_error: 'Obligatorio' })
+    .min(1, 'Selecciona una opción')
+    .refine(v => values.includes(v), 'Selecciona una opción')
+
 // ── Schema ────────────────────────────────────────────────────────
 const schema = z.object({
   nombre:             z.string().min(3, 'Mínimo 3 caracteres').max(100, 'Máximo 100 caracteres'),
@@ -21,13 +28,16 @@ const schema = z.object({
   ciudad:             z.string().max(100).optional(),
   dia_limpieza:       z.string().optional(),
   buscar_companero:   z.boolean().nullish(),
-  // convivencia
-  horario:            z.string().optional(),
-  ambiente:           z.string().optional(),
-  frecuencia_visitas: z.string().optional(),
-  tolerancia_fiestas: z.string().optional(),
+  // convivencia — campos de compatibilidad: obligatorios
+  horario:            enumReq(['MADRUGADOR', 'INTERMEDIO', 'NOCTURNO']),
+  ambiente:           enumReq(['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']),
+  frecuencia_visitas: enumReq(['CASI_NUNCA', 'A_VECES', 'FRECUENTE']),
+  tolerancia_fiestas: enumReq(['NUNCA', 'OCASIONAL', 'FRECUENTE']),
+  ocupacion:          enumReq(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']),
+  limpieza_orden:     enumReq(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']),
+  nivel_ruido:        enumReq(['SILENCIO_TOTAL', 'MODERADO', 'INDIFERENTE']),
+  // campos opcionales
   frecuencia_salidas: z.string().optional(),
-  ocupacion:          z.string().optional(),
   acepta_fumadores:   z.string().optional(),
   acepta_mascotas:    z.string().optional(),
   lgbtq_friendly:     z.boolean().nullish(),
@@ -43,11 +53,14 @@ const DIAS_SEMANA = [
   { value: 'DOMINGO',  label: 'Domingo'  },
 ]
 
-const CONV_FIELDS = ['horario','ambiente','frecuencia_visitas','tolerancia_fiestas','frecuencia_salidas','ocupacion','acepta_fumadores','acepta_mascotas','lgbtq_friendly']
+const CONV_FIELDS = ['horario','ambiente','frecuencia_visitas','tolerancia_fiestas','frecuencia_salidas','ocupacion','acepta_fumadores','acepta_mascotas','lgbtq_friendly','limpieza_orden','nivel_ruido']
 
 // ── Steps ─────────────────────────────────────────────────────────
 const STEPS = ['Datos del grupo', 'Convivencia']
-const STEP_FIELDS = [['nombre', 'descripcion'], []]
+const STEP_FIELDS = [
+  ['nombre', 'descripcion'],
+  ['horario', 'ambiente', 'frecuencia_visitas', 'tolerancia_fiestas', 'ocupacion', 'limpieza_orden', 'nivel_ruido'],
+]
 const STEP_META = [
   {
     icon: Users,
@@ -173,7 +186,7 @@ function Paso1({ register, control, errors, watch, fotoPreview, fotoLoading, fot
 }
 
 // ── Paso 2: Convivencia del grupo ─────────────────────────────────
-function Paso2({ control }) {
+function Paso2({ control, errors }) {
   return (
     <div className='flex flex-col gap-6'>
       <p className='text-sm text-slate-500 leading-relaxed'>
@@ -192,6 +205,7 @@ function Paso2({ control }) {
               ]}
             />
           )} />
+          <FieldError message={errors?.horario?.message} />
         </div>
 
         <div>
@@ -205,6 +219,7 @@ function Paso2({ control }) {
               ]}
             />
           )} />
+          <FieldError message={errors?.ambiente?.message} />
         </div>
 
         <div>
@@ -217,6 +232,42 @@ function Paso2({ control }) {
                 { value: 'ESTUDIO_Y_TRABAJO', label: 'Estudio y trabajo'},
               ]}
             />
+          )} />
+          <FieldError message={errors?.ocupacion?.message} />
+        </div>
+
+        <div>
+          <Label>Limpieza y orden en el piso</Label>
+          <Controller name='limpieza_orden' control={control} render={({ field }) => (
+            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+              options={[
+                { value: 'DESPREOCUPADO', label: 'Despreocupado' },
+                { value: 'FLEXIBLE',      label: 'Flexible' },
+                { value: 'ORDENADO',      label: 'Ordenado' },
+              ]}
+            />
+          )} />
+          <FieldError message={errors?.limpieza_orden?.message} />
+        </div>
+
+        <div>
+          <Label>Nivel de ruido habitual</Label>
+          <Controller name='nivel_ruido' control={control} render={({ field }) => (
+            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+              options={[
+                { value: 'SILENCIO_TOTAL', label: 'Silencio total' },
+                { value: 'MODERADO',       label: 'Moderado' },
+                { value: 'INDIFERENTE',    label: 'Indiferente' },
+              ]}
+            />
+          )} />
+          <FieldError message={errors?.nivel_ruido?.message} />
+        </div>
+
+        <div>
+          <Label>¿Es LGBTQ+ friendly?</Label>
+          <Controller name='lgbtq_friendly' control={control} render={({ field }) => (
+            <BoolPillGroup value={field.value} onChange={field.onChange} />
           )} />
         </div>
       </Section>
@@ -233,6 +284,7 @@ function Paso2({ control }) {
               ]}
             />
           )} />
+          <FieldError message={errors?.frecuencia_visitas?.message} />
         </div>
 
         <div>
@@ -246,6 +298,7 @@ function Paso2({ control }) {
               ]}
             />
           )} />
+          <FieldError message={errors?.tolerancia_fiestas?.message} />
         </div>
 
         <div>
@@ -289,12 +342,6 @@ function Paso2({ control }) {
           )} />
         </div>
 
-        <div>
-          <Label>¿Es LGBTQ+ friendly?</Label>
-          <Controller name='lgbtq_friendly' control={control} render={({ field }) => (
-            <BoolPillGroup value={field.value} onChange={field.onChange} />
-          )} />
-        </div>
       </Section>
     </div>
   )
@@ -329,16 +376,16 @@ function EditarPerfilGrupo() {
       nombre: '', descripcion: '', ciudad: '', dia_limpieza: '', buscar_companero: null,
       horario: '', ambiente: '', frecuencia_visitas: '', tolerancia_fiestas: '',
       frecuencia_salidas: '', ocupacion: '', acepta_fumadores: '', acepta_mascotas: '',
-      lgbtq_friendly: null,
+      lgbtq_friendly: null, limpieza_orden: '', nivel_ruido: '',
     },
   })
 
   useEffect(() => {
     Promise.allSettled([
-      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`,      { credentials: 'include' }).then(r => r.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/convivencia`,   { credentials: 'include' }).then(r => r.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/intereses`,     { credentials: 'include' }).then(r => r.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mis-intereses`, { credentials: 'include' }).then(r => r.json()),
+      apiFetch('/api/grupos/mi-grupo').then(r => r.json()),
+      apiFetch('/api/grupos/convivencia').then(r => r.json()),
+      apiFetch('/api/grupos/intereses').then(r => r.json()),
+      apiFetch('/api/grupos/mis-intereses').then(r => r.json()),
     ]).then(([grupoRes, convRes, todosRes, misRes]) => {
       const camposGrupo = grupoRes.status === 'fulfilled' && grupoRes.value.grupo
         ? {
@@ -360,6 +407,8 @@ function EditarPerfilGrupo() {
             acepta_fumadores:   convRes.value.perfil.acepta_fumadores   ?? '',
             acepta_mascotas:    convRes.value.perfil.acepta_mascotas    ?? '',
             lgbtq_friendly:     convRes.value.perfil.lgbtq_friendly     ?? null,
+            limpieza_orden:     convRes.value.perfil.limpieza_orden     ?? '',
+            nivel_ruido:        convRes.value.perfil.nivel_ruido        ?? '',
           }
         : {}
 
@@ -384,7 +433,7 @@ function EditarPerfilGrupo() {
     try {
       const formData = new FormData()
       formData.append('foto', file)
-      const res  = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/foto`, { method: 'PUT', credentials: 'include', body: formData })
+      const res  = await apiFetch('/api/grupos/foto', { method: 'PUT', body: formData })
       const json = await res.json()
       if (!res.ok) return setFotoError(json.message)
       setFotoPreview(json.grupo.foto_perfil)
@@ -407,10 +456,8 @@ function EditarPerfilGrupo() {
     )
     try {
       const [res] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL}/api/grupos/editar`, {
+        apiFetch('/api/grupos/editar', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({
             nombre:           data.nombre,
             dia_limpieza:     data.dia_limpieza     || null,
@@ -419,16 +466,12 @@ function EditarPerfilGrupo() {
             buscar_companero: data.buscar_companero ?? null,
           }),
         }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/grupos/intereses`, {
+        apiFetch('/api/grupos/intereses', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ intereses: [...interesesSeleccionados] }),
         }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/grupos/convivencia`, {
+        apiFetch('/api/grupos/convivencia', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify(convPayload),
         }),
       ])
@@ -510,12 +553,26 @@ function EditarPerfilGrupo() {
                 onToggleInteres={toggleInteres}
               />
             )}
-            {step === 1 && <Paso2 control={control} />}
+            {step === 1 && <Paso2 control={control} errors={errors} />}
 
             {serverError && (
               <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
                 <AlertCircle size={13} className='text-red-500 shrink-0' />
                 <p className='text-xs text-red-700 font-medium'>{serverError}</p>
+              </div>
+            )}
+
+            {step === 0 && STEP_FIELDS[0].some(f => errors[f]) && (
+              <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+                <AlertCircle size={13} className='text-red-500 shrink-0' />
+                <p className='text-xs text-red-700 font-medium'>Debes rellenar todos los campos obligatorios.</p>
+              </div>
+            )}
+
+            {step === 1 && STEP_FIELDS[1].some(f => errors[f]) && (
+              <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+                <AlertCircle size={13} className='text-red-500 shrink-0' />
+                <p className='text-xs text-red-700 font-medium'>Debes seleccionar una opción en todos los campos marcados como obligatorios.</p>
               </div>
             )}
 

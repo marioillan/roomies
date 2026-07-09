@@ -16,12 +16,14 @@ export const editarGrupoSchema = z.object({
 });
 
 export const grupoConvivenciaSchema = z.object({
-  horario:            z.enum(['MADRUGADOR', 'INTERMEDIO', 'NOCTURNO']).nullable().optional(),
-  ambiente:           z.enum(['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']).nullable().optional(),
-  frecuencia_visitas: z.enum(['CASI_NUNCA', 'A_VECES', 'FRECUENTE']).nullable().optional(),
-  tolerancia_fiestas: z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
+  horario:            z.enum(['MADRUGADOR', 'INTERMEDIO', 'NOCTURNO']),
+  ambiente:           z.enum(['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']),
+  frecuencia_visitas: z.enum(['CASI_NUNCA', 'A_VECES', 'FRECUENTE']),
+  tolerancia_fiestas: z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']),
+  ocupacion:          z.enum(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']),
+  limpieza_orden:     z.enum(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']),
+  nivel_ruido:        z.enum(['SILENCIO_TOTAL', 'MODERADO', 'INDIFERENTE']),
   frecuencia_salidas: z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
-  ocupacion:          z.enum(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']).nullable().optional(),
   acepta_fumadores:   z.enum(['SI', 'NO', 'INDIFERENTE']).nullable().optional(),
   acepta_mascotas:    z.enum(['SI', 'NO', 'DEPENDE']).nullable().optional(),
   lgbtq_friendly:     z.boolean().nullable().optional(),

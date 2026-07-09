@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Plus, X, AlertCircle, Pencil, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, AlertCircle, Pencil, Trash2, LayoutGrid, List } from 'lucide-react'
 import ModalEvento from '../components/ModalEvento.jsx'
+import { apiFetch } from '../lib/apiFetch'
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -100,6 +101,7 @@ function Calendario() {
   const [eliminando, setEliminando] = useState(null)
   const [eventoAEliminar, setEventoAEliminar] = useState(null)
   const [error, setError] = useState(null)
+  const [vista, setVista] = useState('mes')
 
   useEffect(() => {
     cargarEventos()
@@ -107,7 +109,7 @@ function Calendario() {
 
   async function cargarEventos() {
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/eventos`, { credentials: 'include' })
+      const r = await apiFetch('/api/grupos/eventos')
       const data = await r.json()
       if (r.ok) setEventos(data.eventos ?? [])
     } catch { /* no crítico */ }
@@ -130,9 +132,7 @@ function Calendario() {
     if (!eventoAEliminar) return
     setEliminando(eventoAEliminar.id)
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/eventos/${eventoAEliminar.id}`, {
-        method: 'DELETE', credentials: 'include',
-      })
+      const r = await apiFetch(`/api/grupos/eventos/${eventoAEliminar.id}`, { method: 'DELETE' })
       if (r.ok) {
         setEventos(prev => prev.filter(e => e.id !== eventoAEliminar.id))
         setEventoAEliminar(null)
@@ -181,28 +181,47 @@ function Calendario() {
   const esHoyMesActual = mes === hoy.getMonth() && year === hoy.getFullYear()
 
   return (
-    <div className='flex flex-col gap-6 pb-12'>
+    <div className='flex flex-col gap-6'>
 
       {/* Header */}
-      <div className='flex items-end justify-between gap-4'>
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
         <div>
-          <h1 className='font-display text-5xl font-bold text-slate-900'>
+          <h1 className='font-display text-3xl sm:text-5xl font-bold text-slate-900'>
             {MESES[mes]} {year}
           </h1>
         </div>
-        <div className='flex items-center gap-2'>
-          <button onClick={() => navMes(-1)} className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200'>
+        <div className='flex items-center gap-2 flex-wrap'>
+          <button onClick={() => navMes(-1)} className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200 shrink-0'>
             <ChevronLeft size={16} />
           </button>
-          <button onClick={irHoy} className='cursor-pointer! font-semibold text-sm px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition border border-slate-200'>
+          <button onClick={irHoy} className='cursor-pointer! font-semibold text-sm px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition border border-slate-200 shrink-0'>
             Hoy
           </button>
-          <button onClick={() => navMes(1)} className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200'>
+          <button onClick={() => navMes(1)} className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200 shrink-0'>
             <ChevronRight size={16} />
           </button>
+
+          {/* Toggle mes/lista — solo móvil */}
+          <div className='sm:hidden flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-xl p-1 shrink-0'>
+            <button
+              onClick={() => setVista('mes')}
+              aria-label='Vista mensual'
+              className={`cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg transition ${vista === 'mes' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+            >
+              <LayoutGrid size={15} />
+            </button>
+            <button
+              onClick={() => setVista('lista')}
+              aria-label='Vista de lista'
+              className={`cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg transition ${vista === 'lista' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+            >
+              <List size={15} />
+            </button>
+          </div>
+
           <button
             onClick={() => { setDiaInicial(''); setModalNuevo(true) }}
-            className='cursor-pointer! ml-2 inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition'
+            className='cursor-pointer! sm:ml-2 inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition shrink-0'
           >
             <Plus size={14} /> Nuevo evento
           </button>
@@ -218,22 +237,22 @@ function Calendario() {
       )}
 
       {/* Layout calendario + sidebar */}
-      <div className='grid gap-5' style={{ gridTemplateColumns: '1fr 18rem', alignItems: 'start' }}>
+      <div className='grid grid-cols-1 lg:grid-cols-[1fr_18rem] items-start gap-5'>
 
         {/* Calendario mensual */}
-        <div className='bg-white border border-slate-100 rounded-3xl p-6' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
+        <div className={`bg-white border border-slate-100 rounded-3xl p-3 sm:p-6 ${vista === 'lista' ? 'hidden lg:block' : 'block'}`} style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
 
           {/* Días de la semana */}
-          <div className='grid grid-cols-7 gap-1.5 mb-1.5'>
+          <div className='grid grid-cols-7 gap-1 sm:gap-1.5 mb-1.5'>
             {DIAS_SEMANA.map(d => (
-              <div key={d} className='text-center font-mono text-[0.625rem] font-semibold uppercase tracking-[0.1em] text-slate-400 py-1'>
+              <div key={d} className='text-center font-mono text-[0.5625rem] sm:text-[0.625rem] font-semibold uppercase tracking-widest text-slate-400 py-1'>
                 {d}
               </div>
             ))}
           </div>
 
           {/* Celdas */}
-          <div className='grid grid-cols-7 gap-1.5'>
+          <div className='grid grid-cols-7 gap-1 sm:gap-1.5'>
             {cells.map((dia, i) => {
               if (dia === null) return <div key={i} />
               const esHoy = esHoyMesActual && dia === hoy.getDate()
@@ -244,32 +263,35 @@ function Calendario() {
               return (
                 <div
                   key={i}
-                  className={`relative flex flex-col gap-0.5 rounded-xl border p-1.5 overflow-hidden min-h-[3.5rem]
+                  className={`relative flex flex-col gap-0.5 rounded-lg sm:rounded-xl border p-1 sm:p-1.5 overflow-hidden min-h-10 sm:min-h-14
                     ${esHoy ? 'bg-slate-900 border-slate-900' : esLimpieza ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100'}`}
                   style={{ aspectRatio: '1.1' }}
                 >
                   <div className='flex items-center justify-between leading-none'>
-                    <span className={`font-medium text-[0.8125rem] ${esHoy ? 'text-white' : 'text-slate-900'}`}>
+                    <span className={`font-medium text-[0.6875rem] sm:text-[0.8125rem] ${esHoy ? 'text-white' : 'text-slate-900'}`}>
                       {dia}
                     </span>
                     {esLimpieza && esHoy && (
                       <span className='w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0' />
                     )}
                   </div>
-                  {visibles.map((ev) => (
+                  {visibles.map((ev, vi) => (
                     <span
                       key={ev.id}
-                      className='block text-white font-medium text-[0.5625rem] px-1 py-px rounded overflow-hidden text-ellipsis whitespace-nowrap leading-tight'
+                      className={`block text-white font-medium text-[0.5rem] sm:text-[0.5625rem] px-1 py-px rounded overflow-hidden text-ellipsis whitespace-nowrap leading-tight ${vi === 1 ? 'hidden sm:block' : ''}`}
                       style={{ backgroundColor: colorEvento(ev._colorIdx) }}
                     >
                       {ev.titulo}
                     </span>
                   ))}
                   {extra > 0 && (
-                    <span className='font-mono text-[0.5rem] text-slate-400'>+{extra}</span>
+                    <span className='font-mono text-[0.5rem] text-slate-400 hidden sm:block'>+{extra}</span>
+                  )}
+                  {evsDia.length > 1 && (
+                    <span className='font-mono text-[0.5rem] text-slate-400 sm:hidden'>+{evsDia.length - 1}</span>
                   )}
                   {esLimpieza && !esHoy && (
-                    <span className='mt-auto font-mono text-[0.45rem] font-bold uppercase tracking-wide text-amber-500 leading-none'>
+                    <span className='mt-auto font-mono text-[0.45rem] font-bold uppercase tracking-wide text-amber-500 leading-none hidden sm:block'>
                       limpieza
                     </span>
                   )}
@@ -299,6 +321,35 @@ function Calendario() {
             </div>
           )}
         </div>
+
+        {/* Vista de lista — alternativa móvil a la vista mensual */}
+        {vista === 'lista' && (
+          <div className='lg:hidden bg-white border border-slate-100 rounded-3xl p-4' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
+            {Object.keys(eventosPorDia).length === 0 ? (
+              <p className='text-sm text-slate-400 italic px-1 py-3'>Sin eventos este mes</p>
+            ) : (
+              <div className='flex flex-col'>
+                {Object.keys(eventosPorDia).map(Number).sort((a, b) => a - b).map(dia => (
+                  <div key={dia} className='flex items-start gap-3 py-2.5 border-b last:border-0 border-slate-50'>
+                    <div className='w-11 shrink-0 text-center bg-slate-50 border border-slate-100 rounded-xl py-1.5'>
+                      <p className='font-mono text-[0.5625rem] font-semibold uppercase text-slate-400 leading-none'>{MESES_CORTO[mes]}</p>
+                      <p className='font-display text-base font-bold text-slate-900 leading-tight'>{dia}</p>
+                    </div>
+                    <div className='flex-1 min-w-0 flex flex-col gap-1.5 pt-0.5'>
+                      {eventosPorDia[dia].map(ev => (
+                        <div key={ev.id} className='flex items-center gap-2 min-w-0'>
+                          <div className='w-1.5 h-1.5 rounded-full shrink-0' style={{ backgroundColor: colorEvento(ev._colorIdx) }} />
+                          <p className='text-sm font-medium text-slate-800 truncate'>{ev.titulo}</p>
+                          <span className='font-mono text-[0.625rem] text-slate-400 shrink-0 ml-auto'>{formatHora(ev.fecha_inicio)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Sidebar */}
         <div className='flex flex-col gap-4'>
@@ -372,17 +423,17 @@ function Calendario() {
                         </p>
                       </div>
                       {puedeEditar && (
-                        <div className='flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0'>
+                        <div className='flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition shrink-0'>
                           <button
                             onClick={() => setEventoEditando(ev)}
-                            className='cursor-pointer! w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'
+                            className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'
                           >
                             <Pencil size={12} />
                           </button>
                           <button
                             onClick={() => setEventoAEliminar(ev)}
                             disabled={eliminando === ev.id}
-                            className='cursor-pointer! w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition'
+                            className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition'
                           >
                             <Trash2 size={12} />
                           </button>

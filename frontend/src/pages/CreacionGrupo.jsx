@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
 import {
   ArrowLeft, House, Copy, Check, Users, AlertCircle,
   PenLine, CalendarDays,
@@ -81,7 +82,7 @@ function CreacionGrupo() {
   const [checking, setChecking]       = useState(true)
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`, { credentials: 'include' })
+    apiFetch('/api/grupos/mi-grupo')
       .then(r => r.json())
       .then(data => { if (data.grupo) navigate('/grupo', { replace: true }) })
       .catch(() => {})
@@ -96,10 +97,8 @@ function CreacionGrupo() {
   const onSubmit = async (data) => {
     setServerError('')
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/crear`, {
+      const res = await apiFetch('/api/grupos/crear', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ nombre: data.nombre, dia_limpieza: data.dia_limpieza || null }),
       })
       const json = await res.json()

@@ -11,6 +11,8 @@ import {
   editarConvivencia,
   getPublicacion,
   editarPublicacion,
+  eliminarPublicacion,
+  actualizarVisibilidad,
   subirFotosPublicacion,
   eliminarFotoPublicacion,
   subirFotoGrupo,
@@ -36,6 +38,8 @@ router.get('/convivencia',                  requireAuth,                        
 router.put('/convivencia',                  requireAuth, requireAdmin,                          editarConvivencia);
 router.get('/publicacion',                  requireAuth,                                        getPublicacion);
 router.put('/publicacion',                  requireAuth, requireAdmin,                          editarPublicacion);
+router.patch('/publicacion/visible',         requireAuth, requireAdmin,                          actualizarVisibilidad);
+router.delete('/publicacion',               requireAuth, requireAdmin,                          eliminarPublicacion);
 router.put('/publicacion/fotos',            requireAuth, requireAdmin, upload.array('fotos', 10), subirFotosPublicacion);
 router.delete('/publicacion/fotos/:fotoId', requireAuth, requireAdmin,                          eliminarFotoPublicacion);
 router.put('/foto',                         requireAuth, requireAdmin, upload.single('foto'),    subirFotoGrupo);

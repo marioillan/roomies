@@ -95,9 +95,6 @@ enum DiaSemana {
 enum EstadoTarea {
   PENDIENTE
   COMPLETADA
-  VALIDADA
-  RECHAZADA
-  CANCELADA
 
   @@map("estado_tarea_enum")
 }
@@ -134,6 +131,22 @@ enum EstadoChat {
   @@map("estado_chat_enum")
 }
 
+enum LimpiezaOrden {
+  DESPREOCUPADO
+  FLEXIBLE
+  ORDENADO
+
+  @@map("limpieza_orden_enum")
+}
+
+enum NivelRuido {
+  SILENCIO_TOTAL
+  MODERADO
+  INDIFERENTE
+
+  @@map("nivel_ruido_enum")
+}
+
 // ── MODELOS ───────────────────────────────────────────────────
 
 model Usuario {
@@ -142,6 +155,8 @@ model Usuario {
   email                 String    @unique @db.VarChar(255)
   password              String?
   foto_perfil           String?
+  foto_1                String?
+  foto_2                String?
   google_id             String?   @unique @db.VarChar(255)
   google_refresh_token  String?
   google_calendar_token String?
@@ -162,6 +177,7 @@ model Usuario {
   intereses              UsuarioInteres[]
   asignaciones           AsignacionTarea[]
   preferencias_companero PreferenciasCompanero?
+  refresh_tokens         RefreshToken[]
 
   @@map("usuarios")
 }
@@ -228,6 +244,8 @@ model PerfilConvivenciaUsuario {
   tiene_mascotas     Boolean?
   acepta_mascotas    AceptaMascotas?
   lgbtq_friendly     Boolean?
+  limpieza_orden     LimpiezaOrden?
+  nivel_ruido        NivelRuido?
   sobre_mi           String
   created_at         DateTime?          @default(now()) @db.Timestamp(6)
   updated_at         DateTime?          @default(now()) @db.Timestamp(6)
@@ -252,16 +270,16 @@ model PreferenciasCompanero {
   tolerancia_fiestas_req   Boolean?           @default(false)
   frecuencia_salidas       FrecuenciaSalidas?
   frecuencia_salidas_req   Boolean?           @default(false)
-  fumador                  Boolean?
-  fumador_req              Boolean?           @default(false)
   acepta_fumadores         AceptaFumadores?
   acepta_fumadores_req     Boolean?           @default(false)
-  tiene_mascotas           Boolean?
-  tiene_mascotas_req       Boolean?           @default(false)
   acepta_mascotas          AceptaMascotas?
   acepta_mascotas_req      Boolean?           @default(false)
   lgbtq_friendly           Boolean?
   lgbtq_friendly_req       Boolean?           @default(false)
+  limpieza_orden           LimpiezaOrden?
+  limpieza_orden_req       Boolean?           @default(false)
+  nivel_ruido              NivelRuido?
+  nivel_ruido_req          Boolean?           @default(false)
   created_at               DateTime?          @default(now()) @db.Timestamp(6)
   updated_at               DateTime?          @default(now()) @db.Timestamp(6)
 
@@ -282,6 +300,8 @@ model PerfilConvivenciaGrupo {
   acepta_fumadores   AceptaFumadores?
   acepta_mascotas    AceptaMascotas?
   lgbtq_friendly     Boolean?
+  limpieza_orden     LimpiezaOrden?
+  nivel_ruido        NivelRuido?
   created_at         DateTime?          @default(now()) @db.Timestamp(6)
   updated_at         DateTime?          @default(now()) @db.Timestamp(6)
 
@@ -296,7 +316,7 @@ model Publicacion {
   titulo               String    @db.VarChar(255)
   descripcion          String
   ciudad               String    @db.VarChar(100)
-  direccion            String?   @db.VarChar(255)
+  direccion            String    @db.VarChar(255)
   piso_puerta          String?   @db.VarChar(50)
   precio               Decimal   @db.Decimal(10, 2)
   habitaciones_libres  Int?      @default(1)
@@ -486,8 +506,6 @@ model Producto {
   grupo_id        String    @db.VarChar(36)
   anadido_por_id  String    @db.VarChar(36)
   nombre          String    @db.VarChar(255)
-  cantidad        Decimal   @default(1) @db.Decimal(10, 2)
-  unidad_medida   String?   @db.VarChar(50)
   categoria       String    @default("otros") @db.VarChar(20)
   comprado        Boolean?  @default(false)
   comprado_por_id String?   @db.VarChar(36)
@@ -532,4 +550,16 @@ model GrupoInteres {
 
   @@id([grupo_id, interes_id])
   @@map("grupo_intereses")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  usuario_id String
+  expires_at DateTime
+  creado_at  DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }

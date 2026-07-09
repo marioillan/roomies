@@ -8,7 +8,7 @@ export const getProductos = async (req, res, next) => {
     const data = await prisma.producto.findMany({
       where: { grupo_id: req.grupoId },
       select: {
-        id: true, nombre: true, cantidad: true, unidad_medida: true,
+        id: true, nombre: true,
         categoria: true, comprado: true, created_at: true,
         anadido_por:  { select: { nombre: true } },
         comprado_por: { select: { nombre: true } },
@@ -33,16 +33,16 @@ export const añadirProducto = async (req, res, next) => {
   const parsed = añadirSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
 
-  const { nombre, cantidad = 1, unidad_medida, categoria = 'otros' } = parsed.data;
+  const { nombre, categoria = 'otros' } = parsed.data;
 
   try {
     const data = await prisma.producto.create({
       data: {
         id: randomUUID(), grupo_id: req.grupoId, anadido_por_id: req.userId,
-        nombre, cantidad, unidad_medida: unidad_medida ?? null, categoria,
+        nombre, categoria,
       },
       select: {
-        id: true, nombre: true, cantidad: true, unidad_medida: true,
+        id: true, nombre: true,
         categoria: true, comprado: true, created_at: true,
         anadido_por: { select: { nombre: true } },
       },
@@ -74,7 +74,7 @@ export const toggleComprado = async (req, res, next) => {
         fecha_compra:    nuevoEstado ? new Date() : null,
       },
       select: {
-        id: true, nombre: true, cantidad: true, unidad_medida: true,
+        id: true, nombre: true,
         comprado: true, created_at: true,
         anadido_por:  { select: { nombre: true } },
         comprado_por: { select: { nombre: true } },
@@ -100,12 +100,10 @@ export const editarProducto = async (req, res, next) => {
     });
     if (!existente) return res.status(404).json({ message: 'Producto no encontrado' });
 
-    const { nombre, cantidad, unidad_medida, categoria } = parsed.data;
+    const { nombre, categoria } = parsed.data;
     const updateData = {};
-    if (nombre !== undefined)           updateData.nombre = nombre;
-    if (cantidad !== undefined)         updateData.cantidad = cantidad;
-    if ('unidad_medida' in parsed.data) updateData.unidad_medida = unidad_medida ?? null;
-    if (categoria !== undefined)        updateData.categoria = categoria;
+    if (nombre !== undefined)    updateData.nombre = nombre;
+    if (categoria !== undefined) updateData.categoria = categoria;
 
     if (!Object.keys(updateData).length) {
       return res.status(400).json({ message: 'Nada que actualizar' });
@@ -115,7 +113,7 @@ export const editarProducto = async (req, res, next) => {
       where: { id: req.params.id },
       data: updateData,
       select: {
-        id: true, nombre: true, cantidad: true, unidad_medida: true,
+        id: true, nombre: true,
         categoria: true, comprado: true, created_at: true,
         anadido_por:  { select: { nombre: true } },
         comprado_por: { select: { nombre: true } },

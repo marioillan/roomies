@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X, AlertCircle } from 'lucide-react'
+import { apiFetch } from '../lib/apiFetch'
 
 function toLocal(iso) {
   if (!iso) return ''
@@ -31,13 +32,10 @@ function ModalEvento({ evento, diaInicial, onClose, onGuardado }) {
         fecha_inicio: form.fecha_inicio,
         fecha_fin:    form.fecha_fin || null,
       }
-      const url = evento
-        ? `${import.meta.env.VITE_API_URL}/api/grupos/eventos/${evento.id}`
-        : `${import.meta.env.VITE_API_URL}/api/grupos/eventos`
-      const r = await fetch(url, {
+      const url = evento ? `/api/grupos/eventos/${evento.id}` : '/api/grupos/eventos'
+      const r = await apiFetch(url, {
         method: evento ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', body: JSON.stringify(body),
+        body: JSON.stringify(body),
       })
       const data = await r.json()
       if (!r.ok) { setError(data.message ?? 'Error al guardar el evento'); return }

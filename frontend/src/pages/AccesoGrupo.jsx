@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, House, Plus, KeyRound, AlertCircle, Users } from 'lucide-react'
+import { apiFetch } from '../lib/apiFetch'
 
 export default function AccesoGrupo({ setTieneGrupo }) {
   const navigate = useNavigate()
@@ -12,7 +13,7 @@ export default function AccesoGrupo({ setTieneGrupo }) {
   const [esCasero, setEsCasero]     = useState(false)
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`, { credentials: 'include' })
+    apiFetch('/api/grupos/mi-grupo')
       .then(r => r.json())
       .then(data => { if (data.grupo) navigate('/grupo', { replace: true }) })
       .catch(() => {})
@@ -29,10 +30,8 @@ export default function AccesoGrupo({ setTieneGrupo }) {
     setError('')
     setLoading(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/unirse`, {
+      const res = await apiFetch('/api/grupos/unirse', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ codigo_acceso: codigoLimpio }),
       })
       const json = await res.json()

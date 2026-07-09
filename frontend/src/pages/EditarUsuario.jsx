@@ -1,18 +1,25 @@
-import { useForm, Controller, useWatch } from 'react-hook-form'
+import { useForm, Controller, useWatch, useController } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
 import { useState, useRef, useEffect } from 'react'
 import { z } from 'zod'
 import {
   ArrowLeft, Camera, User, Users, Search,
-  AlertCircle, Check, ChevronLeft, ChevronRight,
+  AlertCircle, Check, ChevronLeft, ChevronRight, X,
 } from 'lucide-react'
 import CustomSelect from '../components/CustomSelect'
 import {
   IconInput, baseCls, textareaCls,
   Label, FieldError, Section, PillGroup, BoolPillGroup, StepBar,
 } from '../components/FormPrimitivos'
+
+// ── Helpers ───────────────────────────────────────────────────────
+const enumReq = (values) =>
+  z.string({ required_error: 'Obligatorio' })
+    .min(1, 'Selecciona una opción')
+    .refine(v => values.includes(v), 'Selecciona una opción')
 
 // ── Schema ────────────────────────────────────────────────────────
 const schema = z.object({
@@ -23,12 +30,14 @@ const schema = z.object({
   mes:                z.string().min(1, 'Selecciona el mes'),
   anio:               z.string().min(1, 'Selecciona el año'),
   sobre_mi:           z.string().min(1, 'La descripción es obligatoria').max(399, 'Máximo 399 caracteres'),
-  // Paso 2 — mi perfil
-  ocupacion:          z.string().optional(),
-  horario:            z.string().optional(),
-  frecuencia_visitas: z.string().optional(),
-  ambiente:           z.string().optional(),
-  tolerancia_fiestas: z.string().optional(),
+  // Paso 2 — mi perfil (campos de compatibilidad: obligatorios)
+  ocupacion:          enumReq(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']),
+  horario:            enumReq(['MADRUGADOR', 'INTERMEDIO', 'NOCTURNO']),
+  frecuencia_visitas: enumReq(['CASI_NUNCA', 'A_VECES', 'FRECUENTE']),
+  ambiente:           enumReq(['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']),
+  tolerancia_fiestas: enumReq(['NUNCA', 'OCASIONAL', 'FRECUENTE']),
+  limpieza_orden:     enumReq(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']),
+  nivel_ruido:        enumReq(['SILENCIO_TOTAL', 'MODERADO', 'INDIFERENTE']),
   frecuencia_salidas: z.string().optional(),
   fumador:            z.boolean().nullish(),
   acepta_fumadores:   z.string().optional(),
@@ -48,16 +57,16 @@ const schema = z.object({
   pref_tolerancia_fiestas_req:  z.boolean().nullish(),
   pref_frecuencia_salidas:      z.string().optional(),
   pref_frecuencia_salidas_req:  z.boolean().nullish(),
-  pref_fumador:                 z.boolean().nullish(),
-  pref_fumador_req:             z.boolean().nullish(),
   pref_acepta_fumadores:        z.string().optional(),
   pref_acepta_fumadores_req:    z.boolean().nullish(),
-  pref_tiene_mascotas:          z.boolean().nullish(),
-  pref_tiene_mascotas_req:      z.boolean().nullish(),
   pref_acepta_mascotas:         z.string().optional(),
   pref_acepta_mascotas_req:     z.boolean().nullish(),
   pref_lgbtq_friendly:          z.boolean().nullish(),
   pref_lgbtq_friendly_req:      z.boolean().nullish(),
+  pref_limpieza_orden:          z.string().optional(),
+  pref_limpieza_orden_req:      z.boolean().nullish(),
+  pref_nivel_ruido:             z.string().optional(),
+  pref_nivel_ruido_req:         z.boolean().nullish(),
 })
 
 // ── Opciones de fecha ─────────────────────────────────────────────
@@ -75,11 +84,15 @@ function parseFecha(fechaISO) {
   return { dia: String(Number(dia)), mes: String(Number(mes)), anio }
 }
 
-const CONV_FIELDS = ['ocupacion','horario','frecuencia_visitas','ambiente','tolerancia_fiestas','frecuencia_salidas','fumador','tiene_mascotas']
+const CONV_FIELDS = ['ocupacion','horario','frecuencia_visitas','ambiente','tolerancia_fiestas','frecuencia_salidas','fumador','tiene_mascotas','limpieza_orden','nivel_ruido']
 
 // ── Steps ─────────────────────────────────────────────────────────
 const STEPS = ['Datos personales', 'Tu perfil', 'Filtros de convivencia']
-const STEP_FIELDS = [['nombre', 'sobre_mi', 'genero', 'pais', 'dia', 'mes', 'anio'], [], []]
+const STEP_FIELDS = [
+  ['nombre', 'sobre_mi', 'genero', 'pais', 'dia', 'mes', 'anio'],
+  ['ocupacion', 'horario', 'ambiente', 'frecuencia_visitas', 'tolerancia_fiestas', 'limpieza_orden', 'nivel_ruido'],
+  [],
+]
 const STEP_META = [
   {
     icon: User,
@@ -95,7 +108,7 @@ const STEP_META = [
     ring: 'ring-blue-200',
     borderLeft: 'border-l-blue-400',
     headerBg: 'bg-blue-50', headerBorder: 'border-blue-100',
-    hint: 'Tus preferencias de convivencia y estilo de vida.',
+    hint: 'Tus preferencias de convivencia',
   },
   {
     icon: Search,
@@ -108,7 +121,10 @@ const STEP_META = [
 ]
 
 // ── Paso 1: Datos personales ──────────────────────────────────────
-function Paso1({ register, control, errors, watch, user, fotoPreview, fotoLoading, fotoError, onFotoClick, todosIntereses, interesesSeleccionados, onToggleInteres }) {
+const MAX_FOTOS_PERFIL = 2
+
+function Paso1({ register, control, errors, watch, user, fotoPreview, fotoLoading, fotoError, onFotoClick, todosIntereses, interesesSeleccionados, onToggleInteres, fotosSlots, onAddFotos, onRemoveFoto, fotosInputRef, fotosReqError }) {
+  const [draggingFotos, setDraggingFotos] = useState(false)
   const sobreMiLength = (watch('sobre_mi') ?? '').length
   return (
     <div className='flex flex-col gap-6'>
@@ -258,17 +274,83 @@ function Paso1({ register, control, errors, watch, user, fotoPreview, fotoLoadin
           </div>
         </Section>
       )}
+
+      <Section title='Fotos de perfil' accent='emerald'>
+        <p className='text-xs text-slate-400 -mt-1'>
+          Junto a tu foto de perfil, añade <span className='font-semibold text-slate-600'>2 fotos obligatorias</span> que aparecerán en tu perfil público.
+        </p>
+        {fotosReqError && (
+          <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+            <AlertCircle size={13} className='text-red-500 shrink-0' />
+            <p className='text-xs text-red-700 font-medium'>{fotosReqError}</p>
+          </div>
+        )}
+
+        {/* Grid de miniaturas */}
+        {fotosSlots.some(s => s !== null) && (
+          <div className='grid grid-cols-3 gap-2.5'>
+            {fotosSlots.map((slot, slotIdx) => {
+              if (slot === null) return null
+              const src = slot instanceof File ? URL.createObjectURL(slot) : slot
+              const esNueva = slot instanceof File
+              return (
+                <div key={slotIdx} className='relative aspect-video rounded-xl overflow-hidden bg-slate-100 group'>
+                  <img src={src} alt='' className='w-full h-full object-cover' />
+                  {esNueva && (
+                    <div className='absolute top-1.5 left-1.5 bg-emerald-500/80 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md'>
+                      Nueva
+                    </div>
+                  )}
+                  <button type='button' onClick={() => onRemoveFoto(slotIdx)}
+                    className='cursor-pointer! absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'>
+                    <X size={11} className='text-white' />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Zona de arrastre */}
+        {fotosSlots.filter(s => s !== null).length < MAX_FOTOS_PERFIL && (
+          <div
+            onDragOver={e => { e.preventDefault(); setDraggingFotos(true) }}
+            onDragLeave={() => setDraggingFotos(false)}
+            onDrop={e => { e.preventDefault(); setDraggingFotos(false); onAddFotos(e.dataTransfer.files) }}
+            onClick={() => fotosInputRef.current?.click()}
+            className={`cursor-pointer! border-2 border-dashed rounded-2xl p-6 flex flex-col items-center gap-3 transition-all ${
+              draggingFotos ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40'
+            }`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${draggingFotos ? 'bg-emerald-200' : 'bg-emerald-100'}`}>
+              <Camera size={18} className='text-emerald-500' />
+            </div>
+            <div className='text-center'>
+              <p className='text-sm font-semibold text-slate-700'>Arrastra fotos aquí o haz clic</p>
+              <p className='text-xs text-slate-400 mt-0.5'>
+                {MAX_FOTOS_PERFIL - fotosSlots.filter(s => s !== null).length} foto{MAX_FOTOS_PERFIL - fotosSlots.filter(s => s !== null).length !== 1 ? 's' : ''} más · JPG, PNG, WEBP
+              </p>
+            </div>
+            <input ref={fotosInputRef} type='file' multiple accept='image/*' className='hidden'
+              onChange={e => { onAddFotos(e.target.files); e.target.value = '' }} />
+          </div>
+        )}
+
+        {fotosSlots.filter(s => s !== null).length === MAX_FOTOS_PERFIL && (
+          <p className='text-xs text-center text-slate-400 bg-slate-50 border border-slate-200 rounded-xl py-2.5'>
+            Has añadido las 2 fotos requeridas.
+          </p>
+        )}
+      </Section>
     </div>
   )
 }
 
 // ── Paso 2: Convivencia ───────────────────────────────────────────
-function Paso2({ control }) {
+function Paso2({ control, errors }) {
   return (
     <div className='flex flex-col gap-6'>
       <p className='text-sm text-slate-500 leading-relaxed'>
-        Cuanto más completo esté tu perfil de convivencia, mejores resultados obtendrás al buscar grupos afines.
-        Rellena al menos 3 campos.
+        Cuanto más completo esté tu perfil, mejores resultados obtendrás en tus futuros compañeros.
       </p>
 
       <Section title='Estilo de vida' accent='blue'>
@@ -279,10 +361,11 @@ function Paso2({ control }) {
               options={[
                 { value: 'ESTUDIO',           label: 'Estudio' },
                 { value: 'TRABAJO',           label: 'Trabajo' },
-                { value: 'ESTUDIO Y TRABAJO', label: 'Estudio y trabajo' },
+                { value: 'ESTUDIO_Y_TRABAJO', label: 'Estudio y trabajo' },
               ]}
             />
           )} />
+          <FieldError message={errors?.ocupacion?.message} />
         </div>
 
         <div>
@@ -296,6 +379,7 @@ function Paso2({ control }) {
               ]}
             />
           )} />
+          <FieldError message={errors?.horario?.message} />
         </div>
 
         <div>
@@ -309,6 +393,7 @@ function Paso2({ control }) {
               ]}
             />
           )} />
+          <FieldError message={errors?.ambiente?.message} />
         </div>
 
         <div>
@@ -322,6 +407,35 @@ function Paso2({ control }) {
               ]}
             />
           )} />
+          <FieldError message={errors?.frecuencia_visitas?.message} />
+        </div>
+
+        <div>
+          <Label>Limpieza y orden en casa</Label>
+          <Controller name='limpieza_orden' control={control} render={({ field }) => (
+            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+              options={[
+                { value: 'DESPREOCUPADO', label: 'Despreocupado' },
+                { value: 'FLEXIBLE',      label: 'Flexible' },
+                { value: 'ORDENADO',      label: 'Ordenado' },
+              ]}
+            />
+          )} />
+          <FieldError message={errors?.limpieza_orden?.message} />
+        </div>
+
+        <div>
+          <Label>Nivel de ruido que toleras</Label>
+          <Controller name='nivel_ruido' control={control} render={({ field }) => (
+            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+              options={[
+                { value: 'SILENCIO_TOTAL', label: 'Silencio total' },
+                { value: 'MODERADO',       label: 'Moderado' },
+                { value: 'INDIFERENTE',    label: 'Indiferente' },
+              ]}
+            />
+          )} />
+          <FieldError message={errors?.nivel_ruido?.message} />
         </div>
       </Section>
 
@@ -337,6 +451,7 @@ function Paso2({ control }) {
               ]}
             />
           )} />
+          <FieldError message={errors?.tolerancia_fiestas?.message} />
         </div>
 
         <div>
@@ -398,9 +513,17 @@ function ImportanciaToggle({ nameReq, control }) {
 }
 
 // Wrapper: muestra ImportanciaToggle solo cuando hay valor seleccionado
+// y auto-pone "Preferente" (false) al seleccionar por primera vez
 function CampoPref({ label, nameVal, nameReq, control, children }) {
   const valor = useWatch({ control, name: nameVal })
   const tieneValor = valor !== '' && valor !== null && valor !== undefined
+  const { field: reqField } = useController({ control, name: nameReq })
+
+  useEffect(() => {
+    if (tieneValor && reqField.value === null) reqField.onChange(false)
+    else if (!tieneValor && reqField.value !== null) reqField.onChange(null)
+  }, [tieneValor])
+
   return (
     <div>
       <Label>{label}</Label>
@@ -417,7 +540,7 @@ function Paso3({ control }) {
       <p className='text-sm text-slate-500 leading-relaxed'>
         Indica cómo quieres que sea tu futuro compañero de piso. Para cada preferencia puedes indicar
         si es <span className='font-semibold text-violet-600'>preferente</span> (influye en el orden de resultados)
-        u <span className='font-semibold text-amber-600'>obligatorio</span> (filtra grupos que no cumplan).
+        u <span className='font-semibold text-amber-600'>obligatorio</span> (filtra grupos que no lo cumplan). * No es obligatorio rellenar todas las preferencias *
       </p>
 
       <Section title='Estilo de vida' accent='violet'>
@@ -425,8 +548,8 @@ function Paso3({ control }) {
           <Controller name='pref_ocupacion' control={control} render={({ field }) => (
             <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='violet'
               options={[
-                { value: 'ESTUDIO',           label: 'Que estudie' },
-                { value: 'TRABAJO',           label: 'Que trabaje' },
+                { value: 'ESTUDIO',           label: 'Estudiante' },
+                { value: 'TRABAJO',           label: 'Trabajador/a' },
                 { value: 'ESTUDIO_Y_TRABAJO', label: 'Ambas' },
               ]}
             />
@@ -468,6 +591,30 @@ function Paso3({ control }) {
             />
           )} />
         </CampoPref>
+
+        <CampoPref label='Limpieza y orden en casa' nameVal='pref_limpieza_orden' nameReq='pref_limpieza_orden_req' control={control}>
+          <Controller name='pref_limpieza_orden' control={control} render={({ field }) => (
+            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='violet'
+              options={[
+                { value: 'DESPREOCUPADO', label: 'Despreocupado' },
+                { value: 'FLEXIBLE',      label: 'Flexible' },
+                { value: 'ORDENADO',      label: 'Ordenado' },
+              ]}
+            />
+          )} />
+        </CampoPref>
+
+        <CampoPref label='Nivel de ruido tolerable' nameVal='pref_nivel_ruido' nameReq='pref_nivel_ruido_req' control={control}>
+          <Controller name='pref_nivel_ruido' control={control} render={({ field }) => (
+            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='violet'
+              options={[
+                { value: 'SILENCIO_TOTAL', label: 'Silencio total' },
+                { value: 'MODERADO',       label: 'Moderado' },
+                { value: 'INDIFERENTE',    label: 'Indiferente' },
+              ]}
+            />
+          )} />
+        </CampoPref>
       </Section>
 
       <Section title='Ocio' accent='violet'>
@@ -497,12 +644,6 @@ function Paso3({ control }) {
       </Section>
 
       <Section title='Hábitos' accent='violet'>
-        <CampoPref label='¿Buscas compañero fumador?' nameVal='pref_fumador' nameReq='pref_fumador_req' control={control}>
-          <Controller name='pref_fumador' control={control} render={({ field }) => (
-            <BoolPillGroup value={field.value} onChange={field.onChange} />
-          )} />
-        </CampoPref>
-
         <CampoPref label='¿El grupo debe aceptar fumadores?' nameVal='pref_acepta_fumadores' nameReq='pref_acepta_fumadores_req' control={control}>
           <Controller name='pref_acepta_fumadores' control={control} render={({ field }) => (
             <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='violet'
@@ -512,12 +653,6 @@ function Paso3({ control }) {
                 { value: 'INDIFERENTE', label: 'Indiferente' },
               ]}
             />
-          )} />
-        </CampoPref>
-
-        <CampoPref label='¿Buscas compañero con mascotas?' nameVal='pref_tiene_mascotas' nameReq='pref_tiene_mascotas_req' control={control}>
-          <Controller name='pref_tiene_mascotas' control={control} render={({ field }) => (
-            <BoolPillGroup value={field.value} onChange={field.onChange} />
           )} />
         </CampoPref>
 
@@ -545,17 +680,26 @@ function Paso3({ control }) {
 
 // ── Componente principal ──────────────────────────────────────────
 function EditarUsuario() {
-  const { user, setUser } = useAuth()
+  const { user, setUser, recargarUsuario } = useAuth()
   const navigate = useNavigate()
+  // Si el perfil ya estaba incompleto al entrar, es el relleno obligatorio de primera vez
+  const [esPrimeraVez] = useState(() => user?.perfil_completo === false)
   const [step, setStep]               = useState(0)
   const [serverError, setServerError] = useState('')
   const [loading, setLoading]         = useState(true)
   const [fotoPreview, setFotoPreview] = useState(user?.foto_perfil ?? null)
   const [fotoLoading, setFotoLoading] = useState(false)
   const [fotoError, setFotoError]     = useState('')
+  // Modelo de 2 slots fijos: null | string (URL existente) | File (nueva)
+  const [fotosSlots, setFotosSlots] = useState([
+    user?.foto_1 ?? null,
+    user?.foto_2 ?? null,
+  ])
+  const [fotosReqError, setFotosReqError] = useState('')
   const [todosIntereses, setTodosIntereses]           = useState({})
   const [interesesSeleccionados, setInteresesSeleccionados] = useState(new Set())
-  const fotoInputRef = useRef(null)
+  const fotoInputRef    = useRef(null)
+  const fotosInputRef   = useRef(null)
 
   const toggleInteres = (id) => {
     setInteresesSeleccionados(prev => {
@@ -574,26 +718,27 @@ function EditarUsuario() {
       fumador: null, acepta_fumadores: '',
       tiene_mascotas: null, acepta_mascotas: '',
       lgbtq_friendly: null,
+      limpieza_orden: '', nivel_ruido: '',
       pref_ocupacion: '', pref_ocupacion_req: null,
       pref_horario: '', pref_horario_req: null,
       pref_frecuencia_visitas: '', pref_frecuencia_visitas_req: null,
       pref_ambiente: '', pref_ambiente_req: null,
       pref_tolerancia_fiestas: '', pref_tolerancia_fiestas_req: null,
       pref_frecuencia_salidas: '', pref_frecuencia_salidas_req: null,
-      pref_fumador: null, pref_fumador_req: null,
       pref_acepta_fumadores: '', pref_acepta_fumadores_req: null,
-      pref_tiene_mascotas: null, pref_tiene_mascotas_req: null,
       pref_acepta_mascotas: '', pref_acepta_mascotas_req: null,
       pref_lgbtq_friendly: null, pref_lgbtq_friendly_req: null,
+      pref_limpieza_orden: '', pref_limpieza_orden_req: null,
+      pref_nivel_ruido: '', pref_nivel_ruido_req: null,
     },
   })
 
   useEffect(() => {
     Promise.allSettled([
-      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/convivencia`,   { credentials: 'include' }).then(r => r.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/intereses`).then(r => r.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/mis-intereses`, { credentials: 'include' }).then(r => r.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/perfil/preferencias`,  { credentials: 'include' }).then(r => r.json()),
+      apiFetch('/api/perfil/convivencia').then(r => r.json()),
+      apiFetch('/api/perfil/intereses').then(r => r.json()),
+      apiFetch('/api/perfil/mis-intereses').then(r => r.json()),
+      apiFetch('/api/perfil/preferencias').then(r => r.json()),
     ]).then(([convRes, todosRes, misRes, prefRes]) => {
       const perfil = convRes.status === 'fulfilled' ? convRes.value.perfil : null
       const pref   = prefRes.status === 'fulfilled'  ? prefRes.value.preferencias : null
@@ -617,6 +762,8 @@ function EditarUsuario() {
           tiene_mascotas: perfil.tiene_mascotas ?? null,
           acepta_mascotas: perfil.acepta_mascotas ?? '',
           lgbtq_friendly: perfil.lgbtq_friendly ?? null,
+          limpieza_orden: perfil.limpieza_orden ?? '',
+          nivel_ruido:    perfil.nivel_ruido    ?? '',
           pref_ocupacion:               pref?.ocupacion               ?? '',
           pref_ocupacion_req:           pref?.ocupacion_req           ?? null,
           pref_horario:                 pref?.horario                 ?? '',
@@ -629,16 +776,16 @@ function EditarUsuario() {
           pref_tolerancia_fiestas_req:  pref?.tolerancia_fiestas_req  ?? null,
           pref_frecuencia_salidas:      pref?.frecuencia_salidas      ?? '',
           pref_frecuencia_salidas_req:  pref?.frecuencia_salidas_req  ?? null,
-          pref_fumador:                 pref?.fumador                 ?? null,
-          pref_fumador_req:             pref?.fumador_req             ?? null,
           pref_acepta_fumadores:        pref?.acepta_fumadores        ?? '',
           pref_acepta_fumadores_req:    pref?.acepta_fumadores_req    ?? null,
-          pref_tiene_mascotas:          pref?.tiene_mascotas          ?? null,
-          pref_tiene_mascotas_req:      pref?.tiene_mascotas_req      ?? null,
           pref_acepta_mascotas:         pref?.acepta_mascotas         ?? '',
           pref_acepta_mascotas_req:     pref?.acepta_mascotas_req     ?? null,
           pref_lgbtq_friendly:          pref?.lgbtq_friendly          ?? null,
           pref_lgbtq_friendly_req:      pref?.lgbtq_friendly_req      ?? null,
+          pref_limpieza_orden:          pref?.limpieza_orden          ?? '',
+          pref_limpieza_orden_req:      pref?.limpieza_orden_req      ?? null,
+          pref_nivel_ruido:             pref?.nivel_ruido             ?? '',
+          pref_nivel_ruido_req:         pref?.nivel_ruido_req         ?? null,
         })
       }
       if (todosRes.status === 'fulfilled') setTodosIntereses(todosRes.value.categorias ?? {})
@@ -659,9 +806,7 @@ function EditarUsuario() {
     try {
       const formData = new FormData()
       formData.append('foto', file)
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/perfil/foto`, {
-        method: 'PUT', credentials: 'include', body: formData,
-      })
+      const res = await apiFetch('/api/perfil/foto', { method: 'PUT', body: formData })
       const json = await res.json()
       if (!res.ok) return setFotoError(json.message)
       setUser(json.user)
@@ -673,18 +818,43 @@ function EditarUsuario() {
     }
   }
 
+  const addFotos = (files) => {
+    const imagenes = Array.from(files).filter(f => f.type.startsWith('image/'))
+    setFotosSlots(prev => {
+      const next = [...prev]
+      for (const img of imagenes) {
+        const emptyIdx = next.findIndex(x => x === null)
+        if (emptyIdx === -1) break
+        next[emptyIdx] = img
+      }
+      return next
+    })
+  }
+
+  const removeFotoSlot = (slotIdx) => {
+    setFotosSlots(prev => {
+      const next = [...prev]
+      next[slotIdx] = null
+      return next
+    })
+  }
+
   const next = async () => {
+    if (step === 0) {
+      const faltaFotoPerfil = !fotoPreview
+      const faltanFotosExtra = fotosSlots.some(s => s === null)
+      if (faltaFotoPerfil || faltanFotosExtra) {
+        setFotosReqError('Las tres fotos son obligatorias para continuar.')
+        return
+      }
+      setFotosReqError('')
+    }
     const ok = await trigger(STEP_FIELDS[step])
     if (ok) { setStep(s => s + 1); setServerError(''); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   }
 
   const onSubmit = async (data) => {
     setServerError('')
-    const filled = CONV_FIELDS.filter(k => data[k] !== '' && data[k] !== undefined && data[k] !== null).length
-    if (filled < 3) {
-      setServerError('Debes rellenar al menos 3 preferencias de convivencia')
-      return
-    }
     const {
       dia, mes, anio,
       pref_ocupacion, pref_ocupacion_req,
@@ -693,11 +863,11 @@ function EditarUsuario() {
       pref_ambiente, pref_ambiente_req,
       pref_tolerancia_fiestas, pref_tolerancia_fiestas_req,
       pref_frecuencia_salidas, pref_frecuencia_salidas_req,
-      pref_fumador, pref_fumador_req,
       pref_acepta_fumadores, pref_acepta_fumadores_req,
-      pref_tiene_mascotas, pref_tiene_mascotas_req,
       pref_acepta_mascotas, pref_acepta_mascotas_req,
       pref_lgbtq_friendly, pref_lgbtq_friendly_req,
+      pref_limpieza_orden, pref_limpieza_orden_req,
+      pref_nivel_ruido, pref_nivel_ruido_req,
       ...rest
     } = data
     const fecha_nacimiento = (dia && mes && anio)
@@ -720,42 +890,42 @@ function EditarUsuario() {
       tolerancia_fiestas_req:  pref_tolerancia_fiestas ? (pref_tolerancia_fiestas_req ?? false) : false,
       frecuencia_salidas:      strOrNull(pref_frecuencia_salidas),
       frecuencia_salidas_req:  pref_frecuencia_salidas ? (pref_frecuencia_salidas_req  ?? false) : false,
-      fumador:                 pref_fumador            ?? null,
-      fumador_req:             pref_fumador !== null   ? (pref_fumador_req            ?? false) : false,
       acepta_fumadores:        strOrNull(pref_acepta_fumadores),
       acepta_fumadores_req:    pref_acepta_fumadores   ? (pref_acepta_fumadores_req   ?? false) : false,
-      tiene_mascotas:          pref_tiene_mascotas     ?? null,
-      tiene_mascotas_req:      pref_tiene_mascotas !== null ? (pref_tiene_mascotas_req ?? false) : false,
       acepta_mascotas:         strOrNull(pref_acepta_mascotas),
       acepta_mascotas_req:     pref_acepta_mascotas    ? (pref_acepta_mascotas_req    ?? false) : false,
       lgbtq_friendly:          pref_lgbtq_friendly     ?? null,
       lgbtq_friendly_req:      pref_lgbtq_friendly !== null ? (pref_lgbtq_friendly_req ?? false) : false,
+      limpieza_orden:          strOrNull(pref_limpieza_orden),
+      limpieza_orden_req:      pref_limpieza_orden     ? (pref_limpieza_orden_req     ?? false) : false,
+      nivel_ruido:             strOrNull(pref_nivel_ruido),
+      nivel_ruido_req:         pref_nivel_ruido        ? (pref_nivel_ruido_req        ?? false) : false,
     }
     try {
       const [res] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL}/api/perfil/editar`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(payload),
-        }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/perfil/intereses`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ intereses: [...interesesSeleccionados] }),
-        }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/perfil/preferencias`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(payloadPref),
-        }),
+        apiFetch('/api/perfil/editar', { method: 'PUT', body: JSON.stringify(payload) }),
+        apiFetch('/api/perfil/intereses', { method: 'PUT', body: JSON.stringify({ intereses: [...interesesSeleccionados] }) }),
+        apiFetch('/api/perfil/preferencias', { method: 'PUT', body: JSON.stringify(payloadPref) }),
       ])
       const json = await res.json()
       if (!res.ok) return setServerError(json.message)
-      setUser(json.user)
-      navigate('/perfil/usuario')
+
+      // Guardar fotos extra: subir nuevas, eliminar las quitadas
+      const origFotos = [user?.foto_1 ?? null, user?.foto_2 ?? null]
+      await Promise.allSettled(
+        fotosSlots.map(async (slot, i) => {
+          if (slot instanceof File) {
+            const fd = new FormData()
+            fd.append('foto', slot)
+            await apiFetch(`/api/perfil/fotos/${i + 1}`, { method: 'PUT', body: fd })
+          } else if (slot === null && origFotos[i] !== null) {
+            await apiFetch(`/api/perfil/fotos/${i + 1}`, { method: 'DELETE' })
+          }
+        })
+      )
+
+      await recargarUsuario()
+      navigate(esPrimeraVez ? '/buscar' : '/perfil/usuario')
     } catch {
       setServerError('Error de conexión con el servidor')
     }
@@ -818,15 +988,34 @@ function EditarUsuario() {
                 todosIntereses={todosIntereses}
                 interesesSeleccionados={interesesSeleccionados}
                 onToggleInteres={toggleInteres}
+                fotosSlots={fotosSlots}
+                onAddFotos={addFotos}
+                onRemoveFoto={removeFotoSlot}
+                fotosInputRef={fotosInputRef}
+                fotosReqError={fotosReqError}
               />
             )}
-            {step === 1 && <Paso2 control={control} />}
+            {step === 1 && <Paso2 control={control} errors={errors} />}
             {step === 2 && <Paso3 control={control} />}
 
             {serverError && (
               <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
                 <AlertCircle size={13} className='text-red-500 shrink-0' />
-                <p className='text-xs text-red-700 font-medium'>{serverError}</p>
+                <p className='text-xs text-red-700 font-medium'>Debes seleccionar una opción.</p>
+              </div>
+            )}
+
+            {step === 0 && STEP_FIELDS[0].some(f => errors[f]) && (
+              <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+                <AlertCircle size={13} className='text-red-500 shrink-0' />
+                <p className='text-xs text-red-700 font-medium'>Debes rellenar todos los campos obligatorios.</p>
+              </div>
+            )}
+
+            {step === 1 && STEP_FIELDS[1].some(f => errors[f]) && (
+              <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+                <AlertCircle size={13} className='text-red-500 shrink-0' />
+                <p className='text-xs text-red-700 font-medium'>Debes seleccionar una opción en todos los campos.</p>
               </div>
             )}
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { apiFetch } from '../lib/apiFetch'
 import {
   Home, Zap, Droplet, Wifi, Receipt,
   FileText, Check, MoreHorizontal, TrendingUp, TrendingDown,
@@ -43,7 +44,7 @@ function HistorialGastos({ grupoId }) {
 
   useEffect(() => {
     if (!grupoId) return
-    fetch(`${import.meta.env.VITE_API_URL}/api/facturas/historial?grupo_id=${grupoId}`, { credentials: 'include' })
+    apiFetch(`/api/facturas/historial?grupo_id=${grupoId}`)
       .then(r => r.json())
       .then(d => setHistorial(d.historial ?? []))
       .catch(() => setHistorial([]))
@@ -157,14 +158,25 @@ function HistorialGastos({ grupoId }) {
   )
 }
 
-function FacturaRow({ factura, userId }) {
+function EstadoBadge({ pagado, size = 'md' }) {
+  const text = size === 'sm' ? 'text-[0.625rem]' : 'text-[0.6875rem]'
+  if (pagado) {
+    return (
+      <span className={`inline-flex items-center gap-1 ${text} font-bold uppercase tracking-[0.08em] text-emerald-600`}>
+        <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0' /> Pagada
+      </span>
+    )
+  }
+  return (
+    <span className={`inline-flex items-center gap-1 bg-amber-50 ${text} font-bold uppercase tracking-[0.08em] text-amber-600 px-2.5 py-1 rounded`}>
+      <span className='w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0' /> Pendiente
+    </span>
+  )
+}
+
+function DocumentoMenu({ factura, className }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const menuRef = useRef()
-
-  const pago      = factura.pagos.find(p => p.usuario_id === userId)
-  const pagado    = pago?.pagado ?? false
-  const cfg       = TIPO_CONFIG[factura.tipo] ?? TIPO_CONFIG.OTRO
-  const { Icon }  = cfg
 
   useEffect(() => {
     if (!menuAbierto) return
@@ -172,6 +184,40 @@ function FacturaRow({ factura, userId }) {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [menuAbierto])
+
+  if (!factura.url_documento) return null
+
+  return (
+    <div ref={menuRef} className={`relative flex justify-end ${className ?? ''}`}>
+      <button
+        onClick={() => setMenuAbierto(v => !v)}
+        aria-label='Ver documento'
+        className='cursor-pointer! w-11 h-11 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition'
+      >
+        <MoreHorizontal size={15} />
+      </button>
+      {menuAbierto && (
+        <div className='absolute right-0 top-10 sm:top-8 bg-white border border-slate-200 rounded-xl shadow-xl z-20 py-1.5 min-w-[150px]'>
+          <a
+            href={factura.url_documento} target='_blank' rel='noreferrer'
+            onClick={() => setMenuAbierto(false)}
+            className='w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
+          >
+            <FileText size={14} className='text-slate-400' /> Ver documento
+          </a>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Fila de tabla (sm+) ─────────────────────────────────────────────────
+
+function FacturaRow({ factura, userId }) {
+  const pago      = factura.pagos.find(p => p.usuario_id === userId)
+  const pagado    = pago?.pagado ?? false
+  const cfg       = TIPO_CONFIG[factura.tipo] ?? TIPO_CONFIG.OTRO
+  const { Icon }  = cfg
 
   return (
     <tr className='border-b border-slate-50 hover:bg-slate-50/60 transition-colors'>
@@ -211,41 +257,50 @@ function FacturaRow({ factura, userId }) {
 
       {/* Estado */}
       <td className='py-4 pr-4 whitespace-nowrap'>
-        {pagado
-          ? <span className='inline-flex items-center gap-1 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-emerald-600'>
-              <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0' /> Pagada
-            </span>
-          : <span className='inline-flex items-center gap-1 bg-amber-50 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-amber-600 px-2.5 py-1 rounded'>
-              <span className='w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0' /> Pendiente
-            </span>
-        }
+        <EstadoBadge pagado={pagado} />
       </td>
 
       {/* Documento */}
       <td className='py-4 pr-6'>
-        {factura.url_documento && (
-          <div ref={menuRef} className='relative flex justify-end'>
-            <button
-              onClick={() => setMenuAbierto(v => !v)}
-              className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition'
-            >
-              <MoreHorizontal size={15} />
-            </button>
-            {menuAbierto && (
-              <div className='absolute right-0 top-8 bg-white border border-slate-200 rounded-xl shadow-xl z-20 py-1.5 min-w-[150px]'>
-                <a
-                  href={factura.url_documento} target='_blank' rel='noreferrer'
-                  onClick={() => setMenuAbierto(false)}
-                  className='w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
-                >
-                  <FileText size={14} className='text-slate-400' /> Ver documento
-                </a>
-              </div>
-            )}
-          </div>
-        )}
+        <DocumentoMenu factura={factura} />
       </td>
     </tr>
+  )
+}
+
+// ── Tarjeta (solo mobile) ───────────────────────────────────────────────
+
+function FacturaCardMobile({ factura, userId }) {
+  const pago      = factura.pagos.find(p => p.usuario_id === userId)
+  const pagado    = pago?.pagado ?? false
+  const cfg       = TIPO_CONFIG[factura.tipo] ?? TIPO_CONFIG.OTRO
+  const { Icon }  = cfg
+
+  return (
+    <div className='px-4 py-4 border-b border-slate-50 last:border-0 flex items-start gap-3'>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg.iconBg}`}>
+        <Icon size={16} className={cfg.iconText} />
+      </div>
+
+      <div className='flex-1 min-w-0'>
+        <p className='text-[0.9375rem] font-semibold text-slate-800 truncate'>
+          {cfg.label}{factura.descripcion ? ` · ${factura.descripcion}` : ''}
+        </p>
+        <p className='font-mono text-[0.6875rem] text-slate-400 mt-0.5 truncate'>
+          {pagado && pago?.fecha_pago
+            ? `Pagado el ${formatFecha(pago.fecha_pago)}`
+            : `${formatFecha(factura.fecha_emision)} · vence ${formatFecha(factura.fecha_vencimiento)}`}
+        </p>
+        <div className='flex items-center justify-between gap-2 mt-2'>
+          <EstadoBadge pagado={pagado} size='sm' />
+          <span className={`font-display text-base font-bold ${pagado ? 'text-emerald-600' : 'text-slate-900'}`}>
+            {formatEuros(pago?.importe_asignado ?? 0)}
+          </span>
+        </div>
+      </div>
+
+      <DocumentoMenu factura={factura} className='-mt-1.5 -mr-2' />
+    </div>
   )
 }
 
@@ -256,7 +311,7 @@ export default function MisFacturas() {
 
   useEffect(() => {
     if (!grupo?.id) return
-    fetch(`${import.meta.env.VITE_API_URL}/api/facturas?grupo_id=${grupo.id}`, { credentials: 'include' })
+    apiFetch(`/api/facturas?grupo_id=${grupo.id}`)
       .then(r => r.json())
       .then(data => setFacturas(data.facturas ?? []))
       .catch(() => setFacturas([]))
@@ -289,12 +344,12 @@ export default function MisFacturas() {
   }
 
   return (
-    <div className='flex flex-col gap-6 pb-8'>
+    <div className='flex flex-col gap-6'>
       {/* Encabezado */}
-      <div className='flex items-end justify-between'>
-        <h1 className='font-display text-5xl font-bold text-slate-900'>Mis facturas</h1>
+      <div className='flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between'>
+        <h1 className='font-display text-3xl sm:text-5xl font-bold text-slate-900'>Mis facturas</h1>
         {deuda > 0 && (
-          <div className='bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 text-right'>
+          <div className='bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 text-right self-start sm:self-auto'>
             <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-amber-500'>Deuda pendiente</p>
             <p className='font-display text-[1.5rem] font-bold text-amber-700 leading-none mt-0.5'>{formatEuros(deuda)}</p>
           </div>
@@ -303,7 +358,7 @@ export default function MisFacturas() {
 
       {/* Tabla */}
       <div className='bg-white border border-slate-100 rounded-3xl' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
-        <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
+        <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between px-4 sm:px-6 py-4 border-b border-slate-100'>
           <h3 className='font-display text-base font-bold text-slate-900'>Historial</h3>
           <div className='flex gap-1'>
             {[['todas','Todas'],['pendientes','Pendientes'],['pagadas','Pagadas']].map(([val, lbl]) => (
@@ -327,34 +382,46 @@ export default function MisFacturas() {
             </p>
           </div>
         ) : (
-          <table className='w-full'>
-            <thead>
-              <tr className='border-b border-slate-50'>
-                <th className='w-12 pl-6' />
-                <th className='text-left py-2.5'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Concepto</span>
-                </th>
-                <th className='text-left py-2.5 w-28'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Emisión</span>
-                </th>
-                <th className='text-left py-2.5 w-28 pr-6'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Vence</span>
-                </th>
-                <th className='text-right py-2.5 w-24 pr-6'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Importe</span>
-                </th>
-                <th className='text-left py-2.5 w-28'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Estado</span>
-                </th>
-                <th className='w-10' />
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Tabla — sm y superior */}
+            <div className='hidden sm:block overflow-x-auto'>
+              <table className='w-full'>
+                <thead>
+                  <tr className='border-b border-slate-50'>
+                    <th className='w-12 pl-6' />
+                    <th className='text-left py-2.5'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Concepto</span>
+                    </th>
+                    <th className='text-left py-2.5 w-28'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Emisión</span>
+                    </th>
+                    <th className='text-left py-2.5 w-28 pr-6'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Vence</span>
+                    </th>
+                    <th className='text-right py-2.5 w-24 pr-6'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Importe</span>
+                    </th>
+                    <th className='text-left py-2.5 w-28'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Estado</span>
+                    </th>
+                    <th className='w-10' />
+                  </tr>
+                </thead>
+                <tbody>
+                  {facturasFiltradas.map(f => (
+                    <FacturaRow key={f.id} factura={f} userId={userId} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Tarjetas — mobile */}
+            <div className='sm:hidden flex flex-col'>
               {facturasFiltradas.map(f => (
-                <FacturaRow key={f.id} factura={f} userId={userId} />
+                <FacturaCardMobile key={f.id} factura={f} userId={userId} />
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
 

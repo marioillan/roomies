@@ -3,6 +3,7 @@ import { requireAuth } from '../src/middleware/auth.js';
 import {
   registro,
   login,
+  refreshToken,
   googleAuth,
   googleCallback,
   googleCalendar,
@@ -15,6 +16,7 @@ const router = express.Router();
 
 router.post('/registro',                  registro);
 router.post('/login',                     login);
+router.post('/refresh',                   refreshToken);
 router.get('/google',                     googleAuth);
 router.get('/google/callback',            googleCallback);
 router.get('/google/calendar',            googleCalendar);

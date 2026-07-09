@@ -29,7 +29,7 @@ export const editarPerfil = async (req, res, next) => {
   const {
     nombre, genero, fecha_nacimiento, pais, ocupacion, horario, frecuencia_visitas,
     ambiente, tolerancia_fiestas, frecuencia_salidas, fumador, acepta_fumadores,
-    tiene_mascotas, acepta_mascotas, lgbtq_friendly, sobre_mi,
+    tiene_mascotas, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido, sobre_mi,
   } = parsed.data;
 
   // Campos que solo se actualizan si el nuevo valor no es null (equivalente a COALESCE en SQL)
@@ -45,6 +45,8 @@ export const editarPerfil = async (req, res, next) => {
   if (tiene_mascotas != null)     camposOpcionales.tiene_mascotas = tiene_mascotas;
   if (acepta_mascotas != null)    camposOpcionales.acepta_mascotas = acepta_mascotas;
   if (lgbtq_friendly != null)     camposOpcionales.lgbtq_friendly = lgbtq_friendly;
+  if (limpieza_orden != null)     camposOpcionales.limpieza_orden = limpieza_orden;
+  if (nivel_ruido != null)        camposOpcionales.nivel_ruido = nivel_ruido;
 
   try {
     const [usuarioActualizado, perfilActualizado] = await prisma.$transaction(async (tx) => {
@@ -73,6 +75,8 @@ export const editarPerfil = async (req, res, next) => {
           tiene_mascotas: tiene_mascotas ?? null,
           acepta_mascotas: acepta_mascotas ?? null,
           lgbtq_friendly: lgbtq_friendly ?? null,
+          limpieza_orden: limpieza_orden ?? null,
+          nivel_ruido: nivel_ruido ?? null,
           sobre_mi,
         },
         update: {
@@ -102,7 +106,7 @@ export const subirFoto = async (req, res, next) => {
   try {
     const url = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: 'roomies/avatars', transformation: [{ width: 200, height: 200, crop: 'fill' }] },
+        { folder: 'roomies/avatars', transformation: [{ width: 900, height: 1200, crop: 'fill', gravity: 'auto', quality: 'auto' }] },
         (err, result) => err ? reject(err) : resolve(result.secure_url)
       );
       stream.end(req.file.buffer);
@@ -115,6 +119,51 @@ export const subirFoto = async (req, res, next) => {
     });
 
     res.json({ user: usuario });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── PUT /api/perfil/fotos/:index ──────────────────────────────
+export const subirFotoExtra = async (req, res, next) => {
+  const userId = req.userId;
+  const { index } = req.params;
+  if (!['1', '2'].includes(index)) return res.status(400).json({ message: 'Índice inválido' });
+  if (!req.file) return res.status(400).json({ message: 'No se ha enviado ninguna imagen' });
+
+  try {
+    const url = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'roomies/fotos-perfil', transformation: [{ width: 900, height: 1200, crop: 'fill', gravity: 'auto', quality: 'auto' }] },
+        (err, result) => err ? reject(err) : resolve(result.secure_url)
+      );
+      stream.end(req.file.buffer);
+    });
+
+    const campo = `foto_${index}`;
+    await prisma.usuario.update({
+      where: { id: userId },
+      data: { [campo]: url, updated_at: new Date() },
+    });
+
+    res.json({ url });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── DELETE /api/perfil/fotos/:index ───────────────────────────
+export const eliminarFotoExtra = async (req, res, next) => {
+  const userId = req.userId;
+  const { index } = req.params;
+  if (!['1', '2', '3'].includes(index)) return res.status(400).json({ message: 'Índice inválido' });
+  const campo = `foto_${index}`;
+  try {
+    await prisma.usuario.update({
+      where: { id: userId },
+      data: { [campo]: null, updated_at: new Date() },
+    });
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }
@@ -142,7 +191,7 @@ export const editarConvivencia = async (req, res, next) => {
   const {
     ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas,
     frecuencia_salidas, fumador, acepta_fumadores, tiene_mascotas, acepta_mascotas,
-    lgbtq_friendly,
+    lgbtq_friendly, limpieza_orden, nivel_ruido,
   } = parsed.data;
 
   const camposConvivencia = {
@@ -157,6 +206,8 @@ export const editarConvivencia = async (req, res, next) => {
     tiene_mascotas: tiene_mascotas ?? null,
     acepta_mascotas: acepta_mascotas ?? null,
     lgbtq_friendly: lgbtq_friendly ?? null,
+    limpieza_orden: limpieza_orden ?? null,
+    nivel_ruido: nivel_ruido ?? null,
   };
 
   try {
@@ -182,6 +233,8 @@ export const getPerfilPublico = async (req, res, next) => {
           id: true,
           nombre: true,
           foto_perfil: true,
+          foto_1: true,
+          foto_2: true,
           fecha_registro: true,
           perfil_convivencia: {
             select: {
@@ -201,6 +254,8 @@ export const getPerfilPublico = async (req, res, next) => {
               tiene_mascotas: true,
               acepta_mascotas: true,
               lgbtq_friendly: true,
+              limpieza_orden: true,
+              nivel_ruido: true,
             },
           },
         },
@@ -219,6 +274,8 @@ export const getPerfilPublico = async (req, res, next) => {
       id: usuarioData.id,
       nombre: usuarioData.nombre,
       foto_perfil: usuarioData.foto_perfil,
+      foto_1: usuarioData.foto_1 ?? null,
+      foto_2: usuarioData.foto_2 ?? null,
       fecha_registro: usuarioData.fecha_registro,
       genero: pcu?.genero ?? null,
       fecha_nacimiento: pcu?.fecha_nacimiento ?? null,
@@ -237,6 +294,8 @@ export const getPerfilPublico = async (req, res, next) => {
       tiene_mascotas: pcu.tiene_mascotas,
       acepta_mascotas: pcu.acepta_mascotas,
       lgbtq_friendly: pcu.lgbtq_friendly,
+      limpieza_orden: pcu.limpieza_orden,
+      nivel_ruido: pcu.nivel_ruido,
     } : null;
 
     res.json({ usuario, convivencia, intereses: interesesData.map(ui => ui.interes) });
@@ -276,16 +335,16 @@ export const editarPreferencias = async (req, res, next) => {
     tolerancia_fiestas_req:  d.tolerancia_fiestas_req  ?? false,
     frecuencia_salidas:      d.frecuencia_salidas      ?? null,
     frecuencia_salidas_req:  d.frecuencia_salidas_req  ?? false,
-    fumador:                 d.fumador                 ?? null,
-    fumador_req:             d.fumador_req             ?? false,
     acepta_fumadores:        d.acepta_fumadores        ?? null,
     acepta_fumadores_req:    d.acepta_fumadores_req    ?? false,
-    tiene_mascotas:          d.tiene_mascotas          ?? null,
-    tiene_mascotas_req:      d.tiene_mascotas_req      ?? false,
     acepta_mascotas:         d.acepta_mascotas         ?? null,
     acepta_mascotas_req:     d.acepta_mascotas_req     ?? false,
     lgbtq_friendly:          d.lgbtq_friendly          ?? null,
     lgbtq_friendly_req:      d.lgbtq_friendly_req      ?? false,
+    limpieza_orden:          d.limpieza_orden          ?? null,
+    limpieza_orden_req:      d.limpieza_orden_req      ?? false,
+    nivel_ruido:             d.nivel_ruido             ?? null,
+    nivel_ruido_req:         d.nivel_ruido_req         ?? false,
   };
 
   try {

@@ -1,142 +1,303 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom'
+import { apiFetch } from '../lib/apiFetch'
 import {
-  Megaphone, MapPin, Euro, Bed, Ruler, Users, Eye, EyeOff,
-  Pencil, Plus, Check, Home, Cigarette, PawPrint,
-  ChevronLeft, ChevronRight, ImageOff, Wifi, Wind, Flame,
-  Car, Trees, WashingMachine, Layers, MoveUp,
+  Megaphone, MapPin, Eye, EyeOff, Plus, Pencil,
+  Trash2, MessageCircle, ChevronLeft, ChevronRight, ImageOff, Globe,
 } from 'lucide-react'
 
-// ── Galería de fotos ──────────────────────────────────────────────
+// ── Constantes de estilo ──────────────────────────────────────────────
 
-function Galeria({ fotos }) {
-  const [actual, setActual] = useState(0)
+const CARD = 'bg-white border border-slate-100 rounded-[1.25rem]'
+
+// ── Toggle ────────────────────────────────────────────────────────────
+
+function Toggle({ checked, onChange, disabled }) {
+  return (
+    <button
+      role='switch'
+      aria-checked={checked}
+      onClick={() => !disabled && onChange(!checked)}
+      disabled={disabled}
+      className={`cursor-pointer! flex items-center w-11 h-6 rounded-full px-0.5 transition-colors duration-200 disabled:opacity-50 shrink-0 ${
+        checked ? 'bg-emerald-500 justify-end' : 'bg-slate-300 justify-start'
+      }`}
+    >
+      <span className='w-5 h-5 rounded-full bg-white shadow-sm block transition-all duration-200' />
+    </button>
+  )
+}
+
+// ── Modal confirmar visibilidad ───────────────────────────────────────
+
+function ModalConfirmarVisible({ publicar, onConfirmar, onCancelar }) {
+  return (
+    <div
+      className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm'
+      onClick={onCancelar}
+    >
+      <div
+        className='bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-5'
+        onClick={e => e.stopPropagation()}
+      >
+        <div className='flex items-start gap-4'>
+          <div className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 ${
+            publicar ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-200'
+          }`}>
+            {publicar
+              ? <Globe size={20} className='text-emerald-600' />
+              : <EyeOff size={20} className='text-slate-500' />
+            }
+          </div>
+          <div>
+            <h3 className='font-display text-lg font-bold text-slate-900'>
+              {publicar ? '¿Publicar el anuncio?' : '¿Ocultar el anuncio?'}
+            </h3>
+            <p className='text-sm text-slate-500 mt-1.5 leading-relaxed'>
+              {publicar
+                ? 'El anuncio aparecerá en el marketplace y cualquier persona podrá verlo y contactaros.'
+                : 'El anuncio dejará de aparecer en las búsquedas. Podrás volver a publicarlo cuando quieras.'
+              }
+            </p>
+          </div>
+        </div>
+        <div className='flex gap-2.5 justify-end'>
+          <button
+            onClick={onCancelar}
+            className='cursor-pointer! px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition'
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirmar}
+            className={`cursor-pointer! px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition ${
+              publicar ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-700 hover:bg-slate-800'
+            }`}
+          >
+            {publicar ? 'Sí, publicar' : 'Sí, ocultar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Modal eliminar ────────────────────────────────────────────────────
+
+function ModalEliminar({ eliminando, onConfirmar, onCancelar }) {
+  return (
+    <div
+      className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm'
+      onClick={onCancelar}
+    >
+      <div
+        className='bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-5'
+        onClick={e => e.stopPropagation()}
+      >
+        <div className='flex items-start gap-4'>
+          <div className='w-11 h-11 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0'>
+            <Trash2 size={20} className='text-red-500' />
+          </div>
+          <div>
+            <h3 className='font-display text-lg font-bold text-slate-900'>¿Eliminar el anuncio?</h3>
+            <p className='text-sm text-slate-500 mt-1.5 leading-relaxed'>
+              Esta acción es irreversible. El anuncio desaparecerá del marketplace y se perderán las estadísticas.
+            </p>
+          </div>
+        </div>
+        <div className='flex gap-2.5 justify-end'>
+          <button
+            onClick={onCancelar}
+            className='cursor-pointer! px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition'
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirmar}
+            disabled={eliminando}
+            className='cursor-pointer! px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 text-white transition disabled:opacity-60'
+          >
+            {eliminando ? 'Eliminando…' : 'Sí, eliminar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Carrusel ──────────────────────────────────────────────────────────
+
+function Carrusel({ fotos, visible }) {
+  const [idx, setIdx] = useState(0)
 
   if (!fotos.length) {
     return (
-      <div className='w-full aspect-video bg-slate-100 rounded-2xl flex flex-col items-center justify-center gap-2 border border-slate-200'>
-        <ImageOff size={28} className='text-slate-300' />
-        <p className='text-xs text-slate-400'>Sin fotos</p>
+      <div className={`${CARD} p-5`}>
+        <div className='w-full aspect-video bg-slate-50 rounded-[0.875rem] flex flex-col items-center justify-center gap-2 border border-slate-100'>
+          <ImageOff size={28} className='text-slate-300' />
+          <p className='font-mono text-xs text-slate-400'>Sin fotos</p>
+        </div>
       </div>
     )
   }
 
-  const prev = () => setActual(i => (i - 1 + fotos.length) % fotos.length)
-  const next = () => setActual(i => (i + 1) % fotos.length)
+  const prev = () => setIdx(i => (i - 1 + fotos.length) % fotos.length)
+  const next = () => setIdx(i => (i + 1) % fotos.length)
+
+  const thumbs = fotos.slice(0, 4)
+  const extra  = fotos.length > 4 ? fotos.length - 4 : 0
 
   return (
-    <div className='flex flex-col gap-2'>
+    <div className={`${CARD} p-5 flex flex-col gap-4`}>
+
       {/* Foto principal */}
-      <div className='relative w-full aspect-video bg-slate-100 rounded-2xl overflow-hidden group'>
+      <div className='relative w-full aspect-video bg-slate-100 rounded-[0.875rem] overflow-hidden group'>
         <img
-          src={fotos[actual].url}
-          alt={`Foto ${actual + 1}`}
-          className='w-full h-full object-cover transition-opacity duration-200'
+          src={fotos[idx].url}
+          alt={`Foto ${idx + 1}`}
+          className='w-full h-full object-cover'
         />
 
+        {/* Badge visibilidad */}
+        <span className={`absolute top-3 left-3 inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold px-2.5 py-1 rounded-full border backdrop-blur-sm ${
+          visible
+            ? 'text-emerald-700 bg-emerald-50/90 border-emerald-100'
+            : 'text-slate-600 bg-slate-100/90 border-slate-200'
+        }`}>
+          {visible ? <Eye size={10} /> : <EyeOff size={10} />}
+          {visible ? 'Público' : 'No visible'}
+        </span>
+
+        {/* Flechas */}
         {fotos.length > 1 && (
           <>
             <button
               onClick={prev}
-              className='cursor-pointer! absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition opacity-0 group-hover:opacity-100'
+              className={`cursor-pointer! absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-sm text-slate-700 transition backdrop-blur-sm ${
+                idx === 0 ? 'opacity-40' : 'opacity-100'
+              }`}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={18} />
             </button>
             <button
               onClick={next}
-              className='cursor-pointer! absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition opacity-0 group-hover:opacity-100'
+              className={`cursor-pointer! absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-sm text-slate-700 transition backdrop-blur-sm ${
+                idx === fotos.length - 1 ? 'opacity-40' : 'opacity-100'
+              }`}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </button>
-            <span className='absolute bottom-3 right-3 bg-black/40 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm'>
-              {actual + 1} / {fotos.length}
+
+            {/* Contador */}
+            <span className='absolute bottom-3 right-3 font-mono text-[11px] font-semibold text-white bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full'>
+              {idx + 1} / {fotos.length}
             </span>
           </>
         )}
       </div>
 
-      {/* Miniaturas */}
+      {/* Thumbnails */}
       {fotos.length > 1 && (
-        <div className='flex gap-2 overflow-x-auto pb-1'>
-          {fotos.map((f, i) => (
-            <button
-              key={f.id}
-              onClick={() => setActual(i)}
-              className={`cursor-pointer! shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition ${
-                i === actual ? 'border-emerald-500 opacity-100' : 'border-transparent opacity-60 hover:opacity-90'
-              }`}
-            >
-              <img src={f.url} alt='' className='w-full h-full object-cover' />
-            </button>
-          ))}
+        <div className='grid grid-cols-4 gap-2'>
+          {thumbs.map((f, i) => {
+            const esOverlay = i === 3 && extra > 0
+            return (
+              <button
+                key={f.id}
+                onClick={() => setIdx(i)}
+                className={`cursor-pointer! relative aspect-[1.3] rounded-xl overflow-hidden border-2 transition ${
+                  i === idx
+                    ? 'border-emerald-600 opacity-100'
+                    : 'border-transparent opacity-60 hover:opacity-90'
+                }`}
+              >
+                <img src={f.url} alt='' className='w-full h-full object-cover' />
+                {esOverlay && (
+                  <div className='absolute inset-0 bg-black/55 flex items-center justify-center'>
+                    <span className='font-mono text-sm font-bold text-white'>+{extra}</span>
+                  </div>
+                )}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
   )
 }
 
-// ── Chip de info ──────────────────────────────────────────────────
+// ── Fila de tabla ─────────────────────────────────────────────────────
 
-function Chip({ icon: Icon, children, accent }) {
-  const cls = accent === 'emerald'
-    ? 'text-emerald-700 bg-emerald-50 border-emerald-100'
-    : 'text-slate-600 bg-slate-50 border-slate-100'
+function FilaInfo({ label, children, last }) {
   return (
-    <span className={`flex items-center gap-1.5 text-xs font-medium border px-3 py-1.5 rounded-xl ${cls}`}>
-      <Icon size={12} className='shrink-0' /> {children}
-    </span>
-  )
-}
-
-// ── Fila de comodidad ─────────────────────────────────────────────
-
-const COMODIDAD_ICON = {
-  wifi:               Wifi,
-  lavadora:           WashingMachine,
-  lavavajillas:       WashingMachine,
-  aire_acondicionado: Wind,
-  calefaccion:        Flame,
-  parking:            Car,
-  terraza:            Trees,
-  amueblado:          Home,
-}
-
-const COMODIDAD_LABEL = {
-  wifi:               'Wifi',
-  lavadora:           'Lavadora',
-  lavavajillas:       'Lavavajillas',
-  aire_acondicionado: 'Aire acondicionado',
-  calefaccion:        'Calefacción',
-  parking:            'Parking',
-  terraza:            'Terraza',
-  amueblado:          'Amueblado',
-}
-
-// ── Sección visual ────────────────────────────────────────────────
-
-function Seccion({ title, children }) {
-  return (
-    <div className='flex flex-col gap-3'>
-      <p className='text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2'>
-        {title}
-      </p>
-      {children}
+    <div className={`flex items-center justify-between gap-4 py-3 ${!last ? 'border-b border-dashed border-slate-100' : ''}`}>
+      <span className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-400 shrink-0'>
+        {label}
+      </span>
+      <span className='text-sm text-slate-800 text-right'>{children}</span>
     </div>
   )
 }
 
-// ── Página ────────────────────────────────────────────────────────
+// ── Fila de acción ────────────────────────────────────────────────────
+
+function FilaAccion({ icon: Icon, iconBg, iconColor, title, subtitle, onClick, badge, rojo }) {
+  if (rojo) {
+    return (
+      <button
+        onClick={onClick}
+        className='cursor-pointer! w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 text-left transition'
+      >
+        <div className='w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center shrink-0'>
+          <Icon size={16} className='text-red-600' />
+        </div>
+        <div className='flex-1 min-w-0'>
+          <p className='text-sm font-semibold text-red-600'>{title}</p>
+          {subtitle && <p className='text-xs text-red-400 mt-0.5'>{subtitle}</p>}
+        </div>
+      </button>
+    )
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className='cursor-pointer! w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-slate-200 text-left transition'
+    >
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
+        <Icon size={16} className={iconColor} />
+      </div>
+      <div className='flex-1 min-w-0'>
+        <p className='text-sm font-semibold text-slate-800'>{title}</p>
+        {subtitle && <p className='text-xs text-slate-400 mt-0.5'>{subtitle}</p>}
+      </div>
+      {badge != null && (
+        <span className='shrink-0 min-w-[1.25rem] h-5 px-1.5 rounded-full bg-blue-500 text-white font-mono text-[10px] font-bold flex items-center justify-center'>
+          {badge}
+        </span>
+      )}
+    </button>
+  )
+}
+
+// ── Página ────────────────────────────────────────────────────────────
 
 function Publicacion() {
   const { miembros, user } = useOutletContext()
   const navigate = useNavigate()
-  const [publicacion, setPublicacion] = useState(undefined)
-  const [fotos, setFotos] = useState([])
+
+  const [publicacion,   setPublicacion]   = useState(undefined)
+  const [fotos,         setFotos]         = useState([])
+  const [numChats,      setNumChats]      = useState(0)
+  const [toggling,        setToggling]        = useState(false)
+  const [modalVisible,    setModalVisible]    = useState(null) // null | true | false
+  const [modalEliminar,   setModalEliminar]   = useState(false)
+  const [eliminando,      setEliminando]      = useState(false)
 
   const esAdmin = miembros.find(m => m.id === user?.id)?.rol_en_grupo === 'ADMIN'
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/publicacion`, { credentials: 'include' })
+    apiFetch('/api/grupos/publicacion')
       .then(r => r.json())
       .then(d => {
         setPublicacion(d.publicacion ?? null)
@@ -144,6 +305,52 @@ function Publicacion() {
       })
       .catch(() => setPublicacion(null))
   }, [])
+
+  useEffect(() => {
+    if (!esAdmin) return
+    apiFetch('/api/chats/como-admin')
+      .then(r => r.json())
+      .then(d => setNumChats(d.chats?.length ?? 0))
+      .catch(() => {})
+  }, [esAdmin])
+
+  const handleToggleVisible = (nuevoValor) => {
+    if (toggling || !publicacion) return
+    setModalVisible(nuevoValor)
+  }
+
+  const aplicarVisibilidad = async (nuevoValor) => {
+    setModalVisible(null)
+    setToggling(true)
+    const anterior = publicacion
+    setPublicacion(p => ({ ...p, visible: nuevoValor }))
+    try {
+      const r = await apiFetch('/api/grupos/publicacion/visible', {
+        method: 'PATCH',
+        body: JSON.stringify({ visible: nuevoValor }),
+      })
+      if (!r.ok) setPublicacion(anterior)
+    } catch {
+      setPublicacion(anterior)
+    } finally {
+      setToggling(false)
+    }
+  }
+
+  const handleEliminar = async () => {
+    setEliminando(true)
+    try {
+      const r = await apiFetch('/api/grupos/publicacion', { method: 'DELETE' })
+      if (r.ok) {
+        setPublicacion(null)
+        setFotos([])
+        setModalEliminar(false)
+      }
+    } catch {}
+    setEliminando(false)
+  }
+
+  // ── Loading ───────────────────────────────────────────────────────
 
   if (publicacion === undefined) {
     return (
@@ -153,143 +360,192 @@ function Publicacion() {
     )
   }
 
-  // ── Sin anuncio ───────────────────────────────────────────────
+  // ── Estado 1 — Sin anuncio ────────────────────────────────────────
 
   if (!publicacion) {
     return (
-      <div className='max-w-2xl mx-auto'>
-        <div className='bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-12 flex flex-col items-center text-center gap-4'>
-          <div className='w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center'>
-            <Megaphone size={24} className='text-emerald-400' />
+      <div className='flex items-center justify-center min-h-[70vh]'>
+        <div className={`${CARD} p-12 flex flex-col items-center text-center gap-5 w-full max-w-[28rem]`}>
+          <div className='w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center'>
+            <Megaphone size={28} className='text-emerald-500' />
           </div>
-          <div>
-            <p className='text-sm font-bold text-slate-800'>
-              {esAdmin ? 'Aún no tienes un anuncio publicado' : 'Sin anuncio publicado'}
-            </p>
-            <p className='text-xs text-slate-400 mt-1'>
-              {esAdmin
-                ? 'Tu piso no aparece en las búsquedas todavía.'
-                : 'El administrador del grupo aún no ha publicado el anuncio del piso.'}
+
+          <div className='flex flex-col gap-2'>
+            <h2 className='font-display text-[2rem] font-bold text-slate-900 leading-tight'>
+              Todavía no tenéis anuncio
+            </h2>
+            <p className='text-sm text-slate-500 leading-relaxed max-w-xs mx-auto'>
+              El anuncio muestra vuestro piso en el marketplace para que futuros compañeros puedan contactaros y pedir unirse al grupo.
             </p>
           </div>
-          {esAdmin && (
-            <button
-              onClick={() => navigate('/grupo/publicacion/formulario')}
-              className='cursor-pointer! flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition'
-            >
-              <Plus size={14} /> Crear anuncio
-            </button>
-          )}
+
+          <button
+            onClick={() => navigate('/grupo/publicacion/formulario')}
+            disabled={!esAdmin}
+            className='cursor-pointer! flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-3 rounded-xl transition w-full max-w-[20rem]'
+          >
+            <Plus size={15} /> Crear anuncio
+          </button>
+
+          <p className='text-xs text-slate-400'>
+            Solo el administrador puede crear y editar el anuncio
+          </p>
         </div>
       </div>
     )
   }
 
-  // ── Con anuncio ───────────────────────────────────────────────
-
-  const comodidades = Object.keys(COMODIDAD_LABEL).filter(k => publicacion[k])
-
-  const normas = [
-    publicacion.permite_fumar != null && { icon: Cigarette, label: publicacion.permite_fumar ? 'Fumar permitido' : 'No se puede fumar' },
-    publicacion.permite_mascotas != null && { icon: PawPrint, label: publicacion.permite_mascotas ? 'Mascotas permitidas' : 'No se permiten mascotas' },
-  ].filter(Boolean)
+  // ── Estado 2 / 3 — Con anuncio ────────────────────────────────────
 
   return (
-    <div className='max-w-2xl mx-auto flex flex-col gap-5'>
+    <div className='flex flex-col gap-6'>
 
-      {/* Galería */}
-      <Galeria fotos={fotos} />
-
-      {/* Cabecera */}
-      <div className='flex items-start justify-between gap-4'>
-        <div className='flex-1 min-w-0'>
-          <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border mb-1.5 ${
+      {/* Header */}
+      <div className='flex items-center justify-between gap-4'>
+        <h1 className='font-display text-[2.25rem] font-bold text-slate-900 leading-none'>
+          Tu anuncio
+        </h1>
+        {esAdmin && (
+          <span className={`inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold px-3 py-1.5 rounded-full border shrink-0 ${
             publicacion.visible
               ? 'text-emerald-700 bg-emerald-50 border-emerald-100'
               : 'text-slate-500 bg-slate-100 border-slate-200'
           }`}>
-            {publicacion.visible ? <Eye size={10} /> : <EyeOff size={10} />}
-            {publicacion.visible ? 'Visible en búsquedas' : 'Oculta en búsquedas'}
+            {publicacion.visible ? <Eye size={11} /> : <EyeOff size={11} />}
+            {publicacion.visible ? 'Visible en búsquedas' : 'No visible'}
           </span>
-          <h1 className='text-xl font-bold text-slate-900 leading-tight'>{publicacion.titulo}</h1>
-          {publicacion.ciudad && (
-            <p className='flex items-center gap-1 text-sm text-slate-400 mt-1'>
-              <MapPin size={12} /> {publicacion.direccion ? `${publicacion.direccion}, ${publicacion.ciudad}` : publicacion.ciudad}
+        )}
+      </div>
+
+      {/* Grid dos columnas */}
+      <div className='grid grid-cols-1 lg:grid-cols-[1fr_19rem] gap-6 items-start'>
+
+        {/* ── Columna izquierda ───────────────────────────────── */}
+        <div className='flex flex-col gap-5'>
+
+          {/* Carrusel */}
+          <Carrusel fotos={fotos} visible={publicacion.visible} />
+
+          {/* Información */}
+          <div className={`${CARD} p-5`}>
+            <p className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-400 mb-0.5'>
+              Información
             </p>
-          )}
-        </div>
-        <div className='flex flex-col gap-2 shrink-0'>
-          {esAdmin && (
-            <button
-              onClick={() => navigate('/grupo/publicacion/formulario')}
-              className='cursor-pointer! flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-emerald-600 border border-slate-200 hover:border-emerald-300 px-3 py-1.5 rounded-xl transition'
-            >
-              <Pencil size={12} /> Editar
-            </button>
-          )}
-          {publicacion.visible && (
-            <button
-              onClick={() => navigate(`/anuncio/${publicacion.id}`)}
-              className='cursor-pointer! flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-700 border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-xl transition'
-            >
-              <Eye size={12} /> Ver anuncio
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Datos clave */}
-      <div className='flex flex-wrap gap-2'>
-        <Chip icon={Euro} accent='emerald'>{Number(publicacion.precio).toFixed(0)} €/mes</Chip>
-        <Chip icon={Bed}>{publicacion.habitaciones_libres} hab. libre{publicacion.habitaciones_libres !== 1 ? 's' : ''}</Chip>
-        {publicacion.habitaciones_totales && <Chip icon={Layers}>{publicacion.habitaciones_totales} hab. en total</Chip>}
-        {publicacion.tamano_piso        && <Chip icon={Ruler}>{publicacion.tamano_piso} m²</Chip>}
-        {publicacion.planta != null     && <Chip icon={MoveUp}>Planta {publicacion.planta}</Chip>}
-        {publicacion.tipo_piso          && <Chip icon={Home}>{publicacion.tipo_piso.charAt(0) + publicacion.tipo_piso.slice(1).toLowerCase()}</Chip>}
-        {publicacion.genero_preferido   && <Chip icon={Users}>Solo {publicacion.genero_preferido.toLowerCase()}</Chip>}
-      </div>
-
-      {/* Descripción */}
-      <Seccion title='Descripción'>
-        <p className='text-sm text-slate-600 leading-relaxed whitespace-pre-line'>{publicacion.descripcion}</p>
-      </Seccion>
-
-      {/* Comodidades */}
-      {comodidades.length > 0 && (
-        <Seccion title='Comodidades'>
-          <div className='grid grid-cols-2 gap-2'>
-            {comodidades.map(k => {
-              const Icon = COMODIDAD_ICON[k]
-              return (
-                <div key={k} className='flex items-center gap-2.5 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5'>
-                  <div className='w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0'>
-                    <Icon size={13} className='text-emerald-600' />
-                  </div>
-                  <span className='text-sm font-medium text-slate-700'>{COMODIDAD_LABEL[k]}</span>
-                  <Check size={12} className='text-emerald-500 ml-auto shrink-0' />
-                </div>
-              )
-            })}
-          </div>
-        </Seccion>
-      )}
-
-      {/* Normas */}
-      {(normas.length > 0 || publicacion.normas_adicionales) && (
-        <Seccion title='Normas de la casa'>
-          {normas.length > 0 && (
-            <div className='flex flex-wrap gap-2'>
-              {normas.map(({ icon: Icon, label }) => (
-                <span key={label} className='flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl'>
-                  <Icon size={12} className='shrink-0' /> {label}
+            <FilaInfo label='Título'>{publicacion.titulo}</FilaInfo>
+            {publicacion.ciudad && (
+              <FilaInfo label='Ciudad'>
+                <span className='flex items-center justify-end gap-1.5'>
+                  <MapPin size={12} className='text-slate-400' />
+                  {publicacion.ciudad}
                 </span>
-              ))}
+              </FilaInfo>
+            )}
+            <FilaInfo label='Precio'>
+              <span className='font-semibold text-emerald-700'>
+                {Number(publicacion.precio).toFixed(0)} € / persona al mes
+              </span>
+            </FilaInfo>
+            <FilaInfo label='Hab. libres'>
+              {publicacion.habitaciones_libres} habitación{publicacion.habitaciones_libres !== 1 ? 'es' : ''}
+            </FilaInfo>
+            <FilaInfo label='Tamaño' last>
+              {publicacion.tamano_piso ? `${publicacion.tamano_piso} m²` : '—'}
+            </FilaInfo>
+          </div>
+
+        </div>
+
+        {/* ── Columna derecha ─────────────────────────────────── */}
+        <div className='flex flex-col gap-4 lg:sticky lg:top-6'>
+
+          {/* Visibilidad — solo admin */}
+          {esAdmin && (
+            <div className={`${CARD} overflow-hidden`}>
+              <div className='px-5 pt-5 pb-3'>
+                <p className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-400'>
+                  Visibilidad
+                </p>
+              </div>
+              <div className={`mx-3 mb-3 flex items-center gap-3 pl-3 pr-3 py-3 rounded-xl transition ${
+                publicacion.visible ? 'bg-emerald-50' : 'bg-slate-50'
+              }`}>
+                <span className={`w-2.5 h-2.5 rounded-full shrink-0 transition ${
+                  publicacion.visible ? 'bg-emerald-500' : 'bg-slate-300'
+                }`} />
+                <span className='flex-1 text-sm font-semibold text-slate-800'>
+                  {publicacion.visible ? 'Público' : 'No visible'}
+                </span>
+                <Toggle
+                  checked={publicacion.visible}
+                  onChange={handleToggleVisible}
+                  disabled={toggling}
+                />
+              </div>
             </div>
           )}
-          {publicacion.normas_adicionales && (
-            <p className='text-sm text-slate-500 leading-relaxed'>{publicacion.normas_adicionales}</p>
-          )}
-        </Seccion>
+
+          {/* Acciones */}
+          <div className={`${CARD} p-5 flex flex-col gap-2`}>
+            <p className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-400 mb-1'>
+              Acciones
+            </p>
+
+            <FilaAccion
+              icon={Eye}
+              iconBg='bg-emerald-50'
+              iconColor='text-emerald-600'
+              title='Ver anuncio público'
+              subtitle='Cómo lo ven los demás'
+              onClick={() => window.open(`/anuncio/${publicacion.id}`, '_blank')}
+            />
+
+            {esAdmin && (
+              <>
+                <FilaAccion
+                  icon={Pencil}
+                  iconBg='bg-slate-100'
+                  iconColor='text-slate-600'
+                  title='Editar anuncio'
+                  subtitle='Cambiar fotos, precio y datos'
+                  onClick={() => navigate('/grupo/publicacion/formulario')}
+                />
+                <FilaAccion
+                  icon={MessageCircle}
+                  iconBg='bg-blue-50'
+                  iconColor='text-blue-500'
+                  title='Mensajes'
+                  subtitle='Solicitudes de contacto'
+                  onClick={() => navigate('/grupo/mensajes')}
+                  badge={numChats > 0 ? numChats : null}
+                />
+                <FilaAccion
+                  icon={Trash2}
+                  title='Eliminar anuncio'
+                  subtitle='Acción irreversible'
+                  onClick={() => setModalEliminar(true)}
+                  rojo
+                />
+              </>
+            )}
+          </div>
+
+        </div>
+      </div>
+
+      {modalVisible !== null && (
+        <ModalConfirmarVisible
+          publicar={modalVisible}
+          onConfirmar={() => aplicarVisibilidad(modalVisible)}
+          onCancelar={() => setModalVisible(null)}
+        />
+      )}
+
+      {modalEliminar && (
+        <ModalEliminar
+          eliminando={eliminando}
+          onConfirmar={handleEliminar}
+          onCancelar={() => setModalEliminar(false)}
+        />
       )}
 
     </div>

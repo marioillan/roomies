@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
+import { CARD_SHADOW } from '../lib/convivencia.js'
 import {
   Heart, MessageCircle, ArrowLeft, MapPin, Euro, Bed, Ruler,
   Home, House, Layers, MoveUp, Wifi, WashingMachine, Wind, Flame, Car, Trees,
   Cigarette, PawPrint, Phone, ChevronLeft, ChevronRight, ImageOff,
-  Users, Check, Search, Link2,
+  Users, Check, Search, Link2, CheckCircle, MinusCircle, XCircle,
 } from 'lucide-react'
 
 // ── Helpers ───────────────────────────────────────────────────────────
-
-const CARD_SHADOW = { boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }
 
 const COMODIDAD_CONFIG = {
   wifi:               { Icon: Wifi,          label: 'Wifi fibra'          },
@@ -217,17 +217,46 @@ const TAGLINE = (s) =>
             'Baja afinidad con este grupo'
 
 const DIMENSIONES = [
-  { key: 'horario',  label: 'Horario'   },
-  { key: 'ambiente', label: 'Ambiente'  },
-  { key: 'visitas',  label: 'Visitas'   },
-  { key: 'fiestas',  label: 'Fiestas'   },
-  { key: 'ocupacion',label: 'Ocupación' },
+  { key: 'horario',            label: 'Horario'   },
+  { key: 'ambiente',           label: 'Ambiente'  },
+  { key: 'frecuencia_visitas', label: 'Visitas'   },
+  { key: 'tolerancia_fiestas', label: 'Fiestas'   },
+  { key: 'ocupacion',          label: 'Ocupación' },
+  { key: 'limpieza_orden',     label: 'Limpieza'  },
+  { key: 'nivel_ruido',        label: 'Ruido'     },
 ]
 
-function EstadoDimension({ valor }) {
-  if (valor === 1.0) return <span className='font-mono text-[0.7rem] font-bold text-emerald-600'>✓ Coincide</span>
-  if (valor === 0.5) return <span className='font-mono text-[0.7rem] font-bold text-amber-500'>~ Moderado</span>
-  return <span className='font-mono text-[0.7rem] font-bold text-slate-400'>✗ Difiere</span>
+function GrupoCompatibilidad({ desglose }) {
+  const coinciden = DIMENSIONES.filter(d => desglose[d.key] === 1.0)
+  const parecido  = DIMENSIONES.filter(d => desglose[d.key] === 0.5)
+  const diferente = DIMENSIONES.filter(d => desglose[d.key] === 0.0)
+
+  const Seccion = ({ icono: Icono, titulo, color, items }) => {
+    if (!items.length) return null
+    return (
+      <div className='flex flex-col gap-1.5'>
+        <div className='flex items-center gap-1.5'>
+          <Icono size={13} style={{ color }} />
+          <span className='font-mono text-[0.6rem] font-bold uppercase tracking-widest' style={{ color }}>{titulo}</span>
+        </div>
+        <div className='flex flex-wrap gap-1.5'>
+          {items.map(d => (
+            <span key={d.key} className='text-[0.75rem] font-medium px-2.5 py-1 rounded-full border' style={{ color, borderColor: color + '40', background: color + '10' }}>
+              {d.label}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className='flex flex-col gap-3'>
+      <Seccion icono={CheckCircle} titulo='Coincidís en'  color='#059669' items={coinciden} />
+      <Seccion icono={MinusCircle} titulo='Parecido en'   color='#ea580c' items={parecido}  />
+      <Seccion icono={XCircle}     titulo='Diferente en'  color='#dc2626' items={diferente} />
+    </div>
+  )
 }
 
 // ── Card compañeros ───────────────────────────────────────────────────
@@ -252,15 +281,8 @@ function CardCompaneros({ miembros, compatibilidad, grupoTieneConvivencia, user,
               <p className='text-xs text-emerald-700 mt-0.5'>{TAGLINE(compatibilidad.score)}</p>
             </div>
           </div>
-          {/* Desglose por dimensión */}
-          <div className='flex flex-col gap-1.5'>
-            {DIMENSIONES.map(({ key, label }) => (
-              <div key={key} className='flex items-center justify-between px-1'>
-                <span className='text-[0.8125rem] text-slate-600 font-medium'>{label}</span>
-                <EstadoDimension valor={compatibilidad.desglose[key]} />
-              </div>
-            ))}
-          </div>
+          {/* Desglose agrupado */}
+          <GrupoCompatibilidad desglose={compatibilidad.desglose} />
         </div>
       ) : (
         <div className='bg-slate-50 border border-slate-100 rounded-[0.875rem] p-4'>
@@ -425,9 +447,9 @@ export default function AnuncioPublico() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${import.meta.env.VITE_API_URL}/api/publicaciones/${id}`, { credentials: 'include' }).then(r => r.json()),
+      apiFetch(`/api/publicaciones/${id}`).then(r => r.json()),
       user
-        ? fetch(`${import.meta.env.VITE_API_URL}/api/favoritos`, { credentials: 'include' })
+        ? apiFetch('/api/favoritos')
             .then(r => r.json())
             .then(d => (d.favoritos ?? []).includes(id))
             .catch(() => false)
@@ -442,9 +464,7 @@ export default function AnuncioPublico() {
   const toggleFavorito = async () => {
     if (!user) return
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/favoritos/${id}`, {
-        method: 'POST', credentials: 'include',
-      })
+      await apiFetch(`/api/favoritos/${id}`, { method: 'POST' })
       setEsFavorito(v => !v)
     } catch { /* ignorar */ }
   }
@@ -460,9 +480,7 @@ export default function AnuncioPublico() {
     if (!user) { navigate('/'); return }
     setEstadoSolicitud('enviando')
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/chats/solicitar/${id}`, {
-        method: 'POST', credentials: 'include',
-      })
+      const r = await apiFetch(`/api/chats/solicitar/${id}`, { method: 'POST' })
       if (r.ok) { setEstadoSolicitud('enviada'); return }
       const d = await r.json()
       if (d.yaEnviada) navigate('/perfil/chat')

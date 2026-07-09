@@ -88,20 +88,14 @@ export const buscarPublicaciones = async (req, res, next) => {
         ['tolerancia_fiestas', 'tolerancia_fiestas'],
         ['frecuencia_salidas', 'frecuencia_salidas'],
         ['ocupacion',          'ocupacion'],
+        ['limpieza_orden',     'limpieza_orden'],
+        ['nivel_ruido',        'nivel_ruido'],
       ];
       for (const [campoPref, campoGrupo] of camposOrdinales) {
         if (pref[campoPref] && pref[`${campoPref}_req`] === true) {
           params.push(pref[campoPref]);
           conditions.push(`(pcg.${campoGrupo} IS NULL OR pcg.${campoGrupo}::text = $${params.length})`);
         }
-      }
-      if (pref.fumador !== null && pref.fumador !== undefined && pref.fumador_req === true) {
-        if (pref.fumador === true)  conditions.push(`(pcg.acepta_fumadores IS NULL OR pcg.acepta_fumadores != 'NO')`);
-        if (pref.fumador === false) conditions.push(`(pcg.acepta_fumadores IS NULL OR pcg.acepta_fumadores != 'SI')`);
-      }
-      if (pref.tiene_mascotas !== null && pref.tiene_mascotas !== undefined && pref.tiene_mascotas_req === true) {
-        if (pref.tiene_mascotas === true)  conditions.push(`(pcg.acepta_mascotas IS NULL OR pcg.acepta_mascotas != 'NO')`);
-        if (pref.tiene_mascotas === false) conditions.push(`(pcg.acepta_mascotas IS NULL OR pcg.acepta_mascotas != 'SI')`);
       }
       if (pref.acepta_fumadores && pref.acepta_fumadores_req === true) {
         if (pref.acepta_fumadores === 'NO') {
@@ -169,7 +163,9 @@ export const buscarPublicaciones = async (req, res, next) => {
       pcg.ambiente           AS pcg_ambiente,
       pcg.frecuencia_visitas AS pcg_frecuencia_visitas,
       pcg.tolerancia_fiestas AS pcg_tolerancia_fiestas,
-      pcg.ocupacion          AS pcg_ocupacion` : ''}
+      pcg.ocupacion          AS pcg_ocupacion,
+      pcg.limpieza_orden     AS pcg_limpieza_orden,
+      pcg.nivel_ruido        AS pcg_nivel_ruido` : ''}
     FROM publicaciones p
     JOIN grupos g ON g.id = p.grupo_id
     ${tieneMatching ? 'LEFT JOIN perfiles_convivencia_grupo pcg ON pcg.grupo_id = g.id' : ''}
@@ -189,7 +185,7 @@ export const buscarPublicaciones = async (req, res, next) => {
 
       const conScore = rows.map(pub => {
         const score = calcularScore(perfilUsuario, pub);
-        const { intereses_grupo, pcg_horario, pcg_ambiente, pcg_frecuencia_visitas, pcg_tolerancia_fiestas, pcg_ocupacion, ...resto } = pub;
+        const { intereses_grupo, pcg_horario, pcg_ambiente, pcg_frecuencia_visitas, pcg_tolerancia_fiestas, pcg_ocupacion, pcg_limpieza_orden, pcg_nivel_ruido, ...resto } = pub;
         return { ...resto, compatibilidad: score, intereses_comunes: calcComunes(pub) };
       });
 

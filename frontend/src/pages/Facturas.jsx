@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
 import {
   Plus, X, Trash2, FileText, Check, AlertCircle, Paperclip,
   LogOut, Home, Zap, Droplet, Wifi, Receipt, MoreHorizontal,
@@ -19,16 +20,12 @@ const TIPO_CONFIG = {
 
 const TIPOS = Object.keys(TIPO_CONFIG)
 
-const DIAS   = ['DOMINGO','LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO']
-const MESES  = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-
-function getFechaHoy() {
-  const d = new Date()
-  return `${DIAS[d.getDay()]} ${d.getDate()} DE ${MESES[d.getMonth()]}`
-}
-
 function formatEuros(n) {
   return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n ?? 0)
+}
+
+function formatEurosDec(n) {
+  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n ?? 0)
 }
 
 function formatFechaCorta(str) {
@@ -66,9 +63,66 @@ function AvatarUsuario({ foto, nombre }) {
   )
 }
 
+// ── División equitativa / personalizada ────────────────────────────────
+
+function calcularDiferenciaDivision(personas, importes, importeTotal) {
+  const suma = personas.reduce((s, p) => s + (Number(importes[p.id]) || 0), 0)
+  return Math.round((Number(importeTotal || 0) - suma) * 100) / 100
+}
+
+function SelectorDivision({ tipoDivision, onChange }) {
+  return (
+    <div className='flex flex-col gap-2'>
+      <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>División *</label>
+      <div className='flex gap-2'>
+        {[['EQUITATIVA', 'Equitativo'], ['PERSONALIZADA', 'Personalizado']].map(([value, label]) => {
+          const sel = tipoDivision === value
+          return (
+            <button key={value} type='button' onClick={() => onChange(value)}
+              className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold px-3 py-1.5 rounded-full border transition
+                ${sel ? 'bg-emerald-50 text-emerald-700 border-transparent' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
+              {sel && <Check size={11} />}{label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function DivisionPersonalizada({ personas, importes, onCambiarImporte, importeTotal }) {
+  const suma = personas.reduce((s, p) => s + (Number(importes[p.id]) || 0), 0)
+  const diferencia = calcularDiferenciaDivision(personas, importes, importeTotal)
+
+  return (
+    <div className='flex flex-col gap-2.5 bg-slate-50 rounded-xl p-3'>
+      {personas.map(p => (
+        <div key={p.id} className='flex items-center gap-3'>
+          <AvatarUsuario foto={p.foto} nombre={p.nombre} />
+          <p className='flex-1 text-sm font-medium text-slate-700 truncate'>{p.nombre}</p>
+          <input
+            type='number' step='0.01' min='0' value={importes[p.id] ?? ''}
+            onChange={e => onCambiarImporte(p.id, e.target.value)}
+            placeholder='0.00'
+            className='w-24 border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-right text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition'
+          />
+        </div>
+      ))}
+      <div className='flex items-center justify-between pt-2 mt-1 border-t border-slate-200'>
+        <span className='text-xs font-semibold text-slate-500'>Suma: {formatEurosDec(suma)}</span>
+        {diferencia !== 0 && (
+          <span className='text-xs font-semibold text-red-600'>
+            {diferencia > 0 ? `Faltan ${formatEurosDec(diferencia)}` : `Sobran ${formatEurosDec(Math.abs(diferencia))}`}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Modal nueva factura ───────────────────────────────────────────────
 
-function ModalNuevaFactura({ onClose, onCreada, grupoId }) {
+function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
   const [form, setForm] = useState({
     tipo: '',
     importe_total: '',
@@ -79,9 +133,16 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId }) {
   const [archivo, setArchivo] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState(null)
+  const [tipoDivision, setTipoDivision] = useState('EQUITATIVA')
+  const [importes, setImportes] = useState({})
   const fileRef = useRef()
 
+  const inquilinos = miembros.filter(m => !m.es_casero)
+    .map(m => ({ id: m.id, nombre: m.username, foto: m.foto_perfil }))
+  const diferencia = calcularDiferenciaDivision(inquilinos, importes, form.importe_total)
+
   const cambiar = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  const cambiarImporte = (usuarioId, valor) => setImportes(prev => ({ ...prev, [usuarioId]: valor }))
 
   const enviar = async (e) => {
     e.preventDefault()
@@ -89,6 +150,10 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId }) {
     if (!form.importe_total || Number(form.importe_total) <= 0)      { setError('El importe debe ser un número positivo'); return }
     if (!form.fecha_emision)                                         { setError('La fecha de emisión es obligatoria'); return }
     if (!form.fecha_vencimiento)                                     { setError('La fecha de vencimiento es obligatoria'); return }
+    if (tipoDivision === 'PERSONALIZADA') {
+      if (inquilinos.some(p => !(Number(importes[p.id]) > 0)))       { setError('Indica el importe de cada inquilino'); return }
+      if (diferencia !== 0)                                          { setError('La suma de los importes no coincide con el importe total'); return }
+    }
 
     setEnviando(true); setError(null)
     try {
@@ -97,13 +162,17 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId }) {
       fd.append('importe_total',     form.importe_total)
       fd.append('fecha_emision',     form.fecha_emision)
       fd.append('fecha_vencimiento', form.fecha_vencimiento)
+      fd.append('tipo_division',     tipoDivision)
+      if (tipoDivision === 'PERSONALIZADA') {
+        fd.append('importes_personalizados', JSON.stringify(
+          inquilinos.map(p => ({ usuario_id: p.id, importe: Number(importes[p.id]) }))
+        ))
+      }
       if (form.descripcion.trim()) fd.append('descripcion', form.descripcion.trim())
       if (archivo) fd.append('documento', archivo)
       if (grupoId) fd.append('grupo_id', grupoId)
 
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/facturas`, {
-        method: 'POST', credentials: 'include', body: fd,
-      })
+      const r = await apiFetch('/api/facturas', { method: 'POST', body: fd })
       const data = await r.json()
       if (!r.ok) { setError(data.message ?? 'Error al crear la factura'); return }
       onCreada(data.factura)
@@ -117,79 +186,96 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId }) {
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm' onClick={onClose}>
-      <div className='bg-white rounded-2xl shadow-2xl w-full max-w-md' onClick={e => e.stopPropagation()}>
+      <div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] flex flex-col transition-[max-width] duration-300 ${tipoDivision === 'PERSONALIZADA' ? 'max-w-3xl' : 'max-w-md'}`} onClick={e => e.stopPropagation()}>
 
-        <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
+        <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0'>
           <h3 className='font-display text-base font-bold text-slate-900'>Nueva factura</h3>
           <button onClick={onClose} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'>
             <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={enviar} className='p-6 flex flex-col gap-4'>
+        <form onSubmit={enviar} className='p-6 flex flex-col gap-4 overflow-y-auto'>
 
-          {/* Tipo */}
-          <div className='flex flex-col gap-2'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Tipo *</label>
-            <div className='flex flex-wrap gap-2'>
-              {TIPOS.map(value => {
-                const cfg = TIPO_CONFIG[value]
-                const sel = form.tipo === value
-                return (
-                  <button
-                    key={value} type='button'
-                    onClick={() => setForm(prev => ({ ...prev, tipo: sel ? '' : value }))}
-                    className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold px-3 py-1.5 rounded-full border transition
-                      ${sel ? `${cfg.chipBg} ${cfg.chipText} border-transparent` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
-                  >
-                    {sel && <Check size={11} />}
-                    {cfg.label}
-                  </button>
-                )
-              })}
+          <div className={tipoDivision === 'PERSONALIZADA' ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' : 'flex flex-col gap-4'}>
+            <div className='flex flex-col gap-4'>
+              {/* Tipo */}
+              <div className='flex flex-col gap-2'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Tipo *</label>
+                <div className='flex flex-wrap gap-2'>
+                  {TIPOS.map(value => {
+                    const cfg = TIPO_CONFIG[value]
+                    const sel = form.tipo === value
+                    return (
+                      <button
+                        key={value} type='button'
+                        onClick={() => setForm(prev => ({ ...prev, tipo: sel ? '' : value }))}
+                        className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold px-3 py-1.5 rounded-full border transition
+                          ${sel ? `${cfg.chipBg} ${cfg.chipText} border-transparent` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
+                      >
+                        {sel && <Check size={11} />}
+                        {cfg.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Importe */}
+              <div className='flex flex-col gap-1.5'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Importe total (€) *</label>
+                <input name='importe_total' type='number' step='0.01' min='0.01' value={form.importe_total} onChange={cambiar} placeholder='0.00'
+                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+              </div>
+
+              {/* División */}
+              <SelectorDivision tipoDivision={tipoDivision} onChange={setTipoDivision} />
+
+              {/* Fechas */}
+              <div className='grid grid-cols-2 gap-3'>
+                <div className='flex flex-col gap-1.5'>
+                  <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Emisión *</label>
+                  <input type='date' name='fecha_emision' value={form.fecha_emision} onChange={cambiar}
+                    className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+                </div>
+                <div className='flex flex-col gap-1.5'>
+                  <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Vencimiento *</label>
+                  <input type='date' name='fecha_vencimiento' value={form.fecha_vencimiento} onChange={cambiar}
+                    className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+                </div>
+              </div>
+
+              {/* Descripción */}
+              <div className='flex flex-col gap-1.5'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
+                <textarea name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Ej: Factura de abril, incluye IVA…'
+                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
+              </div>
+
+              {/* Adjunto */}
+              <div className='flex flex-col gap-1.5'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Documento (PDF/imagen)</label>
+                <input ref={fileRef} type='file' accept='.pdf,image/*' className='hidden' onChange={e => setArchivo(e.target.files[0] ?? null)} />
+                <button type='button' onClick={() => fileRef.current?.click()}
+                  className='cursor-pointer! flex items-center gap-2 border border-dashed border-slate-300 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-sm text-slate-500 hover:text-emerald-600 transition'>
+                  <Paperclip size={14} />
+                  {archivo
+                    ? <span className='truncate text-slate-800 font-medium'>{archivo.name}</span>
+                    : <span>Seleccionar archivo…</span>
+                  }
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Importe */}
-          <div className='flex flex-col gap-1.5'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Importe total (€) *</label>
-            <input name='importe_total' type='number' step='0.01' min='0.01' value={form.importe_total} onChange={cambiar} placeholder='0.00'
-              className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
-          </div>
-
-          {/* Fechas */}
-          <div className='grid grid-cols-2 gap-3'>
-            <div className='flex flex-col gap-1.5'>
-              <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Emisión *</label>
-              <input type='date' name='fecha_emision' value={form.fecha_emision} onChange={cambiar}
-                className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
-            </div>
-            <div className='flex flex-col gap-1.5'>
-              <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Vencimiento *</label>
-              <input type='date' name='fecha_vencimiento' value={form.fecha_vencimiento} onChange={cambiar}
-                className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
-            </div>
-          </div>
-
-          {/* Descripción */}
-          <div className='flex flex-col gap-1.5'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
-            <textarea name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Ej: Factura de abril, incluye IVA…'
-              className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
-          </div>
-
-          {/* Adjunto */}
-          <div className='flex flex-col gap-1.5'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Documento (PDF/imagen)</label>
-            <input ref={fileRef} type='file' accept='.pdf,image/*' className='hidden' onChange={e => setArchivo(e.target.files[0] ?? null)} />
-            <button type='button' onClick={() => fileRef.current?.click()}
-              className='cursor-pointer! flex items-center gap-2 border border-dashed border-slate-300 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-sm text-slate-500 hover:text-emerald-600 transition'>
-              <Paperclip size={14} />
-              {archivo
-                ? <span className='truncate text-slate-800 font-medium'>{archivo.name}</span>
-                : <span>Seleccionar archivo…</span>
-              }
-            </button>
+            {tipoDivision === 'PERSONALIZADA' && (
+              <div className='flex flex-col gap-1.5'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Importe por inquilino</label>
+                {inquilinos.length
+                  ? <DivisionPersonalizada personas={inquilinos} importes={importes} onCambiarImporte={cambiarImporte} importeTotal={form.importe_total} />
+                  : <p className='text-sm text-slate-400'>No hay inquilinos en el grupo</p>
+                }
+              </div>
+            )}
           </div>
 
           {error && (
@@ -203,7 +289,7 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId }) {
             <button type='button' onClick={onClose} className='cursor-pointer! px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition'>
               Cancelar
             </button>
-            <button type='submit' disabled={enviando}
+            <button type='submit' disabled={enviando || (tipoDivision === 'PERSONALIZADA' && diferencia !== 0)}
               className='cursor-pointer! px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition disabled:opacity-50'>
               {enviando ? 'Subiendo…' : 'Crear factura'}
             </button>
@@ -227,9 +313,19 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
   const [archivo,   setArchivo]   = useState(null)
   const [enviando,  setEnviando]  = useState(false)
   const [error,     setError]     = useState(null)
+  const [tipoDivision, setTipoDivision] = useState(factura.tipo_division ?? 'EQUITATIVA')
+  const [importes, setImportes] = useState(() => {
+    const obj = {}
+    factura.pagos.forEach(p => { obj[p.usuario_id] = String(p.importe_asignado) })
+    return obj
+  })
   const fileRef = useRef()
 
+  const inquilinos = factura.pagos.map(p => ({ id: p.usuario_id, nombre: p.nombre_usuario, foto: p.foto_usuario }))
+  const diferencia = calcularDiferenciaDivision(inquilinos, importes, form.importe_total)
+
   const cambiar = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  const cambiarImporte = (usuarioId, valor) => setImportes(prev => ({ ...prev, [usuarioId]: valor }))
 
   const enviar = async (e) => {
     e.preventDefault()
@@ -237,6 +333,10 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
     if (!form.importe_total || Number(form.importe_total) <= 0){ setError('El importe debe ser un número positivo'); return }
     if (!form.fecha_emision)                                   { setError('La fecha de emisión es obligatoria'); return }
     if (!form.fecha_vencimiento)                               { setError('La fecha de vencimiento es obligatoria'); return }
+    if (tipoDivision === 'PERSONALIZADA') {
+      if (inquilinos.some(p => !(Number(importes[p.id]) > 0)))  { setError('Indica el importe de cada inquilino'); return }
+      if (diferencia !== 0)                                     { setError('La suma de los importes no coincide con el importe total'); return }
+    }
 
     setEnviando(true); setError(null)
     try {
@@ -245,13 +345,17 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
       fd.append('importe_total',     form.importe_total)
       fd.append('fecha_emision',     form.fecha_emision)
       fd.append('fecha_vencimiento', form.fecha_vencimiento)
+      fd.append('tipo_division',     tipoDivision)
+      if (tipoDivision === 'PERSONALIZADA') {
+        fd.append('importes_personalizados', JSON.stringify(
+          inquilinos.map(p => ({ usuario_id: p.id, importe: Number(importes[p.id]) }))
+        ))
+      }
       if (form.descripcion.trim()) fd.append('descripcion', form.descripcion.trim())
       if (archivo) fd.append('documento', archivo)
       if (grupoId) fd.append('grupo_id', grupoId)
 
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/facturas/${factura.id}`, {
-        method: 'PUT', credentials: 'include', body: fd,
-      })
+      const r = await apiFetch(`/api/facturas/${factura.id}`, { method: 'PUT', body: fd })
       const data = await r.json()
       if (!r.ok) { setError(data.message ?? 'Error al guardar los cambios'); return }
       onActualizada(data.factura)
@@ -265,78 +369,92 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm' onClick={onClose}>
-      <div className='bg-white rounded-2xl shadow-2xl w-full max-w-md' onClick={e => e.stopPropagation()}>
+      <div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] flex flex-col transition-[max-width] duration-300 ${tipoDivision === 'PERSONALIZADA' ? 'max-w-3xl' : 'max-w-md'}`} onClick={e => e.stopPropagation()}>
 
-        <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
+        <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0'>
           <h3 className='font-display text-base font-bold text-slate-900'>Editar factura</h3>
           <button onClick={onClose} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'>
             <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={enviar} className='p-6 flex flex-col gap-4'>
-          {/* Tipo */}
-          <div className='flex flex-col gap-2'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Tipo *</label>
-            <div className='flex flex-wrap gap-2'>
-              {TIPOS.map(value => {
-                const cfg = TIPO_CONFIG[value]
-                const sel = form.tipo === value
-                return (
-                  <button key={value} type='button'
-                    onClick={() => setForm(prev => ({ ...prev, tipo: sel ? '' : value }))}
-                    className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold px-3 py-1.5 rounded-full border transition
-                      ${sel ? `${cfg.chipBg} ${cfg.chipText} border-transparent` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
-                  >
-                    {sel && <Check size={11} />}{cfg.label}
-                  </button>
-                )
-              })}
+        <form onSubmit={enviar} className='p-6 flex flex-col gap-4 overflow-y-auto'>
+          <div className={tipoDivision === 'PERSONALIZADA' ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' : 'flex flex-col gap-4'}>
+            <div className='flex flex-col gap-4'>
+              {/* Tipo */}
+              <div className='flex flex-col gap-2'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Tipo *</label>
+                <div className='flex flex-wrap gap-2'>
+                  {TIPOS.map(value => {
+                    const cfg = TIPO_CONFIG[value]
+                    const sel = form.tipo === value
+                    return (
+                      <button key={value} type='button'
+                        onClick={() => setForm(prev => ({ ...prev, tipo: sel ? '' : value }))}
+                        className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold px-3 py-1.5 rounded-full border transition
+                          ${sel ? `${cfg.chipBg} ${cfg.chipText} border-transparent` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
+                      >
+                        {sel && <Check size={11} />}{cfg.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Importe */}
+              <div className='flex flex-col gap-1.5'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Importe total (€) *</label>
+                <input name='importe_total' type='number' step='0.01' min='0.01' value={form.importe_total} onChange={cambiar} placeholder='0.00'
+                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+              </div>
+
+              {/* División */}
+              <SelectorDivision tipoDivision={tipoDivision} onChange={setTipoDivision} />
+
+              {/* Fechas */}
+              <div className='grid grid-cols-2 gap-3'>
+                <div className='flex flex-col gap-1.5'>
+                  <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Emisión *</label>
+                  <input type='date' name='fecha_emision' value={form.fecha_emision} onChange={cambiar}
+                    className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+                </div>
+                <div className='flex flex-col gap-1.5'>
+                  <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Vencimiento *</label>
+                  <input type='date' name='fecha_vencimiento' value={form.fecha_vencimiento} onChange={cambiar}
+                    className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+                </div>
+              </div>
+
+              {/* Descripción */}
+              <div className='flex flex-col gap-1.5'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
+                <textarea name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Ej: Factura de abril…'
+                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
+              </div>
+
+              {/* Adjunto */}
+              <div className='flex flex-col gap-1.5'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                  Documento {factura.url_documento ? '(reemplazar)' : '(PDF/imagen)'}
+                </label>
+                <input ref={fileRef} type='file' accept='.pdf,image/*' className='hidden' onChange={e => setArchivo(e.target.files[0] ?? null)} />
+                <button type='button' onClick={() => fileRef.current?.click()}
+                  className='cursor-pointer! flex items-center gap-2 border border-dashed border-slate-300 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-sm text-slate-500 hover:text-emerald-600 transition'>
+                  <Paperclip size={14} />
+                  {archivo
+                    ? <span className='truncate text-slate-800 font-medium'>{archivo.name}</span>
+                    : <span>{factura.url_documento ? 'Seleccionar nuevo archivo…' : 'Seleccionar archivo…'}</span>
+                  }
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Importe */}
-          <div className='flex flex-col gap-1.5'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Importe total (€) *</label>
-            <input name='importe_total' type='number' step='0.01' min='0.01' value={form.importe_total} onChange={cambiar} placeholder='0.00'
-              className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
-          </div>
-
-          {/* Fechas */}
-          <div className='grid grid-cols-2 gap-3'>
-            <div className='flex flex-col gap-1.5'>
-              <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Emisión *</label>
-              <input type='date' name='fecha_emision' value={form.fecha_emision} onChange={cambiar}
-                className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
-            </div>
-            <div className='flex flex-col gap-1.5'>
-              <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Vencimiento *</label>
-              <input type='date' name='fecha_vencimiento' value={form.fecha_vencimiento} onChange={cambiar}
-                className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
-            </div>
-          </div>
-
-          {/* Descripción */}
-          <div className='flex flex-col gap-1.5'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
-            <textarea name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Ej: Factura de abril…'
-              className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
-          </div>
-
-          {/* Adjunto */}
-          <div className='flex flex-col gap-1.5'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
-              Documento {factura.url_documento ? '(reemplazar)' : '(PDF/imagen)'}
-            </label>
-            <input ref={fileRef} type='file' accept='.pdf,image/*' className='hidden' onChange={e => setArchivo(e.target.files[0] ?? null)} />
-            <button type='button' onClick={() => fileRef.current?.click()}
-              className='cursor-pointer! flex items-center gap-2 border border-dashed border-slate-300 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-sm text-slate-500 hover:text-emerald-600 transition'>
-              <Paperclip size={14} />
-              {archivo
-                ? <span className='truncate text-slate-800 font-medium'>{archivo.name}</span>
-                : <span>{factura.url_documento ? 'Seleccionar nuevo archivo…' : 'Seleccionar archivo…'}</span>
-              }
-            </button>
+            {tipoDivision === 'PERSONALIZADA' && (
+              <div className='flex flex-col gap-1.5'>
+                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Importe por inquilino</label>
+                <DivisionPersonalizada personas={inquilinos} importes={importes} onCambiarImporte={cambiarImporte} importeTotal={form.importe_total} />
+              </div>
+            )}
           </div>
 
           {error && (
@@ -350,7 +468,7 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
             <button type='button' onClick={onClose} className='cursor-pointer! px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition'>
               Cancelar
             </button>
-            <button type='submit' disabled={enviando}
+            <button type='submit' disabled={enviando || (tipoDivision === 'PERSONALIZADA' && diferencia !== 0)}
               className='cursor-pointer! px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition disabled:opacity-50'>
               {enviando ? 'Guardando…' : 'Guardar cambios'}
             </button>
@@ -361,37 +479,14 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
   )
 }
 
-// ── FacturaRow ────────────────────────────────────────────────────────
+// ── Datos derivados comunes a fila y tarjeta ───────────────────────────
 
-function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEditar, onMarcarPagada }) {
-  const [expandido,  setExpandido]  = useState(false)
-  const [menuAbierto, setMenuAbierto] = useState(false)
-  const [toggling,   setToggling]   = useState(null)
-  const menuRef = useRef()
+function useFacturaDatos(factura, esCasero, userId) {
+  const estado = getEstado(factura)
+  const cfg    = TIPO_CONFIG[factura.tipo] ?? TIPO_CONFIG.OTRO
 
-  const estado  = getEstado(factura)
-  const cfg     = TIPO_CONFIG[factura.tipo] ?? TIPO_CONFIG.OTRO
-  const { Icon } = cfg
-
-  // Cerrar menú al hacer click fuera
-  useEffect(() => {
-    if (!menuAbierto) return
-    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuAbierto(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [menuAbierto])
-
-  const handleToggle = async (usuarioId) => {
-    if (toggling) return
-    setToggling(usuarioId)
-    await onTogglePago(factura.id, usuarioId)
-    setToggling(null)
-  }
-
-  // Para inquilino: su propio pago
   const miPago = !esCasero ? factura.pagos.find(p => p.usuario_id === userId) : null
 
-  // Subtítulo concepto
   let subtitulo = null
   if (esCasero && estado === 'pagada') {
     const fechas = factura.pagos.map(p => p.fecha_pago).filter(Boolean).sort()
@@ -401,13 +496,135 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
     subtitulo = `Pagado el ${formatFechaCorta(miPago.fecha_pago)}`
   }
 
-  const montoDisplay = esCasero
-    ? factura.importe_total
-    : (miPago?.importe_asignado ?? factura.importe_total)
+  const montoDisplay = esCasero ? factura.importe_total : (miPago?.importe_asignado ?? factura.importe_total)
+  const estadoPersonal = esCasero ? estado : (miPago?.pagado ? 'pagada' : 'pendiente')
 
-  const estadoPersonal = esCasero
-    ? estado
-    : (miPago?.pagado ? 'pagada' : 'pendiente')
+  return { cfg, subtitulo, montoDisplay, estadoPersonal }
+}
+
+// ── Badge de estado ─────────────────────────────────────────────────────
+
+function EstadoBadge({ estado, size = 'md' }) {
+  const text = size === 'sm' ? 'text-[0.625rem]' : 'text-[0.6875rem]'
+  if (estado === 'pagada') {
+    return (
+      <span className={`inline-flex items-center gap-1 ${text} font-bold uppercase tracking-[0.08em] text-emerald-600`}>
+        <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0' /> Pagada
+      </span>
+    )
+  }
+  return (
+    <span className={`inline-flex items-center gap-1 bg-amber-50 ${text} font-bold uppercase tracking-[0.08em] text-amber-600 px-2.5 py-1 rounded`}>
+      <span className='w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0' /> Pendiente
+    </span>
+  )
+}
+
+// ── Menú de acciones de una factura (casero) ───────────────────────────
+
+function MenuFactura({ factura, expandido, onToggleExpandido, onEditar, onMarcarPagada, onEliminar, onCerrar }) {
+  return (
+    <>
+      <button
+        onClick={() => { onToggleExpandido(); onCerrar() }}
+        className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
+      >
+        <Users size={14} className='text-slate-400' />
+        {expandido ? 'Ocultar pagos' : 'Ver pagos'}
+      </button>
+      <button
+        onClick={() => { onEditar(factura); onCerrar() }}
+        className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
+      >
+        <Pencil size={14} className='text-slate-400' /> Editar
+      </button>
+      {factura.url_documento && (
+        <a
+          href={factura.url_documento} target='_blank' rel='noreferrer'
+          onClick={onCerrar}
+          className='w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
+        >
+          <FileText size={14} className='text-slate-400' /> Ver documento
+        </a>
+      )}
+      <div className='border-t border-slate-100 my-1' />
+      <button
+        onClick={() => { onMarcarPagada(factura.id); onCerrar() }}
+        className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
+      >
+        <Check size={14} className='text-slate-400' />
+        {factura.pagos.every(p => p.pagado) ? 'Desmarcar todos' : 'Marcar como pagada'}
+      </button>
+      {!factura.pagos.some(p => p.pagado) && (
+        <>
+          <div className='border-t border-slate-100 my-1' />
+          <button
+            onClick={() => { onEliminar(factura.id); onCerrar() }}
+            className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-red-600 hover:bg-red-50 transition'
+          >
+            <Trash2 size={14} /> Eliminar
+          </button>
+        </>
+      )}
+    </>
+  )
+}
+
+// ── Desglose de pagos por inquilino (expandible) ───────────────────────
+
+function PagosPorInquilino({ factura, onTogglePago }) {
+  const [toggling, setToggling] = useState(null)
+
+  const handleToggle = async (usuarioId) => {
+    if (toggling) return
+    setToggling(usuarioId)
+    await onTogglePago(factura.id, usuarioId)
+    setToggling(null)
+  }
+
+  return (
+    <div>
+      <p className='font-mono text-[0.65rem] font-bold uppercase tracking-[0.12em] text-slate-400 mb-3'>
+        Pagos por inquilino {factura.tipo_division === 'PERSONALIZADA' ? '(división personalizada)' : `— ${formatEuros(factura.importe_total / (factura.pagos.length || 1))} cada uno`}
+      </p>
+      <div className='flex flex-col gap-2.5 max-w-sm'>
+        {factura.pagos.map(pago => (
+          <div key={pago.id} className='flex items-center gap-3'>
+            <AvatarUsuario foto={pago.foto_usuario} nombre={pago.nombre_usuario} />
+            <p className='flex-1 text-sm font-medium text-slate-700 truncate'>{pago.nombre_usuario ?? 'Inquilino'}</p>
+            <span className='text-sm font-semibold text-slate-500 whitespace-nowrap'>{formatEurosDec(pago.importe_asignado)}</span>
+            <button
+              onClick={() => handleToggle(pago.usuario_id)}
+              disabled={toggling === pago.usuario_id}
+              className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.75rem] font-semibold px-3 py-1.5 rounded-full transition
+                ${pago.pagado ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}
+                ${toggling === pago.usuario_id ? 'opacity-50' : ''}`}
+            >
+              {pago.pagado ? <><Check size={11} /> Pagado</> : 'Pendiente'}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── FacturaRow (tabla, sm+) ─────────────────────────────────────────────
+
+function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEditar, onMarcarPagada }) {
+  const [expandido,  setExpandido]  = useState(false)
+  const [menuAbierto, setMenuAbierto] = useState(false)
+  const menuRef = useRef()
+
+  const { cfg, subtitulo, montoDisplay, estadoPersonal } = useFacturaDatos(factura, esCasero, userId)
+  const { Icon } = cfg
+
+  useEffect(() => {
+    if (!menuAbierto) return
+    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuAbierto(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [menuAbierto])
 
   return (
     <>
@@ -446,14 +663,7 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
 
         {/* Estado */}
         <td className='py-4 pr-4 whitespace-nowrap'>
-          {estadoPersonal === 'pagada'
-            ? <span className='inline-flex items-center gap-1 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-emerald-600'>
-                <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0' /> Pagada
-              </span>
-            : <span className='inline-flex items-center gap-1 bg-amber-50 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-amber-600 px-2.5 py-1 rounded'>
-                <span className='w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0' /> Pendiente
-              </span>
-          }
+          <EstadoBadge estado={estadoPersonal} />
         </td>
 
         {/* Acciones */}
@@ -469,23 +679,17 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
             {menuAbierto && (
               <div className='absolute right-0 top-8 bg-white border border-slate-200 rounded-xl shadow-xl z-20 py-1.5 min-w-[170px]'>
                 {esCasero && (
-                  <>
-                    <button
-                      onClick={() => { setExpandido(v => !v); setMenuAbierto(false) }}
-                      className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
-                    >
-                      <Users size={14} className='text-slate-400' />
-                      {expandido ? 'Ocultar pagos' : 'Ver pagos'}
-                    </button>
-                    <button
-                      onClick={() => { onEditar(factura); setMenuAbierto(false) }}
-                      className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
-                    >
-                      <Pencil size={14} className='text-slate-400' /> Editar
-                    </button>
-                  </>
+                  <MenuFactura
+                    factura={factura}
+                    expandido={expandido}
+                    onToggleExpandido={() => setExpandido(v => !v)}
+                    onEditar={onEditar}
+                    onMarcarPagada={onMarcarPagada}
+                    onEliminar={onEliminar}
+                    onCerrar={() => setMenuAbierto(false)}
+                  />
                 )}
-                {factura.url_documento && (
+                {!esCasero && factura.url_documento && (
                   <a
                     href={factura.url_documento} target='_blank' rel='noreferrer'
                     onClick={() => setMenuAbierto(false)}
@@ -493,25 +697,6 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
                   >
                     <FileText size={14} className='text-slate-400' /> Ver documento
                   </a>
-                )}
-                {esCasero && (
-                  <>
-                    <div className='border-t border-slate-100 my-1' />
-                    <button
-                      onClick={() => { onMarcarPagada(factura.id); setMenuAbierto(false) }}
-                      className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
-                    >
-                      <Check size={14} className='text-slate-400' />
-                      {factura.pagos.every(p => p.pagado) ? 'Desmarcar todos' : 'Marcar como pagada'}
-                    </button>
-                    <div className='border-t border-slate-100 my-1' />
-                    <button
-                      onClick={() => { onEliminar(factura.id); setMenuAbierto(false) }}
-                      className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-red-600 hover:bg-red-50 transition'
-                    >
-                      <Trash2 size={14} /> Eliminar
-                    </button>
-                  </>
                 )}
               </div>
             )}
@@ -523,26 +708,7 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
       {expandido && esCasero && (
         <tr className='bg-slate-50 border-b border-slate-100'>
           <td colSpan={7} className='px-6 py-4'>
-            <p className='font-mono text-[0.65rem] font-bold uppercase tracking-[0.12em] text-slate-400 mb-3'>
-              Pagos por inquilino — {formatEuros(factura.importe_total / (factura.pagos.length || 1))} cada uno
-            </p>
-            <div className='flex flex-col gap-2.5 max-w-sm'>
-              {factura.pagos.map(pago => (
-                <div key={pago.id} className='flex items-center gap-3'>
-                  <AvatarUsuario foto={pago.foto_usuario} nombre={pago.nombre_usuario} />
-                  <p className='flex-1 text-sm font-medium text-slate-700 truncate'>{pago.nombre_usuario ?? 'Inquilino'}</p>
-                  <button
-                    onClick={() => handleToggle(pago.usuario_id)}
-                    disabled={toggling === pago.usuario_id}
-                    className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.75rem] font-semibold px-3 py-1.5 rounded-full transition
-                      ${pago.pagado ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}
-                      ${toggling === pago.usuario_id ? 'opacity-50' : ''}`}
-                  >
-                    {pago.pagado ? <><Check size={11} /> Pagado</> : 'Pendiente'}
-                  </button>
-                </div>
-              ))}
-            </div>
+            <PagosPorInquilino factura={factura} onTogglePago={onTogglePago} />
           </td>
         </tr>
       )}
@@ -550,11 +716,96 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
   )
 }
 
+// ── FacturaCardMobile (tarjeta, solo mobile) ───────────────────────────
+
+function FacturaCardMobile({ factura, esCasero, userId, onTogglePago, onEliminar, onEditar, onMarcarPagada }) {
+  const [expandido,  setExpandido]  = useState(false)
+  const [menuAbierto, setMenuAbierto] = useState(false)
+  const menuRef = useRef()
+
+  const { cfg, subtitulo, montoDisplay, estadoPersonal } = useFacturaDatos(factura, esCasero, userId)
+  const { Icon } = cfg
+
+  useEffect(() => {
+    if (!menuAbierto) return
+    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuAbierto(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [menuAbierto])
+
+  return (
+    <div className='px-4 py-4 border-b border-slate-50 last:border-0'>
+      <div className='flex items-start gap-3'>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg.iconBg}`}>
+          <Icon size={16} className={cfg.iconText} />
+        </div>
+
+        <div className='flex-1 min-w-0'>
+          <p className='text-[0.9375rem] font-semibold text-slate-800 truncate'>
+            {cfg.label}{factura.descripcion ? ` · ${factura.descripcion}` : ''}
+          </p>
+          <p className='font-mono text-[0.6875rem] text-slate-400 mt-0.5 truncate'>
+            {subtitulo ?? `${formatFechaCorta(factura.fecha_emision)} · vence ${formatFechaCorta(factura.fecha_vencimiento)}`}
+          </p>
+          <div className='flex items-center justify-between gap-2 mt-2'>
+            <EstadoBadge estado={estadoPersonal} size='sm' />
+            <span className={`font-display text-base font-bold ${estadoPersonal === 'pagada' ? 'text-emerald-600' : 'text-slate-900'}`}>
+              {formatEuros(montoDisplay)}
+            </span>
+          </div>
+        </div>
+
+        <div ref={menuRef} className='relative shrink-0'>
+          <button
+            onClick={() => setMenuAbierto(v => !v)}
+            aria-label='Acciones de la factura'
+            className='cursor-pointer! w-11 h-11 -mt-1.5 -mr-2 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition'
+          >
+            <MoreHorizontal size={17} />
+          </button>
+
+          {menuAbierto && (
+            <div className='absolute right-0 top-10 bg-white border border-slate-200 rounded-xl shadow-xl z-20 py-1.5 min-w-[170px]'>
+              {esCasero && (
+                <MenuFactura
+                  factura={factura}
+                  expandido={expandido}
+                  onToggleExpandido={() => setExpandido(v => !v)}
+                  onEditar={onEditar}
+                  onMarcarPagada={onMarcarPagada}
+                  onEliminar={onEliminar}
+                  onCerrar={() => setMenuAbierto(false)}
+                />
+              )}
+              {!esCasero && factura.url_documento && (
+                <a
+                  href={factura.url_documento} target='_blank' rel='noreferrer'
+                  onClick={() => setMenuAbierto(false)}
+                  className='w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
+                >
+                  <FileText size={14} className='text-slate-400' /> Ver documento
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {expandido && esCasero && (
+        <div className='mt-3 pl-13'>
+          <PagosPorInquilino factura={factura} onTogglePago={onTogglePago} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Header compartido ─────────────────────────────────────────────────
 
 function Header({ user, esCasero, onLogout, onVolver }) {
+  const navigate = useNavigate()
   return (
-    <header className='sticky top-0 z-10 bg-white border-b border-slate-100'>
+    <header className='bg-white border-b border-slate-100'>
       <div className='max-w-5xl mx-auto px-8 py-4 flex items-center justify-between'>
         <div className='flex items-center gap-3'>
           {onVolver && (
@@ -563,19 +814,19 @@ function Header({ user, esCasero, onLogout, onVolver }) {
             </button>
           )}
 
-          <span className='font-display text-[1.5rem] font-bold text-slate-900'>
-            {esCasero ? 'Housie' : 'Mis facturas'}
-          </span>
+          {esCasero ? (
+            <button onClick={() => navigate('/')} className='cursor-pointer! font-display text-[1.5rem] font-bold text-slate-900'>
+              Housie
+            </button>
+          ) : (
+            <span className='font-display text-[1.5rem] font-bold text-slate-900'>
+              Mis facturas
+            </span>
+          )}
         </div>
 
         <div className='flex items-center gap-3'>
           <div className='flex items-center gap-3'>
-            {user?.foto_perfil
-              ? <img src={user.foto_perfil} alt={user.nombre} className='w-9 h-9 rounded-full object-cover ring-2 ring-slate-100' />
-              : <div className='w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-sm shrink-0'>
-                  {user?.nombre?.[0]?.toUpperCase() ?? '?'}
-                </div>
-            }
             <div className='flex flex-col'>
               <span className='text-sm font-semibold text-slate-900 leading-tight'>{user?.nombre}</span>
               <span className={`font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] ${esCasero ? 'text-emerald-600' : 'text-slate-400'}`}>
@@ -624,9 +875,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
 
   const handleEliminar = async (id) => {
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/facturas/${id}?grupo_id=${grupoId}`, {
-        method: 'DELETE', credentials: 'include',
-      })
+      const r = await apiFetch(`/api/facturas/${id}?grupo_id=${grupoId}`, { method: 'DELETE' })
       if (!r.ok) { const d = await r.json(); setError(d.message); return }
       setFacturas(prev => prev.filter(f => f.id !== id))
     } catch {
@@ -641,10 +890,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
 
   const handleMarcarPagada = async (facturaId) => {
     try {
-      const r = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/facturas/${facturaId}/pagada?grupo_id=${grupoId}`,
-        { method: 'PATCH', credentials: 'include' }
-      )
+      const r = await apiFetch(`/api/facturas/${facturaId}/pagada?grupo_id=${grupoId}`, { method: 'PATCH' })
       if (!r.ok) { const d = await r.json(); setError(d.message); return }
       const { pagos } = await r.json()
       setFacturas(prev => prev.map(f => f.id !== facturaId ? f : { ...f, pagos }))
@@ -655,10 +901,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
 
   const handleTogglePago = async (facturaId, usuarioId) => {
     try {
-      const r = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/facturas/${facturaId}/pagos/${usuarioId}?grupo_id=${grupoId}`,
-        { method: 'PATCH', credentials: 'include' }
-      )
+      const r = await apiFetch(`/api/facturas/${facturaId}/pagos/${usuarioId}?grupo_id=${grupoId}`, { method: 'PATCH' })
       if (!r.ok) { const d = await r.json(); setError(d.message); return }
       const { pago } = await r.json()
       setFacturas(prev => prev.map(f => {
@@ -671,12 +914,11 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
   }
 
   return (
-    <div className='flex flex-col gap-6 pb-12'>
+    <div className='flex flex-col gap-6'>
       {/* Fecha + título + selector */}
       <div className='flex flex-col gap-4'>
         <div>
-          <p className='font-mono text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-400'>{getFechaHoy()}</p>
-          <h1 className='font-display text-[2.5rem] font-bold text-slate-900 leading-none mt-1'>Tus facturas</h1>
+          <h1 className='font-display text-[2.5rem] font-bold text-slate-900 leading-none'>Tus facturas</h1>
         </div>
         {selectorGrupo}
       </div>
@@ -691,27 +933,27 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
       )}
 
       {/* Cards resumen */}
-      <div className='grid grid-cols-3 gap-4'>
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
         {/* Por cobrar */}
-        <div className='bg-slate-900 rounded-3xl px-7 py-6 flex flex-col gap-2'>
+        <div className='bg-slate-900 rounded-3xl px-5 sm:px-7 py-5 sm:py-6 flex flex-col gap-2'>
           <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-slate-400'>Por cobrar este mes</p>
-          <p className='font-display text-[2.5rem] font-bold text-white leading-none'>{formatEuros(porCobrar)}</p>
+          <p className='font-display text-4xl sm:text-[2.5rem] font-bold text-white leading-none'>{formatEuros(porCobrar)}</p>
           <p className='text-sm text-slate-400'>
             {pendienteCount === 0 ? 'Todo cobrado' : `${pendienteCount} ${pendienteCount === 1 ? 'factura pendiente' : 'facturas pendientes'}`}
           </p>
         </div>
 
         {/* Cobrado */}
-        <div className='bg-emerald-50 border border-emerald-100 rounded-3xl px-7 py-6 flex flex-col gap-2'>
+        <div className='bg-emerald-50 border border-emerald-100 rounded-3xl px-5 sm:px-7 py-5 sm:py-6 flex flex-col gap-2'>
           <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-emerald-600'>Cobrado este mes</p>
-          <p className='font-display text-[2.5rem] font-bold text-emerald-700 leading-none'>{formatEuros(cobrado)}</p>
+          <p className='font-display text-4xl sm:text-[2.5rem] font-bold text-emerald-700 leading-none'>{formatEuros(cobrado)}</p>
           <p className='text-sm text-emerald-500'>
             {pagadaCount === 0 ? 'Sin pagos recibidos' : `${pagadaCount} ${pagadaCount === 1 ? 'pagada' : 'pagadas'}`}
           </p>
         </div>
 
         {/* Subir factura */}
-        <div className='bg-white border border-slate-100 rounded-3xl px-7 py-6 flex flex-col gap-3' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
+        <div className='bg-white border border-slate-100 rounded-3xl px-5 sm:px-7 py-5 sm:py-6 flex flex-col gap-3' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
           <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-slate-400'>Subir nueva factura</p>
           <p className='text-sm text-slate-400 leading-relaxed'>Tipo, monto, fecha límite y adjuntar PDF</p>
           <button
@@ -727,7 +969,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
       <div className='bg-white border border-slate-100 rounded-3xl' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
 
         {/* Cabecera */}
-        <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
+        <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between px-4 sm:px-6 py-4 border-b border-slate-100'>
           <div>
             {(grupo?.direccion || grupo?.nombre) && (
               <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-slate-400'>
@@ -757,31 +999,51 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
             </p>
           </div>
         ) : (
-          <table className='w-full'>
-            <thead>
-              <tr className='border-b border-slate-50'>
-                <th className='w-12 pl-6' />
-                <th className='text-left py-2.5'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Concepto</span>
-                </th>
-                <th className='text-left py-2.5 w-28'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Subida</span>
-                </th>
-                <th className='text-left py-2.5 w-28 pr-6'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Vence</span>
-                </th>
-                <th className='text-right py-2.5 w-24 pr-6'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Monto</span>
-                </th>
-                <th className='text-left py-2.5 w-28'>
-                  <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Estado</span>
-                </th>
-                <th className='w-10' />
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Tabla — sm y superior */}
+            <div className='hidden sm:block overflow-x-auto'>
+              <table className='w-full'>
+                <thead>
+                  <tr className='border-b border-slate-50'>
+                    <th className='w-12 pl-6' />
+                    <th className='text-left py-2.5'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Concepto</span>
+                    </th>
+                    <th className='text-left py-2.5 w-28'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Subida</span>
+                    </th>
+                    <th className='text-left py-2.5 w-28 pr-6'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Vence</span>
+                    </th>
+                    <th className='text-right py-2.5 w-24 pr-6'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Monto</span>
+                    </th>
+                    <th className='text-left py-2.5 w-28'>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Estado</span>
+                    </th>
+                    <th className='w-10' />
+                  </tr>
+                </thead>
+                <tbody>
+                  {facturasFiltradas.map(f => (
+                    <FacturaRow
+                      key={f.id}
+                      factura={f}
+                      esCasero
+                      onTogglePago={handleTogglePago}
+                      onEliminar={handleEliminar}
+                      onEditar={setFacturaEditando}
+                      onMarcarPagada={handleMarcarPagada}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Tarjetas — mobile */}
+            <div className='sm:hidden flex flex-col'>
               {facturasFiltradas.map(f => (
-                <FacturaRow
+                <FacturaCardMobile
                   key={f.id}
                   factura={f}
                   esCasero
@@ -791,8 +1053,8 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
                   onMarcarPagada={handleMarcarPagada}
                 />
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -801,6 +1063,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
           onClose={() => setModalAbierto(false)}
           onCreada={nueva => setFacturas(prev => [nueva, ...prev])}
           grupoId={grupoId}
+          miembros={miembros}
         />
       )}
       {facturaEditando && (
@@ -837,10 +1100,8 @@ function SelectorGrupo({ grupos, grupoActivo, onChange, onVincular }) {
     if (cod.length !== 6) { setErrorCod('El código debe tener 6 caracteres'); return }
     setEnviando(true); setErrorCod(null)
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/unirse`, {
-        method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo_acceso: cod }),
+      const r = await apiFetch('/api/grupos/unirse', {
+        method: 'POST', body: JSON.stringify({ codigo_acceso: cod }),
       })
       const data = await r.json()
       if (!r.ok) { setErrorCod(data.message ?? 'Código incorrecto'); return }
@@ -895,7 +1156,7 @@ function SelectorGrupo({ grupos, grupoActivo, onChange, onVincular }) {
             onChange={e => { setCodigo(e.target.value.toUpperCase()); setErrorCod(null) }}
             maxLength={6}
             placeholder='CÓDIGO'
-            className='w-28 border border-slate-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 rounded-xl px-3 py-2 text-[0.8125rem] font-mono font-bold text-slate-800 placeholder:text-slate-300 outline-none transition uppercase tracking-widest'
+            className='w-28 bg-white border border-slate-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 rounded-xl px-3 py-2 text-[0.8125rem] font-mono font-bold text-slate-800 placeholder:text-slate-400 outline-none transition uppercase tracking-widest'
           />
           <button type='submit' disabled={enviando}
             className='cursor-pointer! inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[0.8125rem] font-semibold px-3.5 py-2 rounded-xl transition disabled:opacity-50'>
@@ -926,7 +1187,7 @@ function Gastos({ onLogout }) {
 
   // Carga inicial: todos los grupos del usuario
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mis-grupos`, { credentials: 'include' })
+    apiFetch('/api/grupos/mis-grupos')
       .then(r => r.json())
       .then(data => {
         const grupos = data.grupos ?? []
@@ -942,8 +1203,8 @@ function Gastos({ onLogout }) {
     if (!grupoActivo) return
     setCargandoFacturas(true)
     Promise.all([
-      fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo?grupo_id=${grupoActivo.id}`, { credentials: 'include' }).then(r => r.json()),
-      fetch(`${import.meta.env.VITE_API_URL}/api/facturas?grupo_id=${grupoActivo.id}`, { credentials: 'include' }).then(r => r.json()),
+      apiFetch(`/api/grupos/mi-grupo?grupo_id=${grupoActivo.id}`).then(r => r.json()),
+      apiFetch(`/api/facturas?grupo_id=${grupoActivo.id}`).then(r => r.json()),
     ]).then(([grupoData, facturasData]) => {
       setMiembros(grupoData.miembros ?? [])
       setFacturas(facturasData.facturas ?? [])
@@ -961,7 +1222,7 @@ function Gastos({ onLogout }) {
     // Pedir los miembros del grupo recién vinculado para obtener num_inquilinos
     let nInquilinos = 0
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo?grupo_id=${grupoNuevo.id}`, { credentials: 'include' })
+      const r = await apiFetch(`/api/grupos/mi-grupo?grupo_id=${grupoNuevo.id}`)
       const data = await r.json()
       nInquilinos = (data.miembros ?? []).filter(m => !m.es_casero).length
     } catch { /* no crítico */ }
@@ -981,20 +1242,20 @@ function Gastos({ onLogout }) {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-[#f4f6f8] flex items-center justify-center'>
+      <div className='min-h-screen bg-slate-200 flex items-center justify-center'>
         <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
       </div>
     )
   }
 
   return (
-    <div className='min-h-screen bg-[#f4f6f8]'>
+    <div className='min-h-screen bg-slate-200'>
       <Header
         user={user}
         esCasero={true}
         onLogout={onLogout}
       />
-      <div className='max-w-8xl mx-auto p-15'>
+      <div className='max-w-8xl mx-auto p-4 sm:p-8 lg:p-15'>
         {cargandoFacturas || facturas === null ? (
           <div className='flex justify-center py-20'>
             <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />

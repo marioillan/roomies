@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/apiFetch'
 import {
   House, LogOut, CircleUserRound,
-  LayoutDashboard, Megaphone, ClipboardList, Receipt, ShoppingCart, MessageCircle, Users, CalendarDays,
+  LayoutDashboard, Megaphone, ClipboardList, Receipt, ShoppingCart, Users, CalendarDays,
 } from 'lucide-react'
 
 const TABS = [
-  { path: '/grupo',              icon: LayoutDashboard, exact: true, title: 'Inicio',       soloCasero: false },
-  { path: '/grupo/perfil',       icon: Users,                        title: 'Mi grupo',     soloCasero: false },
-  { path: '/grupo/publicacion',  icon: Megaphone,                    title: 'Publicación',  soloCasero: false },
-  { path: '/grupo/calendario',   icon: CalendarDays,                 title: 'Calendario',   soloCasero: false },
-  { path: '/grupo/tareas',       icon: ClipboardList,                title: 'Tareas',       soloCasero: false },
-  { path: '/grupo/facturas',     icon: Receipt,                      title: 'Facturas',     soloCasero: false },
-  { path: '/grupo/compra',       icon: ShoppingCart,                 title: 'Compra',       soloCasero: false },
+  { path: '/grupo',             icon: LayoutDashboard, exact: true, title: 'Inicio',     soloCasero: false },
+  { path: '/grupo/calendario',  icon: CalendarDays,                 title: 'Calendario', soloCasero: false },
+  { path: '/grupo/tareas',      icon: ClipboardList,                title: 'Tareas',     soloCasero: false },
+  { path: '/grupo/facturas',    icon: Receipt,                      title: 'Facturas',   soloCasero: false },
+  { path: '/grupo/compra',      icon: ShoppingCart,                 title: 'Compra',     soloCasero: false },
 ]
 
 function LayoutGrupo({ onLogout }) {
@@ -25,7 +24,7 @@ function LayoutGrupo({ onLogout }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/grupos/mi-grupo`, { credentials: 'include' })
+    apiFetch('/api/grupos/mi-grupo')
       .then(r => r.json())
       .then(data => {
         setGrupo(data.grupo ?? null)
@@ -74,11 +73,11 @@ function LayoutGrupo({ onLogout }) {
   }
 
   return (
-    <div className='min-h-screen bg-slate-100 md:h-screen md:overflow-hidden md:flex'>
+    <div className='min-h-screen bg-slate-200 md:h-screen md:overflow-hidden md:flex'>
 
       {/* Sidebar — oculto en mobile, visible en desktop */}
       <aside
-        className='hidden md:flex w-25 shrink-0 flex-col min-h-screen sticky top-0 h-screen'
+        className='group hidden md:flex w-25 shrink-0 flex-col min-h-screen sticky top-0 h-screen'
         style={{ backgroundColor: '#0b8059' }}
       >
 
@@ -90,43 +89,53 @@ function LayoutGrupo({ onLogout }) {
         </div>
 
         {/* Nav */}
-        <nav className='flex-1 px-2 py-4 flex flex-col gap-3'>
+        <nav className='flex-1 px-2 py-4 flex flex-col gap-1'>
           {tabsVisibles.map(({ path, icon: Icon, exact, title }) => {
             const active = exact ? pathname === path : pathname.startsWith(path)
             return (
               <button
                 key={path}
                 onClick={() => navigate(path)}
-                title={title}
-                className='cursor-pointer! w-full flex items-center justify-center py-3 rounded-xl transition'
+                className='cursor-pointer! w-full flex flex-col items-center justify-center py-2.5 gap-1 rounded-xl transition'
                 style={{ backgroundColor: active ? 'rgba(255,255,255,0.25)' : 'transparent' }}
                 onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
                 onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent' }}
               >
                 <Icon size={20} style={{ color: 'rgba(255,255,255,0.85)' }} />
+                <span className='text-[0.6rem] font-semibold tracking-wide text-white/70 opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-none'>
+                  {title}
+                </span>
               </button>
             )
           })}
         </nav>
 
-        {/* Mensajes (solo admin) + Avatar + Logout */}
+        {/* Mi grupo + Publicación + Avatar + Logout */}
         <div className='px-2 py-4 flex flex-col gap-1'>
-          {esAdmin && !esCasero && (
-            <button
-              onClick={() => navigate('/grupo/mensajes')}
-              title='Mensajes'
-              className='cursor-pointer! w-full flex items-center justify-center py-3 rounded-xl transition'
-              style={{ backgroundColor: pathname.startsWith('/grupo/mensajes') ? 'rgba(255,255,255,0.25)' : 'transparent' }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = pathname.startsWith('/grupo/mensajes') ? 'rgba(255,255,255,0.25)' : 'transparent' }}
-            >
-              <MessageCircle size={20} style={{ color: 'rgba(255,255,255,0.85)' }} />
-            </button>
-          )}
+          {[
+            { path: '/grupo/perfil',      icon: Users,     title: 'Mi grupo'    },
+            { path: '/grupo/publicacion', icon: Megaphone, title: 'Tu anuncio' },
+          ].map(({ path, icon: Icon, title }) => {
+            const active = pathname.startsWith(path)
+            return (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className='cursor-pointer! w-full flex flex-col items-center justify-center py-2.5 gap-1 rounded-xl transition'
+                style={{ backgroundColor: active ? 'rgba(255,255,255,0.25)' : 'transparent' }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent' }}
+              >
+                <Icon size={20} style={{ color: 'rgba(255,255,255,0.85)' }} />
+                <span className='text-[0.6rem] font-semibold tracking-wide text-white/70 opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-none'>
+                  {title}
+                </span>
+              </button>
+            )
+          })}
           <button
             onClick={() => navigate('/perfil/usuario')}
-            title='Mi perfil'
-            className='cursor-pointer! w-full flex items-center justify-center py-2 rounded-xl transition'
+            className='cursor-pointer! w-full flex flex-col items-center justify-center py-2 gap-1 rounded-xl transition'
             onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
             onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
           >
@@ -136,22 +145,27 @@ function LayoutGrupo({ onLogout }) {
                   {user?.nombre?.[0]?.toUpperCase() ?? <CircleUserRound size={18} />}
                 </div>
             }
+            <span className='text-[0.6rem] font-semibold tracking-wide text-white/70 opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-none'>
+              Mi perfil
+            </span>
           </button>
           <button
             onClick={onLogout}
-            title='Cerrar sesión'
-            className='cursor-pointer! w-full flex items-center justify-center py-3 rounded-xl transition'
+            className='cursor-pointer! w-full flex flex-col items-center justify-center py-2.5 gap-1 rounded-xl transition'
             style={{ color: 'rgba(255,255,255,0.75)' }}
             onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
             onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
           >
             <LogOut size={20} />
+            <span className='text-[0.6rem] font-semibold tracking-wide text-white/70 opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-none'>
+              Salir
+            </span>
           </button>
         </div>
       </aside>
 
       {/* Contenido principal */}
-      <main className='flex-1 min-w-0 p-4 sm:p-6 md:p-12 overflow-y-auto pb-24 md:pb-12'>
+      <main className='flex-1 min-w-0 p-4 sm:p-6 md:p-12 overflow-y-auto pb-24 md:pb-13'>
         <div className='max-w-9xl mx-auto'>
           <Outlet context={{ grupo, miembros, user }} />
         </div>
@@ -176,16 +190,23 @@ function LayoutGrupo({ onLogout }) {
             </button>
           )
         })}
-        {esAdmin && !esCasero && (
-          <button
-            onClick={() => navigate('/grupo/mensajes')}
-            title='Mensajes'
-            className='cursor-pointer! flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition'
-            style={{ color: pathname.startsWith('/grupo/mensajes') ? 'white' : 'rgba(255,255,255,0.55)', backgroundColor: pathname.startsWith('/grupo/mensajes') ? 'rgba(255,255,255,0.18)' : 'transparent' }}
-          >
-            <MessageCircle size={20} />
-          </button>
-        )}
+        {[
+          { path: '/grupo/perfil',      icon: Users,     title: 'Mi grupo'    },
+          { path: '/grupo/publicacion', icon: Megaphone, title: 'Publicación' },
+        ].map(({ path, icon: Icon, title }) => {
+          const active = pathname.startsWith(path)
+          return (
+            <button
+              key={path}
+              onClick={() => navigate(path)}
+              title={title}
+              className='cursor-pointer! flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition'
+              style={{ color: active ? 'white' : 'rgba(255,255,255,0.55)', backgroundColor: active ? 'rgba(255,255,255,0.18)' : 'transparent' }}
+            >
+              <Icon size={20} />
+            </button>
+          )
+        })}
         <button
           onClick={() => navigate('/perfil/usuario')}
           title='Mi perfil'
