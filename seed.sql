@@ -69,51 +69,51 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO perfiles_convivencia_usuario
   (id, usuario_id, pais, genero, fecha_nacimiento, ocupacion, horario, frecuencia_visitas,
    ambiente, tolerancia_fiestas, frecuencia_salidas, fumador, acepta_fumadores,
-   tiene_mascotas, acepta_mascotas, lgbtq_friendly, sobre_mi)
+   tiene_mascotas, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido, sobre_mi)
 VALUES
   ('pc000001-0000-4000-8000-000000000001', (SELECT id FROM usuarios WHERE email='maria@housie.com'),
    'España','Mujer','2002-03-15','ESTUDIO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','OCASIONAL',
-   FALSE,'NO',FALSE,'DEPENDE',TRUE,
+   FALSE,'NO',FALSE,'DEPENDE',TRUE,'ORDENADO','MODERADO',
    'Soy estudiante de Arquitectura en la UGR. Soy ordenada y me gusta mantener el piso limpio. Busco compañeros responsables y tranquilos.'),
   ('pc000001-0000-4000-8000-000000000002', (SELECT id FROM usuarios WHERE email='carlos@housie.com'),
    'España','Hombre','2001-07-22','ESTUDIO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
-   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'FLEXIBLE','SILENCIO_TOTAL',
    'Estudio Informática. Soy tranquilo y respeto el espacio de los demás. Me gusta cocinar y suelo hacer cenas para el piso los fines de semana.'),
   ('pc000001-0000-4000-8000-000000000003', (SELECT id FROM usuarios WHERE email='ana@housie.com'),
    'España','Mujer','2002-11-08','ESTUDIO','INTERMEDIO','A_VECES','SOCIAL','OCASIONAL','FRECUENTE',
-   FALSE,'NO',FALSE,'NO',TRUE,
+   FALSE,'NO',FALSE,'NO',TRUE,'FLEXIBLE','INDIFERENTE',
    'Estudiante de Medicina. Sé separar el tiempo de estudio del ocio. Salgo a correr casi cada mañana.'),
   ('pc000001-0000-4000-8000-000000000004', (SELECT id FROM usuarios WHERE email='david@housie.com'),
    'España','Hombre','1995-04-30','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
-   FALSE,'NO',FALSE,'NO',TRUE,
+   FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Trabajo en una consultora tecnológica. Soy muy ordenado y puntual con los pagos.'),
   ('pc000001-0000-4000-8000-000000000005', (SELECT id FROM usuarios WHERE email='laura@housie.com'),
    'España','Mujer','1997-09-12','TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'FLEXIBLE','SILENCIO_TOTAL',
    'Diseñadora gráfica freelance. Valoro un ambiente tranquilo durante el día.'),
   ('pc000001-0000-4000-8000-000000000006', (SELECT id FROM usuarios WHERE email='javier@housie.com'),
    'España','Hombre','1999-02-18','ESTUDIO_Y_TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'FLEXIBLE','MODERADO',
    'Máster de Marketing digital mientras trabajo media jornada. Me gusta el cine y explorar Gràcia.'),
   ('pc000001-0000-4000-8000-000000000007', (SELECT id FROM usuarios WHERE email='sofia@housie.com'),
    'China','Mujer','2000-06-25','ESTUDIO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
-   FALSE,'NO',FALSE,'NO',TRUE,
+   FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Intercambio en la UB, estudio Económicas. Muy limpia y ordenada. Me gusta cocinar comida asiática.'),
   ('pc000001-0000-4000-8000-000000000008', (SELECT id FROM usuarios WHERE email='pablo@housie.com'),
    'España','Hombre','2001-12-03','ESTUDIO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'FLEXIBLE','INDIFERENTE',
    'Estudiante de Derecho que empieza en Granada en septiembre. Soy sociable y nunca me he retrasado en los pagos.'),
   ('pc000001-0000-4000-8000-000000000009', (SELECT id FROM usuarios WHERE email='isabel@housie.com'),
    'España','Mujer','2000-08-19','ESTUDIO','NOCTURNO','A_VECES','SOCIAL','FRECUENTE','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'DESPREOCUPADO','INDIFERENTE',
    'Estudiante de Bellas Artes con horarios atípicos. Me encantan el arte, la música y la cultura.'),
   ('pc000001-0000-4000-8000-000000000010', (SELECT id FROM usuarios WHERE email='roberto@housie.com'),
    'España','Hombre','1972-06-10','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
-   FALSE,'NO',FALSE,'NO',FALSE,
+   FALSE,'NO',FALSE,'NO',FALSE,'ORDENADO','SILENCIO_TOTAL',
    'Propietario de varios pisos en Granada. Llevo más de 20 años en el sector inmobiliario.'),
   ('pc000001-0000-4000-8000-000000000011', (SELECT id FROM usuarios WHERE email='elena@housie.com'),
    'España','Mujer','1975-09-23','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
-   FALSE,'NO',FALSE,'NO',FALSE,
+   FALSE,'NO',FALSE,'NO',FALSE,'ORDENADO','SILENCIO_TOTAL',
    'Propietaria y gestora de inmuebles en Madrid. Busco inquilinos responsables y comprometidos.')
 ON CONFLICT (usuario_id) DO NOTHING;
 
@@ -123,11 +123,11 @@ ON CONFLICT (usuario_id) DO NOTHING;
 
 INSERT INTO perfiles_convivencia_grupo
   (id, grupo_id, ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas,
-   frecuencia_salidas, acepta_fumadores, acepta_mascotas, lgbtq_friendly)
+   frecuencia_salidas, acepta_fumadores, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido)
 VALUES
-  ('pg000001-0000-4000-8000-000000000001', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'NO',          'DEPENDE', TRUE),
-  ('pg000001-0000-4000-8000-000000000002', '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE),
-  ('pg000001-0000-4000-8000-000000000003', '33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'DEPENDE', TRUE)
+  ('pg000001-0000-4000-8000-000000000001', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'NO',          'DEPENDE', TRUE, 'ORDENADO',  'MODERADO'),
+  ('pg000001-0000-4000-8000-000000000002', '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',  'SILENCIO_TOTAL'),
+  ('pg000001-0000-4000-8000-000000000003', '33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',  'MODERADO')
 ON CONFLICT (grupo_id) DO NOTHING;
 
 -- =================================================================
@@ -137,7 +137,7 @@ ON CONFLICT (grupo_id) DO NOTHING;
 INSERT INTO publicaciones
   (id, grupo_id, titulo, descripcion, ciudad, direccion, precio, habitaciones_libres,
    tipo_piso, habitaciones_totales, tamano_piso, planta, ascensor,
-   wifi, lavadora, aire_acondicionado, calefaccion, amueblado,
+   wifi, lavadora, aire_acondicionado, calefaccion, amueblado, parking, terraza,
    permite_fumar, permite_mascotas, visitas, horario_silencio, genero_preferido,
    normas_adicionales, telefono_contacto, modo_contacto, visible)
 VALUES
@@ -146,15 +146,15 @@ VALUES
    'Habitación en piso universitario - Granada Sol',
    'Piso luminoso y reformado a 5 minutos de la Facultad de Ciencias y de Medicina. Somos tres estudiantes tranquilos que buscamos un cuarto compañero. Doble ventana en todas las habitaciones. Incluye gastos de comunidad.',
    'Granada','Calle Recogidas, 14',350.00,1,'PISO',4,90.00,3,FALSE,
-   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,'OCASIONAL','23:00','INDIFERENTE',
+   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'OCASIONAL','23:00','INDIFERENTE',
    'No se puede fumar en el interior. Rotación de limpieza semanal.','958123456','CHAT',TRUE),
 
   ('55e6f7a8-b9c0-4d1e-2f3a-b4c5d6e7f8a9',
    '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6',
    'Habitación en loft reformado - Malasaña',
    'Loft completamente reformado en el corazón de Malasaña. Techos altos, mucha luz natural y diseño industrial. Somos dos profesionales con trabajo estable. Habitación de 12m² con armario empotrado. Metro a 3 minutos.',
-   'Madrid','Calle Fuencarral, 89',650.00,1,'LOFT',3,110.00,4,TRUE,
-   TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,'CASI_NUNCA','22:00','INDIFERENTE',
+   'Madrid','Calle Fuencarral, 89',650.00,1,'ESTUDIO',3,110.00,4,TRUE,
+   TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'CASI_NUNCA','22:00','INDIFERENTE',
    'Perfil profesional preferiblemente. Sin fiestas. Puntualidad con los pagos.','912345678','CHAT',TRUE),
 
   ('66f7a8b9-c0d1-4e2f-3a4b-c5d6e7f8a9b0',
@@ -162,7 +162,7 @@ VALUES
    'Habitación en piso Gràcia - Barcelona',
    'Piso moderno y luminoso en el barrio de Gràcia. Habitación de 10m², armario y ventana al patio. Terraza comunitaria con vistas. Metro Fontana a 5 min.',
    'Barcelona','Carrer Gran de Gràcia, 45',520.00,1,'PISO',3,80.00,2,FALSE,
-   TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,'A_VECES','23:00','INDIFERENTE',
+   TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,FALSE,TRUE,'A_VECES','23:00','INDIFERENTE',
    'Ambiente tranquilo entre semana. Mascotas pequeñas previo acuerdo.',NULL,'CHAT',TRUE)
 ON CONFLICT (grupo_id) DO NOTHING;
 
@@ -187,24 +187,24 @@ ON CONFLICT (id) DO NOTHING;
 
 -- =================================================================
 -- INTERESES
--- 1=Gimnasio 6=Running 18=Cocina en casa 23=Cine 26=Música en directo
--- 29=Videojuegos 33=Viajes 34=Festivales 36=Networking
+-- Se referencian por nombre (no por id) porque los ids de la tabla
+-- intereses son SERIAL y su orden ha cambiado con el catálogo.
 -- =================================================================
 
 INSERT INTO grupo_intereses (grupo_id, interes_id) VALUES
-  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5',6),
-  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5',18),
-  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5',23),
-  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5',33),
-  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5',34),
-  ('22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6',1),
-  ('22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6',6),
-  ('22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6',29),
-  ('22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6',36),
-  ('33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7',23),
-  ('33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7',26),
-  ('33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7',33),
-  ('33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7',34)
+  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM intereses WHERE nombre='Running')),
+  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM intereses WHERE nombre='Cocina en casa')),
+  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM intereses WHERE nombre='Cine')),
+  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM intereses WHERE nombre='Viajes')),
+  ('11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM intereses WHERE nombre='Festivales')),
+  ('22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', (SELECT id FROM intereses WHERE nombre='Gimnasio')),
+  ('22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', (SELECT id FROM intereses WHERE nombre='Running')),
+  ('22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', (SELECT id FROM intereses WHERE nombre='Videojuegos')),
+  ('22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', (SELECT id FROM intereses WHERE nombre='Networking')),
+  ('33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', (SELECT id FROM intereses WHERE nombre='Cine')),
+  ('33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ('33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', (SELECT id FROM intereses WHERE nombre='Viajes')),
+  ('33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', (SELECT id FROM intereses WHERE nombre='Festivales'))
 ON CONFLICT DO NOTHING;
 
 -- =================================================================
@@ -340,15 +340,15 @@ ON CONFLICT (id) DO NOTHING;
 -- LISTA DE LA COMPRA (grupo Granada)
 -- =================================================================
 
-INSERT INTO productos (id, grupo_id, anadido_por_id, nombre, cantidad, unidad_medida, categoria, comprado) VALUES
-  ('pr100001-0000-4000-8000-000000000001', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='maria@housie.com'),  'Leche entera',        2,   'litros', 'comida',   FALSE),
-  ('pr100001-0000-4000-8000-000000000002', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='maria@housie.com'),  'Pan de molde',        1,   'bolsa',  'comida',   FALSE),
-  ('pr100001-0000-4000-8000-000000000003', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='carlos@housie.com'), 'Pasta (espaguetis)', 500,  'gramos', 'comida',   FALSE),
-  ('pr100001-0000-4000-8000-000000000004', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='carlos@housie.com'), 'Detergente lavadora', 1,   'bote',   'limpieza', FALSE),
-  ('pr100001-0000-4000-8000-000000000005', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='ana@housie.com'),    'Limpiahogar',         1,   'bote',   'limpieza', FALSE),
-  ('pr100001-0000-4000-8000-000000000006', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='ana@housie.com'),    'Aceite de oliva',     1,   'litro',  'comida',   TRUE),
-  ('pr100001-0000-4000-8000-000000000007', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='maria@housie.com'),  'Papel higiénico',    12,   'rollos', 'hogar',    TRUE),
-  ('pr100001-0000-4000-8000-000000000008', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='carlos@housie.com'), 'Tomate frito',        2,   'botes',  'comida',   TRUE)
+INSERT INTO productos (id, grupo_id, anadido_por_id, nombre, categoria, comprado) VALUES
+  ('pr100001-0000-4000-8000-000000000001', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='maria@housie.com'),  'Leche entera',        'comida',   FALSE),
+  ('pr100001-0000-4000-8000-000000000002', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='maria@housie.com'),  'Pan de molde',        'comida',   FALSE),
+  ('pr100001-0000-4000-8000-000000000003', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='carlos@housie.com'), 'Pasta (espaguetis)',  'comida',   FALSE),
+  ('pr100001-0000-4000-8000-000000000004', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='carlos@housie.com'), 'Detergente lavadora', 'limpieza', FALSE),
+  ('pr100001-0000-4000-8000-000000000005', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='ana@housie.com'),    'Limpiahogar',         'limpieza', FALSE),
+  ('pr100001-0000-4000-8000-000000000006', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='ana@housie.com'),    'Aceite de oliva',     'comida',   TRUE),
+  ('pr100001-0000-4000-8000-000000000007', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='maria@housie.com'),  'Papel higiénico',     'hogar',    TRUE),
+  ('pr100001-0000-4000-8000-000000000008', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', (SELECT id FROM usuarios WHERE email='carlos@housie.com'), 'Tomate frito',        'comida',   TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- =================================================================
@@ -425,55 +425,55 @@ ON CONFLICT (email) DO NOTHING;
 INSERT INTO perfiles_convivencia_usuario
   (id, usuario_id, pais, genero, fecha_nacimiento, ocupacion, horario, frecuencia_visitas,
    ambiente, tolerancia_fiestas, frecuencia_salidas, fumador, acepta_fumadores,
-   tiene_mascotas, acepta_mascotas, lgbtq_friendly, sobre_mi)
+   tiene_mascotas, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido, sobre_mi)
 VALUES
   ('pc000002-0000-4000-8000-000000000001', (SELECT id FROM usuarios WHERE email='lucia@housie.com'),
    'España','Mujer','2001-05-14','ESTUDIO','INTERMEDIO','A_VECES','SOCIAL','FRECUENTE','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'DESPREOCUPADO','INDIFERENTE',
    'Estudiante de Comunicación. Me encantan los conciertos y los festivales de música. Busco piso animado.'),
   ('pc000002-0000-4000-8000-000000000002', (SELECT id FROM usuarios WHERE email='miguel@housie.com'),
    'España','Hombre','1998-11-20','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
-   FALSE,'NO',FALSE,'NO',TRUE,
+   FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Ingeniero de software. Muy ordenado y tranquilo. Madrugo para el gimnasio y me gusta la tecnología.'),
   ('pc000002-0000-4000-8000-000000000003', (SELECT id FROM usuarios WHERE email='natalia@housie.com'),
    'España','Mujer','2000-03-07','ESTUDIO','INTERMEDIO','CASI_NUNCA','EQUILIBRADO','NUNCA','OCASIONAL',
-   FALSE,'NO',FALSE,'NO',TRUE,
+   FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','MODERADO',
    'Estudiante de Psicología. Practico yoga y meditación. Busco un piso tranquilo y con buen rollo.'),
   ('pc000002-0000-4000-8000-000000000004', (SELECT id FROM usuarios WHERE email='sergio@housie.com'),
    'España','Hombre','1999-08-15','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
-   FALSE,'NO',FALSE,'NO',TRUE,
+   FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Trabajo en marketing digital. Muy madrugador y ordenado. Salgo a correr cada mañana antes de trabajar.'),
   ('pc000002-0000-4000-8000-000000000005', (SELECT id FROM usuarios WHERE email='cristina@housie.com'),
    'España','Mujer','2001-01-28','ESTUDIO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','OCASIONAL',
-   FALSE,'NO',FALSE,'DEPENDE',TRUE,
+   FALSE,'NO',FALSE,'DEPENDE',TRUE,'FLEXIBLE','MODERADO',
    'Estudiante de Nutrición. Cocino mucho y cuido la alimentación. Prefiero un ambiente tranquilo.'),
   ('pc000002-0000-4000-8000-000000000006', (SELECT id FROM usuarios WHERE email='alvaro@housie.com'),
    'España','Hombre','2000-09-03','ESTUDIO','NOCTURNO','A_VECES','EQUILIBRADO','OCASIONAL','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'DESPREOCUPADO','MODERADO',
    'Estudiante de Ingeniería. Me gustan los videojuegos y el cine. Suelo acostarme tarde pero soy tranquilo.'),
   ('pc000002-0000-4000-8000-000000000007', (SELECT id FROM usuarios WHERE email='marta@housie.com'),
    'España','Mujer','1999-04-22','TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','OCASIONAL',
-   FALSE,'NO',FALSE,'DEPENDE',TRUE,
+   FALSE,'NO',FALSE,'DEPENDE',TRUE,'ORDENADO','MODERADO',
    'Fotógrafa profesional. Suelo volver tarde por eventos y reportajes. Muy limpia y organizada en casa.'),
   ('pc000002-0000-4000-8000-000000000008', (SELECT id FROM usuarios WHERE email='diego@housie.com'),
    'España','Hombre','2002-07-11','ESTUDIO','INTERMEDIO','A_VECES','SOCIAL','OCASIONAL','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'FLEXIBLE','INDIFERENTE',
    'Estudiante de Ciencias del Mar. Surfeo los fines de semana. Muy sociable y activo, me gusta el deporte.'),
   ('pc000002-0000-4000-8000-000000000009', (SELECT id FROM usuarios WHERE email='valeria@housie.com'),
    'Argentina','Mujer','2001-10-18','ESTUDIO','INTERMEDIO','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
-   FALSE,'NO',FALSE,'SI',TRUE,
+   FALSE,'NO',FALSE,'SI',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Intercambio desde Buenos Aires, estudio Biología. Vegana y muy respetuosa con el espacio compartido.'),
   ('pc000002-0000-4000-8000-000000000010', (SELECT id FROM usuarios WHERE email='hugo@housie.com'),
    'España','Hombre','1997-12-05','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
-   FALSE,'NO',FALSE,'NO',TRUE,
+   FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Fisioterapeuta deportivo. Voy al gimnasio cada mañana y cuido mucho mi rutina. Busco compañeros activos.'),
   ('pc000002-0000-4000-8000-000000000011', (SELECT id FROM usuarios WHERE email='irene@housie.com'),
    'España','Mujer','2001-06-30','ESTUDIO','NOCTURNO','A_VECES','SOCIAL','OCASIONAL','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'FLEXIBLE','INDIFERENTE',
    'Estudiante de Arte Dramático. Tengo ensayos hasta tarde algunos días pero respeto los horarios del piso.'),
   ('pc000002-0000-4000-8000-000000000012', (SELECT id FROM usuarios WHERE email='ruben@housie.com'),
    'España','Hombre','1998-02-14','ESTUDIO_Y_TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','FRECUENTE','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,
+   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'FLEXIBLE','MODERADO',
    'Músico y estudiante de composición. Toco en varios grupos. Respeto siempre el horario de silencio.')
 ON CONFLICT (usuario_id) DO NOTHING;
 
@@ -493,42 +493,63 @@ INSERT INTO grupos (id, nombre, codigo_acceso, codigo_casero, descripcion, ciuda
   ('aa000001-0000-4000-8000-000000000012', 'Granada Albaicín',       'GRA012', 'GRC012', 'Vistas a la Alhambra. Piso auténtico en el Albaicín.',          'Granada',     TRUE, 'MARTES',    0, NULL)
 ON CONFLICT (id) DO NOTHING;
 
--- Intereses grupos extra
--- 1=Gimnasio 6=Running 10=Yoga 18=Cocina en casa 20=Vegano/vegetariano
--- 23=Cine 25=Teatro 26=Música en directo 27=Fotografía 29=Videojuegos
--- 33=Viajes 34=Festivales 36=Networking 38=Meditación 41=Surf
+-- Intereses grupos extra (referenciados por nombre, ver nota anterior)
 INSERT INTO grupo_intereses (grupo_id, interes_id) VALUES
-  ('aa000001-0000-4000-8000-000000000001',18),('aa000001-0000-4000-8000-000000000001',34),('aa000001-0000-4000-8000-000000000001',26),
-  ('aa000001-0000-4000-8000-000000000002',1), ('aa000001-0000-4000-8000-000000000002',36),('aa000001-0000-4000-8000-000000000002',29),
-  ('aa000001-0000-4000-8000-000000000003',6), ('aa000001-0000-4000-8000-000000000003',33),('aa000001-0000-4000-8000-000000000003',23),
-  ('aa000001-0000-4000-8000-000000000004',41),('aa000001-0000-4000-8000-000000000004',34),('aa000001-0000-4000-8000-000000000004',26),
-  ('aa000001-0000-4000-8000-000000000005',23),('aa000001-0000-4000-8000-000000000005',18),('aa000001-0000-4000-8000-000000000005',33),
-  ('aa000001-0000-4000-8000-000000000006',6), ('aa000001-0000-4000-8000-000000000006',23),('aa000001-0000-4000-8000-000000000006',29),
-  ('aa000001-0000-4000-8000-000000000007',25),('aa000001-0000-4000-8000-000000000007',27),('aa000001-0000-4000-8000-000000000007',26),
-  ('aa000001-0000-4000-8000-000000000008',1), ('aa000001-0000-4000-8000-000000000008',10),('aa000001-0000-4000-8000-000000000008',38),
-  ('aa000001-0000-4000-8000-000000000009',18),('aa000001-0000-4000-8000-000000000009',20),('aa000001-0000-4000-8000-000000000009',33),
-  ('aa000001-0000-4000-8000-000000000010',33),('aa000001-0000-4000-8000-000000000010',34),('aa000001-0000-4000-8000-000000000010',41),
-  ('aa000001-0000-4000-8000-000000000011',23),('aa000001-0000-4000-8000-000000000011',25),('aa000001-0000-4000-8000-000000000011',27),
-  ('aa000001-0000-4000-8000-000000000012',26),('aa000001-0000-4000-8000-000000000012',34),('aa000001-0000-4000-8000-000000000012',33)
+  ('aa000001-0000-4000-8000-000000000001', (SELECT id FROM intereses WHERE nombre='Cocina en casa')),
+  ('aa000001-0000-4000-8000-000000000001', (SELECT id FROM intereses WHERE nombre='Festivales')),
+  ('aa000001-0000-4000-8000-000000000001', (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ('aa000001-0000-4000-8000-000000000002', (SELECT id FROM intereses WHERE nombre='Gimnasio')),
+  ('aa000001-0000-4000-8000-000000000002', (SELECT id FROM intereses WHERE nombre='Networking')),
+  ('aa000001-0000-4000-8000-000000000002', (SELECT id FROM intereses WHERE nombre='Videojuegos')),
+  ('aa000001-0000-4000-8000-000000000003', (SELECT id FROM intereses WHERE nombre='Running')),
+  ('aa000001-0000-4000-8000-000000000003', (SELECT id FROM intereses WHERE nombre='Viajes')),
+  ('aa000001-0000-4000-8000-000000000003', (SELECT id FROM intereses WHERE nombre='Cine')),
+  ('aa000001-0000-4000-8000-000000000004', (SELECT id FROM intereses WHERE nombre='Surf')),
+  ('aa000001-0000-4000-8000-000000000004', (SELECT id FROM intereses WHERE nombre='Festivales')),
+  ('aa000001-0000-4000-8000-000000000004', (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ('aa000001-0000-4000-8000-000000000005', (SELECT id FROM intereses WHERE nombre='Cine')),
+  ('aa000001-0000-4000-8000-000000000005', (SELECT id FROM intereses WHERE nombre='Cocina en casa')),
+  ('aa000001-0000-4000-8000-000000000005', (SELECT id FROM intereses WHERE nombre='Viajes')),
+  ('aa000001-0000-4000-8000-000000000006', (SELECT id FROM intereses WHERE nombre='Running')),
+  ('aa000001-0000-4000-8000-000000000006', (SELECT id FROM intereses WHERE nombre='Cine')),
+  ('aa000001-0000-4000-8000-000000000006', (SELECT id FROM intereses WHERE nombre='Videojuegos')),
+  ('aa000001-0000-4000-8000-000000000007', (SELECT id FROM intereses WHERE nombre='Teatro')),
+  ('aa000001-0000-4000-8000-000000000007', (SELECT id FROM intereses WHERE nombre='Fotografía')),
+  ('aa000001-0000-4000-8000-000000000007', (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ('aa000001-0000-4000-8000-000000000008', (SELECT id FROM intereses WHERE nombre='Gimnasio')),
+  ('aa000001-0000-4000-8000-000000000008', (SELECT id FROM intereses WHERE nombre='Yoga')),
+  ('aa000001-0000-4000-8000-000000000008', (SELECT id FROM intereses WHERE nombre='Meditación')),
+  ('aa000001-0000-4000-8000-000000000009', (SELECT id FROM intereses WHERE nombre='Cocina en casa')),
+  ('aa000001-0000-4000-8000-000000000009', (SELECT id FROM intereses WHERE nombre='Vegano')),
+  ('aa000001-0000-4000-8000-000000000009', (SELECT id FROM intereses WHERE nombre='Viajes')),
+  ('aa000001-0000-4000-8000-000000000010', (SELECT id FROM intereses WHERE nombre='Viajes')),
+  ('aa000001-0000-4000-8000-000000000010', (SELECT id FROM intereses WHERE nombre='Festivales')),
+  ('aa000001-0000-4000-8000-000000000010', (SELECT id FROM intereses WHERE nombre='Surf')),
+  ('aa000001-0000-4000-8000-000000000011', (SELECT id FROM intereses WHERE nombre='Cine')),
+  ('aa000001-0000-4000-8000-000000000011', (SELECT id FROM intereses WHERE nombre='Teatro')),
+  ('aa000001-0000-4000-8000-000000000011', (SELECT id FROM intereses WHERE nombre='Fotografía')),
+  ('aa000001-0000-4000-8000-000000000012', (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ('aa000001-0000-4000-8000-000000000012', (SELECT id FROM intereses WHERE nombre='Festivales')),
+  ('aa000001-0000-4000-8000-000000000012', (SELECT id FROM intereses WHERE nombre='Viajes'))
 ON CONFLICT DO NOTHING;
 
 -- Perfiles convivencia grupos extra
 INSERT INTO perfiles_convivencia_grupo
   (id, grupo_id, ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas,
-   frecuencia_salidas, acepta_fumadores, acepta_mascotas, lgbtq_friendly)
+   frecuencia_salidas, acepta_fumadores, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido)
 VALUES
-  ('pg000002-0000-4000-8000-000000000001', 'aa000001-0000-4000-8000-000000000001', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'SOCIAL',      'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'DEPENDE', TRUE),
-  ('pg000002-0000-4000-8000-000000000002', 'aa000001-0000-4000-8000-000000000002', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE),
-  ('pg000002-0000-4000-8000-000000000003', 'aa000001-0000-4000-8000-000000000003', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'INDIFERENTE', 'DEPENDE', TRUE),
-  ('pg000002-0000-4000-8000-000000000004', 'aa000001-0000-4000-8000-000000000004', 'TRABAJO',           'INTERMEDIO', 'FRECUENTE',  'SOCIAL',      'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'SI',      TRUE),
-  ('pg000002-0000-4000-8000-000000000005', 'aa000001-0000-4000-8000-000000000005', 'ESTUDIO',          'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE),
-  ('pg000002-0000-4000-8000-000000000006', 'aa000001-0000-4000-8000-000000000006', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'NO',          'DEPENDE', TRUE),
-  ('pg000002-0000-4000-8000-000000000007', 'aa000001-0000-4000-8000-000000000007', 'ESTUDIO',          'NOCTURNO',   'A_VECES',    'SOCIAL',      'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'DEPENDE', TRUE),
-  ('pg000002-0000-4000-8000-000000000008', 'aa000001-0000-4000-8000-000000000008', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE),
-  ('pg000002-0000-4000-8000-000000000009', 'aa000001-0000-4000-8000-000000000009', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'INDIFERENTE', 'DEPENDE', TRUE),
-  ('pg000002-0000-4000-8000-000000000010', 'aa000001-0000-4000-8000-000000000010', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE),
-  ('pg000002-0000-4000-8000-000000000011', 'aa000001-0000-4000-8000-000000000011', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'NO',          'DEPENDE', TRUE),
-  ('pg000002-0000-4000-8000-000000000012', 'aa000001-0000-4000-8000-000000000012', 'ESTUDIO',          'NOCTURNO',   'FRECUENTE',  'SOCIAL',      'FRECUENTE', 'FRECUENTE', 'INDIFERENTE', 'SI',      TRUE)
+  ('pg000002-0000-4000-8000-000000000001', 'aa000001-0000-4000-8000-000000000001', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'SOCIAL',      'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'DEPENDE', TRUE, 'DESPREOCUPADO', 'INDIFERENTE'),
+  ('pg000002-0000-4000-8000-000000000002', 'aa000001-0000-4000-8000-000000000002', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
+  ('pg000002-0000-4000-8000-000000000003', 'aa000001-0000-4000-8000-000000000003', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
+  ('pg000002-0000-4000-8000-000000000004', 'aa000001-0000-4000-8000-000000000004', 'TRABAJO',           'INTERMEDIO', 'FRECUENTE',  'SOCIAL',      'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'SI',      TRUE, 'DESPREOCUPADO', 'INDIFERENTE'),
+  ('pg000002-0000-4000-8000-000000000005', 'aa000001-0000-4000-8000-000000000005', 'ESTUDIO',          'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
+  ('pg000002-0000-4000-8000-000000000006', 'aa000001-0000-4000-8000-000000000006', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'NO',          'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
+  ('pg000002-0000-4000-8000-000000000007', 'aa000001-0000-4000-8000-000000000007', 'ESTUDIO',          'NOCTURNO',   'A_VECES',    'SOCIAL',      'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',       'INDIFERENTE'),
+  ('pg000002-0000-4000-8000-000000000008', 'aa000001-0000-4000-8000-000000000008', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
+  ('pg000002-0000-4000-8000-000000000009', 'aa000001-0000-4000-8000-000000000009', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
+  ('pg000002-0000-4000-8000-000000000010', 'aa000001-0000-4000-8000-000000000010', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
+  ('pg000002-0000-4000-8000-000000000011', 'aa000001-0000-4000-8000-000000000011', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'NO',          'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
+  ('pg000002-0000-4000-8000-000000000012', 'aa000001-0000-4000-8000-000000000012', 'ESTUDIO',          'NOCTURNO',   'FRECUENTE',  'SOCIAL',      'FRECUENTE', 'FRECUENTE', 'INDIFERENTE', 'SI',      TRUE, 'DESPREOCUPADO', 'INDIFERENTE')
 ON CONFLICT (grupo_id) DO NOTHING;
 
 -- Miembros admin de los grupos extra
@@ -551,7 +572,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO publicaciones
   (id, grupo_id, titulo, descripcion, ciudad, direccion, precio, habitaciones_libres,
    tipo_piso, habitaciones_totales, tamano_piso, planta, ascensor,
-   wifi, lavadora, aire_acondicionado, calefaccion, amueblado,
+   wifi, lavadora, aire_acondicionado, calefaccion, amueblado, parking, terraza,
    permite_fumar, permite_mascotas, visitas, horario_silencio, genero_preferido,
    normas_adicionales, modo_contacto, visible)
 VALUES
@@ -560,84 +581,84 @@ VALUES
    'Habitación en Triana — Sevilla',
    'Piso amplio con terraza en el barrio más animado de Sevilla. A 10 min andando del centro.',
    'Sevilla','Calle Betis, 22',380.00,1,'PISO',3,85.00,1,FALSE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000002',
    'aa000001-0000-4000-8000-000000000002',
    'Apartamento moderno — Valencia',
    'Apartamento recién reformado cerca de la Ciudad de las Artes y las Ciencias. Muy luminoso.',
    'Valencia','Avenida Francia, 15',490.00,1,'PISO',2,65.00,5,TRUE,
-   TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,'CASI_NUNCA','22:30','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,'CASI_NUNCA','22:30','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000003',
    'aa000001-0000-4000-8000-000000000003',
    'Piso en el Casco Viejo — Bilbao',
    'Habitación en piso reformado en el corazón del Casco Viejo. Todos los servicios a pie de calle.',
    'Bilbao','Calle Somera, 8',420.00,1,'PISO',4,100.00,2,FALSE,
-   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000004',
    'aa000001-0000-4000-8000-000000000004',
    'Piso con terraza — Málaga Playa',
    'Piso a 5 min a pie de la playa. Terraza compartida con vistas al Mediterráneo.',
    'Málaga','Paseo Marítimo, 34',560.00,2,'PISO',4,110.00,3,TRUE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE,'A_VECES','24:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE,FALSE,TRUE,'A_VECES','24:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000005',
    'aa000001-0000-4000-8000-000000000005',
    'Piso céntrico — Zaragoza',
    'Piso de 90m² en el centro histórico. Zona tranquila, ideal para estudiantes o trabajadores.',
    'Zaragoza','Calle Alfonso I, 12',310.00,1,'PISO',3,90.00,4,TRUE,
-   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,'CASI_NUNCA','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,'CASI_NUNCA','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000006',
    'aa000001-0000-4000-8000-000000000006',
    'Piso universitario — Valladolid',
    'Ideal para estudiantes. Cerca de la UVa y del campus Miguel Delibes. Muy bien comunicado.',
    'Valladolid','Calle Real de Burgos, 5',280.00,1,'PISO',3,75.00,2,FALSE,
-   TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000007',
    'aa000001-0000-4000-8000-000000000007',
    'A 3 min de la Plaza Mayor — Salamanca',
    'Piso histórico completamente reformado. La ubicación más céntrica de Salamanca.',
    'Salamanca','Calle Compañía, 3',340.00,1,'PISO',3,80.00,1,FALSE,
-   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000008',
    'aa000001-0000-4000-8000-000000000008',
    'Vista al mar — Alicante',
    'Apartamento con vistas al Mediterráneo. Soleado los 365 días del año.',
    'Alicante','Avenida del Mar, 7',450.00,1,'PISO',2,60.00,6,TRUE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE,'CASI_NUNCA','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,FALSE,TRUE,'CASI_NUNCA','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000009',
    'aa000001-0000-4000-8000-000000000009',
    'Piso tranquilo — Murcia',
    'Piso amplio y muy tranquilo en La Flota. A 15 min del centro en bici.',
    'Murcia','Calle Mayor, 18',295.00,2,'PISO',4,95.00,1,FALSE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000010',
    'aa000001-0000-4000-8000-000000000010',
    'Piso moderno — Palma de Mallorca',
    'Piso reformado en el centro de Palma. Arquitectura mallorquina con toque moderno.',
    'Palma','Carrer dels Oms, 9',580.00,1,'PISO',3,85.00,3,TRUE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,'CASI_NUNCA','22:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,'CASI_NUNCA','22:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000011',
    'aa000001-0000-4000-8000-000000000011',
    'Junto a la Mezquita — Córdoba',
    'Piso en el casco histórico a 5 min de la Mezquita-Catedral. Arquitectura mudéjar original.',
    'Córdoba','Calle Judería, 6',320.00,1,'PISO',2,70.00,1,FALSE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000012',
    'aa000001-0000-4000-8000-000000000012',
    'Vistas a la Alhambra — Albaicín',
    'Piso típico granadino con vistas privilegiadas a la Alhambra. Zona monumental UNESCO.',
    'Granada','Calle Calderería Nueva, 4',410.00,1,'PISO',3,75.00,2,FALSE,
-   TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE)
+   TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE)
 ON CONFLICT (grupo_id) DO NOTHING;
 
 -- Fotos para los nuevos anuncios
@@ -688,97 +709,94 @@ INSERT INTO fotos_publicacion (id, publicacion_id, url, orden) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- =================================================================
--- INTERESES USUARIOS
--- 1=Gimnasio 6=Running 10=Yoga 18=Cocina en casa 20=Vegano/vegetariano
--- 23=Cine 25=Teatro 26=Música en directo 27=Fotografía 29=Videojuegos
--- 33=Viajes 34=Festivales 36=Networking 38=Meditación 41=Surf
+-- INTERESES USUARIOS (referenciados por nombre, ver nota anterior)
 -- =================================================================
 
 INSERT INTO usuario_intereses (usuario_id, interes_id) VALUES
   -- maria: running, cine, viajes
-  ((SELECT id FROM usuarios WHERE email='maria@housie.com'), 6),
-  ((SELECT id FROM usuarios WHERE email='maria@housie.com'), 23),
-  ((SELECT id FROM usuarios WHERE email='maria@housie.com'), 33),
+  ((SELECT id FROM usuarios WHERE email='maria@housie.com'), (SELECT id FROM intereses WHERE nombre='Running')),
+  ((SELECT id FROM usuarios WHERE email='maria@housie.com'), (SELECT id FROM intereses WHERE nombre='Cine')),
+  ((SELECT id FROM usuarios WHERE email='maria@housie.com'), (SELECT id FROM intereses WHERE nombre='Viajes')),
   -- carlos: gimnasio, videojuegos, cocina en casa
-  ((SELECT id FROM usuarios WHERE email='carlos@housie.com'), 1),
-  ((SELECT id FROM usuarios WHERE email='carlos@housie.com'), 18),
-  ((SELECT id FROM usuarios WHERE email='carlos@housie.com'), 29),
+  ((SELECT id FROM usuarios WHERE email='carlos@housie.com'), (SELECT id FROM intereses WHERE nombre='Gimnasio')),
+  ((SELECT id FROM usuarios WHERE email='carlos@housie.com'), (SELECT id FROM intereses WHERE nombre='Cocina en casa')),
+  ((SELECT id FROM usuarios WHERE email='carlos@housie.com'), (SELECT id FROM intereses WHERE nombre='Videojuegos')),
   -- ana: running, yoga, fotografía
-  ((SELECT id FROM usuarios WHERE email='ana@housie.com'), 6),
-  ((SELECT id FROM usuarios WHERE email='ana@housie.com'), 10),
-  ((SELECT id FROM usuarios WHERE email='ana@housie.com'), 27),
+  ((SELECT id FROM usuarios WHERE email='ana@housie.com'), (SELECT id FROM intereses WHERE nombre='Running')),
+  ((SELECT id FROM usuarios WHERE email='ana@housie.com'), (SELECT id FROM intereses WHERE nombre='Yoga')),
+  ((SELECT id FROM usuarios WHERE email='ana@housie.com'), (SELECT id FROM intereses WHERE nombre='Fotografía')),
   -- david: gimnasio, networking, viajes
-  ((SELECT id FROM usuarios WHERE email='david@housie.com'), 1),
-  ((SELECT id FROM usuarios WHERE email='david@housie.com'), 33),
-  ((SELECT id FROM usuarios WHERE email='david@housie.com'), 36),
+  ((SELECT id FROM usuarios WHERE email='david@housie.com'), (SELECT id FROM intereses WHERE nombre='Gimnasio')),
+  ((SELECT id FROM usuarios WHERE email='david@housie.com'), (SELECT id FROM intereses WHERE nombre='Viajes')),
+  ((SELECT id FROM usuarios WHERE email='david@housie.com'), (SELECT id FROM intereses WHERE nombre='Networking')),
   -- laura: yoga, fotografía, meditación
-  ((SELECT id FROM usuarios WHERE email='laura@housie.com'), 10),
-  ((SELECT id FROM usuarios WHERE email='laura@housie.com'), 27),
-  ((SELECT id FROM usuarios WHERE email='laura@housie.com'), 38),
+  ((SELECT id FROM usuarios WHERE email='laura@housie.com'), (SELECT id FROM intereses WHERE nombre='Yoga')),
+  ((SELECT id FROM usuarios WHERE email='laura@housie.com'), (SELECT id FROM intereses WHERE nombre='Fotografía')),
+  ((SELECT id FROM usuarios WHERE email='laura@housie.com'), (SELECT id FROM intereses WHERE nombre='Meditación')),
   -- javier: cine, música en directo, viajes
-  ((SELECT id FROM usuarios WHERE email='javier@housie.com'), 23),
-  ((SELECT id FROM usuarios WHERE email='javier@housie.com'), 26),
-  ((SELECT id FROM usuarios WHERE email='javier@housie.com'), 33),
+  ((SELECT id FROM usuarios WHERE email='javier@housie.com'), (SELECT id FROM intereses WHERE nombre='Cine')),
+  ((SELECT id FROM usuarios WHERE email='javier@housie.com'), (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ((SELECT id FROM usuarios WHERE email='javier@housie.com'), (SELECT id FROM intereses WHERE nombre='Viajes')),
   -- sofia: cocina en casa, fotografía, meditación
-  ((SELECT id FROM usuarios WHERE email='sofia@housie.com'), 18),
-  ((SELECT id FROM usuarios WHERE email='sofia@housie.com'), 27),
-  ((SELECT id FROM usuarios WHERE email='sofia@housie.com'), 38),
+  ((SELECT id FROM usuarios WHERE email='sofia@housie.com'), (SELECT id FROM intereses WHERE nombre='Cocina en casa')),
+  ((SELECT id FROM usuarios WHERE email='sofia@housie.com'), (SELECT id FROM intereses WHERE nombre='Fotografía')),
+  ((SELECT id FROM usuarios WHERE email='sofia@housie.com'), (SELECT id FROM intereses WHERE nombre='Meditación')),
   -- pablo: cine, videojuegos, festivales
-  ((SELECT id FROM usuarios WHERE email='pablo@housie.com'), 23),
-  ((SELECT id FROM usuarios WHERE email='pablo@housie.com'), 29),
-  ((SELECT id FROM usuarios WHERE email='pablo@housie.com'), 34),
+  ((SELECT id FROM usuarios WHERE email='pablo@housie.com'), (SELECT id FROM intereses WHERE nombre='Cine')),
+  ((SELECT id FROM usuarios WHERE email='pablo@housie.com'), (SELECT id FROM intereses WHERE nombre='Videojuegos')),
+  ((SELECT id FROM usuarios WHERE email='pablo@housie.com'), (SELECT id FROM intereses WHERE nombre='Festivales')),
   -- isabel: teatro, fotografía, música en directo
-  ((SELECT id FROM usuarios WHERE email='isabel@housie.com'), 25),
-  ((SELECT id FROM usuarios WHERE email='isabel@housie.com'), 26),
-  ((SELECT id FROM usuarios WHERE email='isabel@housie.com'), 27),
+  ((SELECT id FROM usuarios WHERE email='isabel@housie.com'), (SELECT id FROM intereses WHERE nombre='Teatro')),
+  ((SELECT id FROM usuarios WHERE email='isabel@housie.com'), (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ((SELECT id FROM usuarios WHERE email='isabel@housie.com'), (SELECT id FROM intereses WHERE nombre='Fotografía')),
   -- lucia: festivales, música en directo, running
-  ((SELECT id FROM usuarios WHERE email='lucia@housie.com'), 6),
-  ((SELECT id FROM usuarios WHERE email='lucia@housie.com'), 26),
-  ((SELECT id FROM usuarios WHERE email='lucia@housie.com'), 34),
+  ((SELECT id FROM usuarios WHERE email='lucia@housie.com'), (SELECT id FROM intereses WHERE nombre='Running')),
+  ((SELECT id FROM usuarios WHERE email='lucia@housie.com'), (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ((SELECT id FROM usuarios WHERE email='lucia@housie.com'), (SELECT id FROM intereses WHERE nombre='Festivales')),
   -- miguel: gimnasio, networking, videojuegos
-  ((SELECT id FROM usuarios WHERE email='miguel@housie.com'), 1),
-  ((SELECT id FROM usuarios WHERE email='miguel@housie.com'), 29),
-  ((SELECT id FROM usuarios WHERE email='miguel@housie.com'), 36),
+  ((SELECT id FROM usuarios WHERE email='miguel@housie.com'), (SELECT id FROM intereses WHERE nombre='Gimnasio')),
+  ((SELECT id FROM usuarios WHERE email='miguel@housie.com'), (SELECT id FROM intereses WHERE nombre='Videojuegos')),
+  ((SELECT id FROM usuarios WHERE email='miguel@housie.com'), (SELECT id FROM intereses WHERE nombre='Networking')),
   -- natalia: yoga, meditación, viajes
-  ((SELECT id FROM usuarios WHERE email='natalia@housie.com'), 10),
-  ((SELECT id FROM usuarios WHERE email='natalia@housie.com'), 33),
-  ((SELECT id FROM usuarios WHERE email='natalia@housie.com'), 38),
+  ((SELECT id FROM usuarios WHERE email='natalia@housie.com'), (SELECT id FROM intereses WHERE nombre='Yoga')),
+  ((SELECT id FROM usuarios WHERE email='natalia@housie.com'), (SELECT id FROM intereses WHERE nombre='Viajes')),
+  ((SELECT id FROM usuarios WHERE email='natalia@housie.com'), (SELECT id FROM intereses WHERE nombre='Meditación')),
   -- sergio: running, gimnasio, networking
-  ((SELECT id FROM usuarios WHERE email='sergio@housie.com'), 1),
-  ((SELECT id FROM usuarios WHERE email='sergio@housie.com'), 6),
-  ((SELECT id FROM usuarios WHERE email='sergio@housie.com'), 36),
+  ((SELECT id FROM usuarios WHERE email='sergio@housie.com'), (SELECT id FROM intereses WHERE nombre='Gimnasio')),
+  ((SELECT id FROM usuarios WHERE email='sergio@housie.com'), (SELECT id FROM intereses WHERE nombre='Running')),
+  ((SELECT id FROM usuarios WHERE email='sergio@housie.com'), (SELECT id FROM intereses WHERE nombre='Networking')),
   -- cristina: yoga, cocina en casa, meditación
-  ((SELECT id FROM usuarios WHERE email='cristina@housie.com'), 10),
-  ((SELECT id FROM usuarios WHERE email='cristina@housie.com'), 18),
-  ((SELECT id FROM usuarios WHERE email='cristina@housie.com'), 38),
+  ((SELECT id FROM usuarios WHERE email='cristina@housie.com'), (SELECT id FROM intereses WHERE nombre='Yoga')),
+  ((SELECT id FROM usuarios WHERE email='cristina@housie.com'), (SELECT id FROM intereses WHERE nombre='Cocina en casa')),
+  ((SELECT id FROM usuarios WHERE email='cristina@housie.com'), (SELECT id FROM intereses WHERE nombre='Meditación')),
   -- alvaro: videojuegos, cine, festivales
-  ((SELECT id FROM usuarios WHERE email='alvaro@housie.com'), 23),
-  ((SELECT id FROM usuarios WHERE email='alvaro@housie.com'), 29),
-  ((SELECT id FROM usuarios WHERE email='alvaro@housie.com'), 34),
+  ((SELECT id FROM usuarios WHERE email='alvaro@housie.com'), (SELECT id FROM intereses WHERE nombre='Cine')),
+  ((SELECT id FROM usuarios WHERE email='alvaro@housie.com'), (SELECT id FROM intereses WHERE nombre='Videojuegos')),
+  ((SELECT id FROM usuarios WHERE email='alvaro@housie.com'), (SELECT id FROM intereses WHERE nombre='Festivales')),
   -- marta: fotografía, teatro, música en directo
-  ((SELECT id FROM usuarios WHERE email='marta@housie.com'), 25),
-  ((SELECT id FROM usuarios WHERE email='marta@housie.com'), 26),
-  ((SELECT id FROM usuarios WHERE email='marta@housie.com'), 27),
+  ((SELECT id FROM usuarios WHERE email='marta@housie.com'), (SELECT id FROM intereses WHERE nombre='Teatro')),
+  ((SELECT id FROM usuarios WHERE email='marta@housie.com'), (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ((SELECT id FROM usuarios WHERE email='marta@housie.com'), (SELECT id FROM intereses WHERE nombre='Fotografía')),
   -- diego: surf, running, viajes
-  ((SELECT id FROM usuarios WHERE email='diego@housie.com'), 6),
-  ((SELECT id FROM usuarios WHERE email='diego@housie.com'), 33),
-  ((SELECT id FROM usuarios WHERE email='diego@housie.com'), 41),
-  -- valeria: yoga, vegano/vegetariano, meditación
-  ((SELECT id FROM usuarios WHERE email='valeria@housie.com'), 10),
-  ((SELECT id FROM usuarios WHERE email='valeria@housie.com'), 20),
-  ((SELECT id FROM usuarios WHERE email='valeria@housie.com'), 38),
+  ((SELECT id FROM usuarios WHERE email='diego@housie.com'), (SELECT id FROM intereses WHERE nombre='Running')),
+  ((SELECT id FROM usuarios WHERE email='diego@housie.com'), (SELECT id FROM intereses WHERE nombre='Viajes')),
+  ((SELECT id FROM usuarios WHERE email='diego@housie.com'), (SELECT id FROM intereses WHERE nombre='Surf')),
+  -- valeria: yoga, vegano, meditación
+  ((SELECT id FROM usuarios WHERE email='valeria@housie.com'), (SELECT id FROM intereses WHERE nombre='Yoga')),
+  ((SELECT id FROM usuarios WHERE email='valeria@housie.com'), (SELECT id FROM intereses WHERE nombre='Vegano')),
+  ((SELECT id FROM usuarios WHERE email='valeria@housie.com'), (SELECT id FROM intereses WHERE nombre='Meditación')),
   -- hugo: gimnasio, surf, networking
-  ((SELECT id FROM usuarios WHERE email='hugo@housie.com'), 1),
-  ((SELECT id FROM usuarios WHERE email='hugo@housie.com'), 36),
-  ((SELECT id FROM usuarios WHERE email='hugo@housie.com'), 41),
+  ((SELECT id FROM usuarios WHERE email='hugo@housie.com'), (SELECT id FROM intereses WHERE nombre='Gimnasio')),
+  ((SELECT id FROM usuarios WHERE email='hugo@housie.com'), (SELECT id FROM intereses WHERE nombre='Networking')),
+  ((SELECT id FROM usuarios WHERE email='hugo@housie.com'), (SELECT id FROM intereses WHERE nombre='Surf')),
   -- irene: teatro, cine, fotografía
-  ((SELECT id FROM usuarios WHERE email='irene@housie.com'), 23),
-  ((SELECT id FROM usuarios WHERE email='irene@housie.com'), 25),
-  ((SELECT id FROM usuarios WHERE email='irene@housie.com'), 27),
+  ((SELECT id FROM usuarios WHERE email='irene@housie.com'), (SELECT id FROM intereses WHERE nombre='Cine')),
+  ((SELECT id FROM usuarios WHERE email='irene@housie.com'), (SELECT id FROM intereses WHERE nombre='Teatro')),
+  ((SELECT id FROM usuarios WHERE email='irene@housie.com'), (SELECT id FROM intereses WHERE nombre='Fotografía')),
   -- ruben: festivales, música en directo, surf
-  ((SELECT id FROM usuarios WHERE email='ruben@housie.com'), 26),
-  ((SELECT id FROM usuarios WHERE email='ruben@housie.com'), 34),
-  ((SELECT id FROM usuarios WHERE email='ruben@housie.com'), 41)
+  ((SELECT id FROM usuarios WHERE email='ruben@housie.com'), (SELECT id FROM intereses WHERE nombre='Música en directo')),
+  ((SELECT id FROM usuarios WHERE email='ruben@housie.com'), (SELECT id FROM intereses WHERE nombre='Festivales')),
+  ((SELECT id FROM usuarios WHERE email='ruben@housie.com'), (SELECT id FROM intereses WHERE nombre='Surf'))
 ON CONFLICT (usuario_id, interes_id) DO NOTHING;
 
 -- =================================================================

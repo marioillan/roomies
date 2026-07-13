@@ -27,24 +27,25 @@ ON CONFLICT (email) DO NOTHING;
 INSERT INTO perfiles_convivencia_usuario
   (id, usuario_id, pais, genero, fecha_nacimiento, ocupacion, horario,
    frecuencia_visitas, ambiente, tolerancia_fiestas, frecuencia_salidas,
-   fumador, acepta_fumadores, tiene_mascotas, acepta_mascotas, lgbtq_friendly, sobre_mi)
+   fumador, acepta_fumadores, tiene_mascotas, acepta_mascotas, lgbtq_friendly,
+   limpieza_orden, nivel_ruido, sobre_mi)
 VALUES
   ('dp000001-0000-4000-8000-000000000002',
    'dd000001-0000-4000-8000-000000000002',
    'España','Hombre','1999-07-22','ESTUDIO','INTERMEDIO','CASI_NUNCA','TRANQUILO',
-   'NUNCA','OCASIONAL',FALSE,'NO',FALSE,'NO',TRUE,
+   'NUNCA','OCASIONAL',FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Estudiante de Ingeniería Informática. Tranquilo y ordenado. Me gusta cocinar los fines de semana.'),
 
   ('dp000001-0000-4000-8000-000000000003',
    'dd000001-0000-4000-8000-000000000003',
    'España','Mujer','2001-11-08','ESTUDIO','NOCTURNO','A_VECES','SOCIAL',
-   'OCASIONAL','FRECUENTE',FALSE,'INDIFERENTE',FALSE,'SI',TRUE,
+   'OCASIONAL','FRECUENTE',FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'FLEXIBLE','MODERADO',
    'Estudiante de Bellas Artes. Creativa y sociable. Respeto siempre el horario de silencio.'),
 
   ('dp000001-0000-4000-8000-000000000004',
    'dd000001-0000-4000-8000-000000000004',
    'España','Mujer','2000-05-30','TRABAJO','MADRUGADOR','A_VECES','EQUILIBRADO',
-   'OCASIONAL','OCASIONAL',FALSE,'NO',FALSE,'DEPENDE',TRUE,
+   'OCASIONAL','OCASIONAL',FALSE,'NO',FALSE,'DEPENDE',TRUE,'ORDENADO','MODERADO',
    'Trabajo en diseño gráfico. Me gusta tener el piso limpio y organizado. Tranquila y respetuosa.')
 ON CONFLICT (usuario_id) DO NOTHING;
 
@@ -148,39 +149,39 @@ ON CONFLICT (tarea_id, usuario_id, semana) DO NOTHING;
 -- LISTA DE LA COMPRA
 -- =================================================================
 
-INSERT INTO productos (id, grupo_id, anadido_por_id, nombre, cantidad, unidad_medida, categoria, comprado) VALUES
+INSERT INTO productos (id, grupo_id, anadido_por_id, nombre, categoria, comprado) VALUES
   ('pr000002-0000-4000-8000-000000000001',
    '074301e3-0cb1-4b0f-bd23-d994a0bfc0d8',
    '2bb30d66-6677-4189-adf4-85d9efef9751',
-   'Leche entera',        2,   'litros',   'comida',   FALSE),
+   'Leche entera',        'comida',   FALSE),
   ('pr000002-0000-4000-8000-000000000002',
    '074301e3-0cb1-4b0f-bd23-d994a0bfc0d8',
    '2bb30d66-6677-4189-adf4-85d9efef9751',
-   'Pasta (espaguetis)',  500, 'gramos',   'comida',   FALSE),
+   'Pasta (espaguetis)',  'comida',   FALSE),
   ('pr000002-0000-4000-8000-000000000003',
    '074301e3-0cb1-4b0f-bd23-d994a0bfc0d8',
    'dd000001-0000-4000-8000-000000000002',
-   'Detergente lavadora', 1,   'bote',     'limpieza', FALSE),
+   'Detergente lavadora', 'limpieza', FALSE),
   ('pr000002-0000-4000-8000-000000000004',
    '074301e3-0cb1-4b0f-bd23-d994a0bfc0d8',
    'dd000001-0000-4000-8000-000000000002',
-   'Papel higiénico',    12,   'rollos',   'hogar',    FALSE),
+   'Papel higiénico',     'hogar',    FALSE),
   ('pr000002-0000-4000-8000-000000000005',
    '074301e3-0cb1-4b0f-bd23-d994a0bfc0d8',
    'dd000001-0000-4000-8000-000000000003',
-   'Tomates',             1,   'kg',       'comida',   FALSE),
+   'Tomates',             'comida',   FALSE),
   ('pr000002-0000-4000-8000-000000000006',
    '074301e3-0cb1-4b0f-bd23-d994a0bfc0d8',
    'dd000001-0000-4000-8000-000000000003',
-   'Aceite de oliva',     1,   'litro',    'comida',   TRUE),
+   'Aceite de oliva',     'comida',   TRUE),
   ('pr000002-0000-4000-8000-000000000007',
    '074301e3-0cb1-4b0f-bd23-d994a0bfc0d8',
    '2bb30d66-6677-4189-adf4-85d9efef9751',
-   'Jabón friegaplatos',  2,   'botes',    'limpieza', TRUE),
+   'Jabón friegaplatos',  'limpieza', TRUE),
   ('pr000002-0000-4000-8000-000000000008',
    '074301e3-0cb1-4b0f-bd23-d994a0bfc0d8',
    'dd000001-0000-4000-8000-000000000002',
-   'Esponjas',            4,   'unidades', 'limpieza', TRUE)
+   'Esponjas',            'limpieza', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- =================================================================
