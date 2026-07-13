@@ -24,7 +24,7 @@ function TraitCard({ cfg, valor }) {
 
 function GrupoPerfil() {
   const navigate = useNavigate()
-  const { grupo, miembros, user } = useOutletContext()
+  const { grupo, miembros, setMiembros, user } = useOutletContext()
 
   const [convivencia, setConvivencia] = useState(null)
   const [intereses,   setIntereses]   = useState([])
@@ -37,6 +37,10 @@ function GrupoPerfil() {
   const [nuevoAdminId,           setNuevoAdminId]           = useState('')
   const [saliendo,               setSaliendo]               = useState(false)
   const [errorSalir,             setErrorSalir]             = useState('')
+
+  const [miembroAEliminar, setMiembroAEliminar] = useState(null)
+  const [eliminandoMiembro, setEliminandoMiembro] = useState(false)
+  const [errorEliminarMiembro, setErrorEliminarMiembro] = useState('')
 
   useEffect(() => {
     Promise.allSettled([
@@ -78,7 +82,7 @@ function GrupoPerfil() {
         setErrorSalir(data.message ?? 'Error al salir del grupo')
         return
       }
-      navigate('/acceso-grupo')
+      navigate('/')
     } catch {
       setErrorSalir('Error de conexión')
     } finally {
@@ -105,6 +109,26 @@ function GrupoPerfil() {
     } catch {
       setErrorSalir('Error de conexión')
       setSaliendo(false)
+    }
+  }
+
+  const handleEliminarMiembro = async () => {
+    if (!miembroAEliminar) return
+    setEliminandoMiembro(true)
+    setErrorEliminarMiembro('')
+    try {
+      const res = await apiFetch(`/api/grupos/miembros/${miembroAEliminar.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        setErrorEliminarMiembro(data.message ?? 'Error al eliminar al miembro')
+        return
+      }
+      setMiembros?.(prev => prev.filter(m => m.id !== miembroAEliminar.id))
+      setMiembroAEliminar(null)
+    } catch {
+      setErrorEliminarMiembro('Error de conexión')
+    } finally {
+      setEliminandoMiembro(false)
     }
   }
 
@@ -280,6 +304,44 @@ function GrupoPerfil() {
         </div>
       )}
 
+      {/* ── Modal: confirmar eliminación de miembro ── */}
+      {miembroAEliminar && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm' onClick={() => { setMiembroAEliminar(null); setErrorEliminarMiembro('') }}>
+          <div className='bg-white rounded-3xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5 shadow-2xl' onClick={e => e.stopPropagation()}>
+            <div className='flex flex-col gap-1.5'>
+              <h2 className='font-display text-[1.375rem] font-semibold text-slate-900'>¿Eliminar a {miembroAEliminar.username} del grupo?</h2>
+              <p className='text-[0.875rem] text-slate-500 leading-relaxed'>
+                Esta acción eliminará al miembro del grupo de convivencia.
+              </p>
+            </div>
+            {errorEliminarMiembro && (
+              <div className='flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-3'>
+                <AlertCircle size={16} className='text-red-500 shrink-0' />
+                <p className='text-[0.8125rem] font-medium text-red-700'>{errorEliminarMiembro}</p>
+              </div>
+            )}
+            <div className='flex gap-3'>
+              <button
+                onClick={() => { setMiembroAEliminar(null); setErrorEliminarMiembro('') }}
+                disabled={eliminandoMiembro}
+                className='cursor-pointer! flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[0.875rem] font-semibold py-3 rounded-full transition disabled:opacity-50'
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleEliminarMiembro}
+                disabled={eliminandoMiembro}
+                className='cursor-pointer! flex-1 bg-red-600 hover:bg-red-700 text-white text-[0.875rem] font-semibold py-3 rounded-full transition disabled:opacity-50 flex items-center justify-center gap-2'
+              >
+                {eliminandoMiembro
+                  ? <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                  : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Hero card ── */}
       <div
         className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 sm:grid-cols-2'
@@ -330,7 +392,7 @@ function GrupoPerfil() {
               const desde = m.fecha_union ? new Date(m.fecha_union).getFullYear() : null
               const pastel = PASTEL[i % PASTEL.length]
               return (
-                <div key={m.id} className='flex items-center gap-3 py-3'>
+                <div key={m.id} className='group flex items-center gap-3 py-3'>
                   {m.foto_perfil
                     ? <img src={m.foto_perfil} alt={m.username} className='w-11 h-11 rounded-full object-cover shrink-0' />
                     : <div
@@ -359,6 +421,15 @@ function GrupoPerfil() {
                       {[edad != null ? `${edad} años` : null, desde ? `desde ${desde}` : null].filter(Boolean).join(' · ')}
                     </p>
                   </div>
+                  {esAdmin && m.id !== user?.id && (
+                    <button
+                      type='button'
+                      onClick={() => setMiembroAEliminar(m)}
+                      className='cursor-pointer! shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-[0.75rem] font-semibold text-red-600 hover:text-red-700'
+                    >
+                      Eliminar del grupo
+                    </button>
+                  )}
                   <div className='shrink-0'>
                     {m.es_casero
                       ? <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-amber-500'>Casero</span>

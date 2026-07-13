@@ -168,6 +168,7 @@ model Usuario {
   perfil_convivencia   PerfilConvivenciaUsuario?
   favoritos            Favorito[]
   solicitudes_contacto SolicitudContacto[]
+  solicitudes_union    SolicitudUnion[]
   mensajes             Mensaje[]
   facturas_casero      Factura[]           @relation("CaseroFacturas")
   pagos_factura        PagoFactura[]
@@ -202,6 +203,7 @@ model Grupo {
   perfil_convivencia   PerfilConvivenciaGrupo?
   publicacion          Publicacion?
   solicitudes_contacto SolicitudContacto[]
+  solicitudes_union    SolicitudUnion[]
   tareas               Tarea[]
   facturas             Factura[]
   eventos              Evento[]
@@ -225,6 +227,20 @@ model MiembroGrupo {
 
   @@unique([usuario_id, grupo_id])
   @@map("miembros_grupo")
+}
+
+model SolicitudUnion {
+  id               String          @id @db.VarChar(36)
+  usuario_id       String          @db.VarChar(36)
+  grupo_id         String          @db.VarChar(36)
+  estado           EstadoSolicitud @default(PENDIENTE)
+  fecha_solicitud  DateTime?       @default(now()) @db.Timestamp(6)
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  grupo   Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
+
+  @@unique([usuario_id, grupo_id])
+  @@map("solicitudes_union")
 }
 
 model PerfilConvivenciaUsuario {
@@ -320,11 +336,11 @@ model Publicacion {
   piso_puerta          String?   @db.VarChar(50)
   precio               Decimal   @db.Decimal(10, 2)
   habitaciones_libres  Int?      @default(1)
-  tipo_piso            String?   @db.VarChar(50)
-  habitaciones_totales Int?
-  tamano_piso          Decimal?  @db.Decimal(10, 2)
-  planta               Int?
-  ascensor             Boolean?  @default(false)
+  tipo_piso            String    @db.VarChar(50)
+  habitaciones_totales Int
+  tamano_piso          Decimal   @db.Decimal(10, 2)
+  planta               Int
+  ascensor             Boolean   @default(false)
   wifi                 Boolean?  @default(false)
   lavadora             Boolean?  @default(false)
   lavavajillas         Boolean?  @default(false)

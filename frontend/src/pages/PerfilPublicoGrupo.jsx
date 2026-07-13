@@ -122,14 +122,14 @@ export default function PerfilPublicoGrupo() {
       <div className='max-w-7xl mx-auto px-4 sm:px-10 py-8 flex flex-col gap-5'>
 
         {/* Volver */}
-        <div className='flex items-center justify-between'>
+        <div className='flex items-center sm:justify-between'>
           <button
             onClick={() => navigate(`/anuncio/${id}`)}
-            className='cursor-pointer! inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition bg-slate-100 hover:bg-white border border-slate-200 px-[1.125rem] py-3 rounded-full'
+            className='cursor-pointer! hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition bg-slate-100 hover:bg-white border border-slate-200 px-[1.125rem] py-3 rounded-full w-fit'
           >
             <ArrowLeft size={15} /> Volver al anuncio
           </button>
-          <h1 className='font-display text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
+          <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
             Perfil del grupo
           </h1>
         </div>
@@ -137,8 +137,44 @@ export default function PerfilPublicoGrupo() {
         {/* ── Hero card ── */}
         <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 sm:grid-cols-2' style={CARD_SHADOW}>
 
+          {/* Columna der: identidad del grupo */}
+          <div className='flex flex-col justify-center gap-4 sm:pr-8 sm:border-r border-dashed border-slate-200 min-w-0'>
+            <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Grupo de convivencia</p>
+            <h2 className='font-display text-[2rem] sm:text-[3rem] font-bold text-slate-900 leading-none -tracking-[0.02em] break-words'>
+              {pub.nombre_grupo ?? '—'}
+            </h2>
+            <div className='flex flex-wrap gap-2'>
+              {pub.ciudad && (
+                <span className='inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
+                  <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0' />
+                  {pub.ciudad}
+                </span>
+              )}
+              {anioDesde && (
+                <span className='inline-flex items-center gap-2 bg-amber-50 text-amber-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
+                  <span className='w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0' />
+                  Conviviendo desde {anioDesde}
+                </span>
+              )}
+              {pub.buscar_companero_grupo && (
+                <span className='inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
+                  <span className='w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0' />
+                  Buscando compañero
+                </span>
+              )}
+            </div>
+            {pub.descripcion_grupo
+              ? <p className='font-display text-[1.0625rem] font-normal text-slate-700 leading-[1.6] bg-slate-50 rounded-2xl px-4 py-4 break-words'>
+                  {pub.descripcion_grupo}
+                </p>
+              : <p className='font-display text-[1.0625rem] font-normal text-slate-400 italic leading-[1.4]'>
+                  Sin descripción todavía.
+                </p>
+            }
+          </div>
+
           {/* Columna izq: miembros */}
-          <div className='flex flex-col gap-4 pr-8 border-r border-dashed border-slate-200'>
+          <div className='flex flex-col gap-4 pt-6 sm:pt-0 sm:pl-8 min-w-0'>
             <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Miembros</p>
             <div className='flex flex-col divide-y divide-dashed divide-slate-200'>
               {[...miembros].sort((a, b) => (a.es_casero === b.es_casero ? 0 : a.es_casero ? 1 : -1)).map((m, i) => {
@@ -186,49 +222,13 @@ export default function PerfilPublicoGrupo() {
               })}
             </div>
           </div>
-
-          {/* Columna der: identidad del grupo */}
-          <div className='flex flex-col justify-center gap-4 pt-6 sm:pt-0 sm:pl-8 min-w-0'>
-            <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Grupo de convivencia</p>
-            <h2 className='font-display text-[3rem] font-bold text-slate-900 leading-none -tracking-[0.02em] break-words'>
-              {pub.nombre_grupo ?? '—'}
-            </h2>
-            <div className='flex flex-wrap gap-2'>
-              {pub.ciudad && (
-                <span className='inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
-                  <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0' />
-                  {pub.ciudad}
-                </span>
-              )}
-              {anioDesde && (
-                <span className='inline-flex items-center gap-2 bg-amber-50 text-amber-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
-                  <span className='w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0' />
-                  Conviviendo desde {anioDesde}
-                </span>
-              )}
-              {pub.buscar_companero_grupo && (
-                <span className='inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-[0.8125rem] font-medium px-3.5 py-[7px] rounded-full'>
-                  <span className='w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0' />
-                  Buscando compañero
-                </span>
-              )}
-            </div>
-            {pub.descripcion_grupo
-              ? <p className='font-display text-[1.0625rem] font-normal text-slate-700 leading-[1.6] bg-slate-50 rounded-2xl px-4 py-4 break-words'>
-                  {pub.descripcion_grupo}
-                </p>
-              : <p className='font-display text-[1.0625rem] font-normal text-slate-400 italic leading-[1.4]'>
-                  Sin descripción todavía.
-                </p>
-            }
-          </div>
         </div>
 
         {/* ── Datos del piso + Intereses ── */}
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
 
           {/* Datos del piso */}
-          <div className='bg-white border border-slate-100 rounded-3xl p-7 flex flex-col gap-4' style={CARD_SHADOW}>
+          <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-4' style={CARD_SHADOW}>
             <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Datos del piso</p>
             <div className='flex flex-col'>
               {[
@@ -266,7 +266,7 @@ export default function PerfilPublicoGrupo() {
           </div>
 
           {/* Intereses */}
-          <div className='bg-slate-900 text-slate-200 rounded-3xl p-7 flex flex-col gap-5 min-w-0 overflow-hidden' style={CARD_SHADOW}>
+          <div className='bg-slate-900 text-slate-200 rounded-3xl p-5 sm:p-7 flex flex-col gap-5 min-w-0 overflow-hidden' style={CARD_SHADOW}>
 
             {/* Estilo de vida */}
             {convivencia && (convivencia.ocupacion || convivencia.acepta_fumadores || convivencia.acepta_mascotas || convivencia.lgbtq_friendly === true) && (
@@ -308,10 +308,10 @@ export default function PerfilPublicoGrupo() {
         </div>
 
         {/* ── Perfil de convivencia ── */}
-        <div className='bg-white border border-slate-100 rounded-3xl p-7 flex flex-col gap-6' style={CARD_SHADOW}>
+        <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-6' style={CARD_SHADOW}>
           <div>
             <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500 mb-1.5'>Convivencia</p>
-            <h3 className='font-display text-[2rem] font-normal text-slate-900 leading-none'>¿Cómo se vive aquí?</h3>
+            <h3 className='font-display text-2xl sm:text-[2rem] font-normal text-slate-900 leading-none'>¿Cómo se vive aquí?</h3>
           </div>
 
           {!convivencia ? (
@@ -328,6 +328,14 @@ export default function PerfilPublicoGrupo() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Botón volver — solo móvil, al final de la página */}
+        <div className='sm:hidden bg-white border border-slate-100 rounded-3xl p-4' style={CARD_SHADOW}>
+          <button onClick={() => navigate(`/anuncio/${id}`)}
+            className='cursor-pointer! w-full inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition bg-slate-100 hover:bg-white border border-slate-200 px-[1.125rem] py-3 rounded-full'>
+            <ArrowLeft size={15} /> Volver al anuncio
+          </button>
         </div>
 
       </div>

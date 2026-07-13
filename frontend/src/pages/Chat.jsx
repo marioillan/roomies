@@ -391,7 +391,7 @@ export default function Chat({ modo }) {
 
       {/* Header */}
       <div>
-        <h1 className='font-display text-[2.25rem] font-medium -tracking-[0.02em] text-slate-900 leading-none mt-1'>
+        <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium -tracking-[0.02em] text-slate-900 leading-none mt-1'>
           Mensajes
         </h1>
       </div>

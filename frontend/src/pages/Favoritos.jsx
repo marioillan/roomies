@@ -253,15 +253,15 @@ export default function Favoritos() {
     <div className='flex flex-col gap-6'>
 
       {/* Cabecera */}
-      <div className='flex items-start justify-between gap-4'>
+      <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between'>
         <div>
-          <h1 className='font-display text-[2.25rem] font-medium -tracking-[0.02em] text-slate-900 leading-none'>
+          <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium -tracking-[0.02em] text-slate-900 leading-none'>
             Tus favoritos
           </h1>
         </div>
 
         {publicaciones.length > 0 && (
-          <div className='flex items-center gap-1.5 shrink-0 mt-1'>
+          <div className='flex items-center gap-1.5 shrink-0'>
             {ORDEN_CHIPS.map(chip => (
               <button
                 key={chip.value}

@@ -69,7 +69,7 @@ Monorepo con dos carpetas independientes: `backend/` y `frontend/`. Sin workspac
   - `backend/validators/` — schemas Zod y constantes de validación. Un fichero por router excepto `favoritos` (sin validación propia). Algunos solo exportan constantes: `publicacionesValidator.js` exporta `TIPOS_VALIDOS`, `GENEROS_VALIDOS`, `ORDENES_VALIDOS`; `chatsValidator.js` exporta `ACCIONES_SOLICITUD_VALIDAS`.
 - **Base de datos:** `backend/src/config/db.js` exporta `pool` (pg, legacy) y `prisma` (PrismaClient). Los controladores usan **Prisma** para todas las queries.
 - **Subida de imágenes:** Multer (memoria) → Cloudinary. Config en `backend/src/config/cloudinary.js`.
-- **Autenticación:** JWT en cookie `httpOnly`. Middleware centralizado en `backend/src/middleware/auth.js` — exporta `requireAuth`. Todas las rutas protegidas lo importan y usan como middleware; el `userId` queda en `req.userId`.
+- **Autenticación:** par de cookies `httpOnly` — `token` (JWT access, TTL 15 min, verificado por `requireAuth`) y `refresh_token` (UUID opaco, TTL 30 días, almacenado en la tabla `refresh_tokens`). `setAuthCookies(res, userId)` en `authController.js` crea la fila de `RefreshToken` y fija ambas cookies (login, registro, callback Google). `POST /api/auth/refresh` rota el refresh token (borra la fila vieja + crea una nueva en una `$transaction`) y reemite ambas cookies; si el refresh token no existe o expiró, limpia cookies y devuelve 401. `logout` borra también la fila de `refresh_tokens`. Middleware centralizado en `backend/src/middleware/auth.js` — exporta `requireAuth`, que solo comprueba `token` (no conoce el refresh). Todas las rutas protegidas lo importan y usan como middleware; el `userId` queda en `req.userId`.
 - **Validación:** Zod. Schemas centralizados en `backend/validators/`. Cada controlador importa solo sus schemas. Validación siempre antes de tocar la BD.
 - **IDs:** `randomUUID()` de Node `crypto` (nativo, no uuid package).
 - **Emails:** `backend/src/config/email.js` — nodemailer con Gmail. Patrón fire-and-forget (`.then().catch(() => {})`); nunca bloquean la respuesta HTTP. Si `EMAIL_USER`/`EMAIL_PASS` no están en `.env`, se silencia sin error. Plantillas exportadas: `emailSolicitudEnviadaUsuario`, `emailSolicitudRecibidaAdmin`, `emailSolicitudAceptada`, `emailSolicitudRechazada`, `emailPublicacionConfirmada`.
@@ -77,7 +77,7 @@ Monorepo con dos carpetas independientes: `backend/` y `frontend/`. Sin workspac
 ### Frontend — React + Vite + Tailwind
 
 - **Entrada:** `frontend/src/main.jsx` → `App.jsx`.
-- **Estado global:** `AuthContext` (`frontend/src/context/AuthContext.jsx`) es la fuente de verdad para `user`, `tieneGrupo` y `cargando`. Exporta `{ user, setUser, tieneGrupo, setTieneGrupo, recargarUsuario, cargando }`. `cargando` empieza en `true` y pasa a `false` cuando la llamada inicial a `/api/auth/me` termina — úsalo para evitar race conditions al decidir si hay sesión (ej. `if (cargando) return` al inicio de efectos que dependan de `user`). Páginas públicas con header propio usan `const { user, tieneGrupo } = useAuth()`.
+- **Estado global:** `AuthContext` (`frontend/src/context/AuthContext.jsx`) es la fuente de verdad para `user`, `tieneGrupo` y `cargando`. Exporta `{ user, setUser, tieneGrupo, setTieneGrupo, recargarUsuario, cargando }`. `cargando` empieza en `true` y pasa a `false` cuando la llamada inicial a `/api/auth/me` termina — úsalo para evitar race conditions al decidir si hay sesión (ej. `if (cargando) return` al inicio de efectos que dependan de `user`). Páginas públicas con header propio usan `const { user, tieneGrupo } = useAuth()`. `recargarUsuario` llama a `/api/auth/me`; si devuelve 401, hace `POST /api/auth/refresh` y reintenta `/api/auth/me` una vez antes de dar por no autenticado (ver refresh token en la sección de backend). Tras un `/me` exitoso, también carga `/api/grupos/mi-grupo` para poblar `tieneGrupo`. Usa `useLocation`/`useNavigate` para forzar la redirección a `/perfil/usuario/editar` cuando `user.perfil_completo === false` y la ruta actual no está en `RUTAS_EXCLUIDAS_PERFIL_INCOMPLETO` (`['/', '/perfil/usuario/editar']`). `perfil_completo` lo calcula `authController.js` (`me`): requiere `sobre_mi, genero, pais, fecha_nacimiento, ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas, limpieza_orden, nivel_ruido` todos no-nulos, salvo que el usuario sea `es_casero`.
 - **Routing:** React Router v7. Layouts anidados por sección.
 - **Formularios:** `react-hook-form` + `zodResolver`. Schemas en `frontend/src/lib/schemas.js`.
 - **Componentes:** `frontend/src/components/` — `CustomSelect`, `LoginModal`, `RegistroModal`, `DonutChart`, `ui/chart.jsx` (wrapper recharts), `FormPrimitivos.jsx` (primitivos de formulario compartidos).
@@ -87,7 +87,8 @@ Monorepo con dos carpetas independientes: `backend/` y `frontend/`. Sin workspac
 ### Rutas React Router v7
 
 ```
-/                              — Home (inline en App.jsx)
+/                              — Home (frontend/src/pages/Home.jsx — landing page con scroll-reveal, ya no inline en App.jsx)
+/faq                           — FAQ (página pública, acordeón de preguntas por categorías, CTAs de login/registro)
 /buscar                        — BuscarPage (búsqueda con filtros, ciudad opcional)
 /perfil                        — LayoutPerfil (sidebar emerald icon-only w-25, bottom nav en mobile)
   /perfil/usuario              — PerfilUsuario (solo lectura + nav a editar)
@@ -102,6 +103,7 @@ Monorepo con dos carpetas independientes: `backend/` y `frontend/`. Sin workspac
   /grupo/facturas              — MisFacturas (inquilino: sus facturas y estado de pago)
   /grupo/compra                — ListaCompra (funcional)
   /grupo/mensajes              — Chat (modo admin — funcional con Socket.io)
+  /grupo/solicitudes-union     — SolicitudesUnion (admin: aceptar/rechazar solicitudes de unión con % compatibilidad)
 /casero/facturas               — Gastos (standalone, casero: gestión de facturas de múltiples pisos)
 — Rutas standalone (sin layout) —
 /grupo/perfil/editar           — EditarPerfilGrupo (2 pasos: datos + convivencia + intereses)
@@ -109,7 +111,6 @@ Monorepo con dos carpetas independientes: `backend/` y `frontend/`. Sin workspac
 /perfil/usuario/editar         — EditarUsuario (2 pasos: datos + convivencia)
 /perfil/convivencia            — PerfilConvivencia (pill-buttons, upsert)
 /creacion-grupo                — CreacionGrupo
-/acceso-grupo                  — AccesoGrupo (unirse con código o crear)
 /anuncio/:id                   — AnuncioPublico (vista pública del anuncio)
 /anuncio/:id/convivencia       — PerfilPublicoGrupo (perfil público del grupo — sin auth)
 /usuario/:id                   — PerfilPublicoUsuario (perfil público del usuario — sin auth)
@@ -120,8 +121,9 @@ Monorepo con dos carpetas independientes: `backend/` y `frontend/`. Sin workspac
 ```
 POST   /api/auth/registro
 POST   /api/auth/login
-GET    /api/auth/me                              # devuelve también tiene_calendar: bool
-POST   /api/auth/logout
+GET    /api/auth/me                              # devuelve también tiene_calendar: bool y perfil_completo: bool
+POST   /api/auth/refresh                         # rota refresh_token y reemite ambas cookies (token + refresh_token)
+POST   /api/auth/logout                          # borra también la fila de refresh_tokens
 POST   /api/auth/google                          # OAuth Google (no guarda foto del payload)
 GET    /api/auth/google/calendar                 # Inicia OAuth Google Calendar
 GET    /api/auth/google/calendar/callback        # Callback OAuth Calendar — guarda refresh token en usuarios.google_calendar_token
@@ -129,6 +131,8 @@ GET    /api/auth/google/calendar/callback        # Callback OAuth Calendar — g
 GET    /api/perfil/datos
 PUT    /api/perfil/editar
 PUT    /api/perfil/foto
+PUT    /api/perfil/fotos/:index                  # sube foto extra (0 o 1) → usuarios.foto_1 / foto_2
+DELETE /api/perfil/fotos/:index                  # elimina foto extra (0 o 1)
 GET    /api/perfil/convivencia
 PUT    /api/perfil/convivencia
 GET    /api/perfil/publico/:userId               # perfil público del usuario (sin auth) — devuelve { usuario, convivencia, intereses }
@@ -142,7 +146,9 @@ POST   /api/grupos/crear
 PUT    /api/grupos/editar
 GET    /api/grupos/mi-grupo                      # acepta ?grupo_id= para caseros con múltiples pisos
 GET    /api/grupos/mis-grupos                    # todos los grupos a los que pertenece el usuario (para casero multi-piso)
-POST   /api/grupos/unirse                        # une al usuario con el código de 6 caracteres (acceso o casero)
+POST   /api/grupos/unirse                        # codigo_casero: une inmediatamente. codigo_acceso: crea SolicitudUnion PENDIENTE
+                                               # (ya NO une directamente) — devuelve { solicitud, message }. Si había una
+                                               # RECHAZADA la resetea a PENDIENTE en vez de duplicar (unique [usuario_id, grupo_id])
 GET    /api/grupos/convivencia
 PUT    /api/grupos/convivencia
 GET    /api/grupos/publicacion
@@ -159,6 +165,10 @@ GET    /api/grupos/mis-intereses                 # intereses del grupo del usuar
 PUT    /api/grupos/intereses                     # reemplaza intereses del grupo (admin, máx 20)
 POST   /api/grupos/transferir-admin              # admin transfiere el rol ADMIN a otro miembro (body: { nuevo_admin_id })
 DELETE /api/grupos/salir                         # sale del grupo (body: { grupo_id? }). Si admin con otros miembros, devuelve 400
+DELETE /api/grupos/miembros/:usuarioId           # admin elimina un miembro (activo=false, no borra fila). 400 si usuarioId === admin
+GET    /api/grupos/solicitudes-union             # admin: solicitudes PENDIENTE con usuario + compatibilidad (0-100) + desglose
+PUT    /api/grupos/solicitudes-union/:id/aceptar # admin: ACEPTADA + crea MiembroGrupo (rol MEMBER)
+PUT    /api/grupos/solicitudes-union/:id/rechazar # admin: RECHAZADA
 
 GET    /api/favoritos
 GET    /api/favoritos/publicaciones              # devuelve compatibilidad (number|null) e intereses_comunes (string[]) igual que /api/publicaciones
@@ -181,10 +191,12 @@ GET    /api/publicaciones                        # búsqueda paginada con filtro
                                                # calefaccion, ascensor, permite_fumar, genero_preferido, ordenar
                                                # Si el usuario tiene sesión: devuelve compatibilidad + intereses_comunes por pub
                                                # ordenar=precio_asc|precio_desc se respeta incluso cuando tieneMatching=true
+                                               # Auth opcional: decodifica la cookie 'token' directamente con jwt.verify (no usa requireAuth),
+                                               # así los anónimos siguen viendo resultados. Ver algoritmo de matching más abajo.
 
 GET    /api/compra                               # lista de productos del grupo (pendientes primero)
 POST   /api/compra                               # añadir producto
-PUT    /api/compra/:id                           # editar nombre/cantidad/unidad_medida
+PUT    /api/compra/:id                           # editar nombre/categoría
 PATCH  /api/compra/:id/comprado                  # toggle comprado/pendiente
 DELETE /api/compra/:id                           # eliminar producto
 
@@ -206,13 +218,15 @@ PATCH  /api/facturas/:id/pagos/:usuarioId        # casero confirma/deshace el pa
 ### Base de datos — PostgreSQL
 
 El schema completo está en `backend/src/config/database.sql`. Los datos de demostración están en `seed.sql` (raíz del repo). Datos de demo para presentación TFG en `seed_demo_convivencia.sql` (raíz del repo). Tablas principales:
-- `usuarios` — identidad y datos básicos. Tiene `google_calendar_token` para la integración de Google Calendar. **No tiene columna `username`** (solo `nombre`). El campo `username` en las queries de `mi-grupo` es un alias de `u.nombre`.
-- `preferencias_companero` — lo que el usuario busca en futuros compañeros (1:1 con usuarios, opcional). Mismos campos enum que `perfiles_convivencia_usuario` pero sin genero/pais/fecha_nacimiento/sobre_mi. Se usa en el matching de búsqueda con prioridad sobre el perfil propio.
-- `perfiles_convivencia_usuario` — preferencias de convivencia (1:1 con usuarios). Incluye `sobre_mi` (NOT NULL en BD) — aunque conceptualmente es un campo de presentación del usuario, se almacena aquí porque se edita junto con los datos de convivencia en `PUT /api/perfil/editar`. **Mínimo 3 campos** del bloque de preferencias requeridos (validado en Zod).
-- `perfiles_convivencia_grupo` — misma estructura para grupos (sin `sobre_mi`)
+- `usuarios` — identidad y datos básicos. Tiene `google_calendar_token` para la integración de Google Calendar. **No tiene columna `username`** (solo `nombre`). El campo `username` en las queries de `mi-grupo` es un alias de `u.nombre`. Campos `foto_1`/`foto_2` (además de `foto_perfil`) — galería de hasta 3 fotos de perfil.
+- `refresh_tokens` — tabla `RefreshToken` (Prisma) para el flujo de refresh token (ver Autenticación en Arquitectura): `token` (UUID opaco), `usuario_id`, `expires_at`.
+- `preferencias_companero` — lo que el usuario busca en futuros compañeros (1:1 con usuarios, opcional). Mismos campos enum que `perfiles_convivencia_usuario` pero sin genero/pais/fecha_nacimiento/sobre_mi. Incluye `limpieza_orden`/`nivel_ruido` (con sus `_req`). Se usa en el matching de búsqueda con prioridad sobre el perfil propio; los campos con `_req = true` actúan como filtro duro (excluyen resultados) en `GET /api/publicaciones`.
+- `perfiles_convivencia_usuario` — preferencias de convivencia (1:1 con usuarios). Incluye `sobre_mi` (NOT NULL en BD) — aunque conceptualmente es un campo de presentación del usuario, se almacena aquí porque se edita junto con los datos de convivencia en `PUT /api/perfil/editar`. Incluye `limpieza_orden` (`limpieza_orden_enum`: `DESPREOCUPADO`/`FLEXIBLE`/`ORDENADO`) y `nivel_ruido` (`nivel_ruido_enum`: `SILENCIO_TOTAL`/`MODERADO`/`INDIFERENTE`), usados en el algoritmo de compatibilidad. **Mínimo 3 campos** del bloque de preferencias requeridos (validado en Zod).
+- `perfiles_convivencia_grupo` — misma estructura para grupos (sin `sobre_mi`), incluye también `limpieza_orden`/`nivel_ruido`.
 - `grupos` — pisos compartidos con `codigo_acceso` (6 chars, miembros) y `codigo_casero` (6 chars, casero). Campo `dia_limpieza` (`dia_semana_enum`) para el calendario. `descripcion` es NOT NULL en BD pero opcional en el form de creación. Campos `semana_rotacion` (INT, índice de rotación actual) y `rotacion_semana_actual` (DATE, lunes de la semana en curso) para el sistema de tareas.
 - `miembros_grupo` — relación N:M usuarios↔grupos con rol (`ADMIN` | `MEMBER`) y flag `es_casero`. El ENUM usa `'MEMBER'` (no `'MIEMBRO'`); el frontend compara solo `=== 'ADMIN'` por lo que no hay bug activo.
-- `publicaciones` — anuncios de habitaciones (1:1 con grupos, UNIQUE constraint en grupo_id). Campo `visible` (boolean): `true` → aparece en búsquedas; `false` → borrador, no aparece.
+- `solicitudes_union` — modelo `SolicitudUnion`, solicitud para unirse a un grupo con `codigo_acceso` (no aplica a `codigo_casero`, que sigue uniendo directo). Reutiliza el enum `EstadoSolicitud` (`PENDIENTE`/`ACEPTADA`/`RECHAZADA`) que ya usaba `solicitudes_contacto`, en vez de duplicarlo. `@@unique([usuario_id, grupo_id])`.
+- `publicaciones` — anuncios de habitaciones (1:1 con grupos, UNIQUE constraint en grupo_id). Campo `visible` (boolean): `true` → aparece en búsquedas; `false` → borrador, no aparece. `direccion`, `tipo_piso`, `habitaciones_totales`, `tamano_piso`, `planta` y `ascensor` son **NOT NULL** (obligatorios también en `PublicacionFormulario.jsx` y en `publicacionSchema` de `gruposValidator.js`).
 - `fotos_publicacion` — fotos asociadas a publicaciones (url, orden). **No tiene columna `cloudinary_id`.**
 - `chats` / `mensajes` / `solicitudes_contacto` — mensajería entre solicitante y admin del grupo. Si una solicitud estaba `RECHAZADA`, el endpoint la resetea a `PENDIENTE` en lugar de crear una nueva.
 - `favoritos` — publicaciones guardadas por usuario
@@ -220,22 +234,25 @@ El schema completo está en `backend/src/config/database.sql`. Los datos de demo
 - `asignaciones_tarea` — asignación zona↔miembro por semana (`semana` DATE = lunes de esa semana). Estados: `PENDIENTE` | `COMPLETADA`.
 - `facturas` / `pagos_factura` — sistema de gastos. `tipo_division` siempre `'EQUITATIVA'`. El importe se divide equitativamente entre los inquilinos activos al crear la factura.
 - `eventos` — eventos del grupo con soporte de Google Calendar (`google_calendar_event_id`)
-- `productos` — lista de la compra por grupo (funcional)
-- `intereses` — catálogo de intereses con `nombre` y `categoria` (SERIAL PK, no UUID). Pre-poblado con 41 intereses en 5 categorías: Deporte y actividad física, Alimentación, Cultura y ocio, Vida social, Bienestar.
+- `productos` — lista de la compra por grupo. **No tiene `cantidad` ni `unidad_medida`** (eliminadas). Campos: `id, nombre, categoria, comprado, created_at`. `categoria` (default `'otros'`) se usa en el frontend para agrupar visualmente y colorear (`CATEGORIAS` en `ListaCompra.jsx`).
+- `intereses` — catálogo de intereses con `nombre` y `categoria` (SERIAL PK, no UUID). Pre-poblado con intereses en 5 categorías: Deporte y actividad física, Alimentación, Cultura y ocio, Vida social, Bienestar.
 - `usuario_intereses` — intereses de usuarios (N:M, PK compuesta `(usuario_id, interes_id)`)
 - `grupo_intereses` — intereses de grupos (N:M, PK compuesta, no tiene columna `id`)
 
 ENUMs de PostgreSQL: al modificar valores hay que usar `ALTER TYPE ... RENAME TO old; CREATE TYPE ...; ALTER TABLE ... ALTER COLUMN ... TYPE ... USING ...::text::nuevo_tipo; DROP TYPE old;`. Valores válidos de `horario_enum`: `'MADRUGADOR'`, `'INTERMEDIO'`, `'NOCTURNO'` (no existe `'MATUTINO'`).
 
+**Trampa histórica — datos de catálogo fuera de las migraciones:** el `INSERT INTO intereses` vivía solo en `backend/src/config/database.sql` (fichero de referencia, no se ejecuta nunca solo) y nunca se migró a `backend/prisma/migrations/`. Como producción se aprovisionó vía `prisma migrate deploy` (no ejecutando `database.sql`), el catálogo de intereses llegó a estar vacío en producción durante un tiempo sin que ningún error lo delatara (`GET /api/perfil/intereses` devolvía `200 {"categorias":{}}`). Arreglado en la migración `20260713120344_seed_intereses` (INSERT idempotente, `WHERE NOT EXISTS (SELECT 1 FROM intereses)`). Lección: cualquier dato de catálogo/seed que la app necesite en runtime debe vivir en una migración de Prisma, nunca solo en `database.sql`.
+
 ### seed.sql
 
 Fichero en la raíz del repo. Idempotente: todos los bloques tienen `ON CONFLICT ... DO NOTHING`. Incluye:
-- 23 usuarios (11 originales + 12 extra para paginación). Todos tienen `perfiles_convivencia_usuario` completo.
-- 15 grupos → 15 publicaciones (3 originales + 12 extra) → paginación funciona en dos páginas (límite 12/página).
+- 23 usuarios (11 originales + 12 extra para paginación). Todos tienen `perfiles_convivencia_usuario` completo (incl. `limpieza_orden`/`nivel_ruido`).
+- 15 grupos → 15 publicaciones (3 originales + 12 extra) → paginación funciona en dos páginas (límite 12/página). Variedad de `parking`/`terraza` en `TRUE` para poder probar esos filtros.
 - **40 fotos de Cloudinary** distribuidas entre las 15 publicaciones (IDs prefijo `cl000001-...`). Las 3 publicaciones originales tienen 3 fotos c/u; las 12 extra tienen 2-3 fotos c/u; Granada Albaicín tiene 4.
-- `usuario_intereses`: 3 intereses por cada usuario no-casero.
+- `grupo_intereses`/`usuario_intereses`: **referenciados por nombre** vía `(SELECT id FROM intereses WHERE nombre='X')`, nunca por ID numérico — la tabla `intereses` usa SERIAL y su orden cambia cada vez que se añade un interés nuevo al catálogo en `database.sql`/la migración, así que un ID hardcodeado queda desincronizado sin dar error (inserta un interés distinto al pretendido, en silencio).
 - Chat activo entre pablo↔grupo Granada, solicitud pendiente isabel↔Barcelona.
 - 6 meses de facturas en Granada, 2 meses en Madrid.
+- **Requiere que la migración `20260713120344_seed_intereses` ya esté aplicada** (ver más abajo) — si el catálogo de `intereses` está vacío, los `(SELECT id FROM intereses WHERE nombre=...)` devuelven `NULL` y el INSERT falla por la PK compuesta NOT NULL (falla ruidoso, no silencioso).
 
 ### seed_demo_convivencia.sql
 
@@ -249,6 +266,18 @@ Fichero en la raíz del repo para demo de presentación TFG. Idempotente. Trabaj
 ### Perfil de convivencia
 
 Flujo: `PerfilUsuario` → aviso naranja si no relleno → navega a `/perfil/convivencia`. El formulario usa pill-buttons. Hace upsert vía `ON CONFLICT (usuario_id) DO UPDATE`. Campos opcionales individualmente, mínimo 3 requeridos (validado en Zod frontend y backend).
+
+### Algoritmo de compatibilidad (matching)
+
+`backend/src/utils/compatibilidad.js` es la única fuente del cálculo, usada tanto por `publicacionesController.js` como por `favoritosController.js`:
+- `calcularCompatibilidad(usuario, pcg)` compara el perfil del usuario (usa `preferencias_companero` si existe, si no cae al `perfiles_convivencia_usuario`) contra el `perfiles_convivencia_grupo` (pcg) del grupo, en 7 dimensiones. Ordinal/enum vía `matchOrdinal` (1.0 si coinciden, 0.5 si son adyacentes en el `ORDEN` del enum, 0.0 si están lejos): `horario` (20%), `limpieza_orden` (20%), `ambiente` (15%), `nivel_ruido` (15%), `frecuencia_visitas` (10%), `tolerancia_fiestas` (10%); `ocupacion` (10%) vía `matchOcupacion` (stub: 0.5 salvo coincidencia exacta). Devuelve `{ score, desglose }` (score 0-100 redondeado; `desglose` no se renderiza actualmente en ningún sitio).
+- `calcularScore(usuario, grupoRow)` es un adaptador para resultados de listado donde el SQL devuelve columnas prefijadas `pcg_*`; las remapea y llama a `calcularCompatibilidad`.
+- En `GET /api/publicaciones` (`buscarPublicaciones`), si el usuario tiene `preferencias_companero` con campos `_req = true`, esos campos se convierten en **filtros SQL duros** (excluyen grupos que no cumplan, incl. fumadores/mascotas/lgbtq_friendly). Sin `preferencias_companero`, cae a un filtrado blando usando solo `perfiles_convivencia_usuario` (fumador/mascotas/lgbtq). Los resultados se ordenan por `compatibilidad` descendente por defecto.
+- `intereses_comunes` se calcula igual en ambos controladores: intersección de los IDs de interés del usuario con los del grupo, devuelta como array de nombres.
+
+### Fotos extra de perfil de usuario
+
+`usuarios.foto_1`/`foto_2` amplían `foto_perfil` a una galería de 3 fotos. `EditarUsuario.jsx` gestiona `fotosSlots` (array de 2, cada slot `null | URL existente | File`) y diffea contra el estado original al enviar, subiendo (`PUT /api/perfil/fotos/:index`) o borrando (`DELETE /api/perfil/fotos/:index`) solo lo que cambió. Las 3 fotos son obligatorias para avanzar del primer paso del wizard. `PerfilUsuario.jsx` y `PerfilPublicoUsuario.jsx` construyen `fotos = [foto_perfil, foto_1, foto_2]` para renderizar la galería.
 
 ### Perfil público de usuario (`/usuario/:id`)
 
@@ -288,6 +317,12 @@ La app es completamente responsive con breakpoints Tailwind: `sm` (640px), `md` 
 - **AnuncioPublico:** `grid-cols-1 lg:grid-cols-[1fr_20rem]` — columna única en mobile/tablet, dos columnas en desktop.
 - **Chat móvil:** estado `mostrandoConversacion` (boolean) controla qué panel se ve. Panel lista: `hidden sm:flex` cuando `mostrandoConversacion`. Panel conversación: `hidden sm:flex` cuando `!mostrandoConversacion`. El componente `Conversacion` recibe prop `onVolver` y muestra botón `ArrowLeft` solo en mobile (`sm:hidden`).
 - **Headers públicos:** `px-4 sm:px-10` en el contenedor del header.
+- **Título de página — estándar único:** `font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]` (el mismo que `PerfilUsuario` "Mi perfil"). Usado en `GrupoPerfil`, `Favoritos`, `Chat`, `PerfilPublicoGrupo`, `PerfilPublicoUsuario`, `Facturas`, `MisFacturas`, `Publicacion` ("Tu anuncio"), `Calendario`, `Tareas`, `ListaCompra`, `SolicitudesUnion`. No usar `text-3xl sm:text-5xl font-bold` (estilo antiguo, ya no queda en ningún sitio) ni tamaños fijos sin variante mobile.
+- **Header de `BuscarPage`/`AnuncioPublico`/`PerfilPublicoGrupo`/`PerfilPublicoUsuario` — nav en mobile:** dos variantes coexisten a propósito:
+  - `BuscarPage` y `AnuncioPublico`: avatar/iconos/"Iniciar sesión" con `hidden sm:...` — **desaparecen del todo** en mobile para dejar sitio al buscador de ciudad. El logo "Housie" es siempre texto (`font-display text-xl sm:text-2xl font-bold`, nunca imagen — `housienegrologo.png` era un logo cuadrado en 2 líneas que se veía roto al forzarlo a una cabecera fina).
+  - `PerfilPublicoGrupo` y `PerfilPublicoUsuario`: nav **siempre visible**, sin `hidden sm:`, logo `text-2xl` fijo (sin variante mobile) — a propósito distinto del resto, por petición explícita.
+- **Botón "Volver" — patrón mobile-al-final:** en `PerfilPublicoGrupo`, `PerfilPublicoUsuario` y `AnuncioPublico`, el botón "Volver" de la cabecera es `hidden sm:inline-flex`, y se repite como botón de ancho completo dentro de una card (`sm:hidden bg-white border border-slate-100 rounded-3xl p-4`) al final de la página. No poner el volver arriba visible en mobile en estas 3 páginas — es intencional.
+- **`StepBar` (`FormPrimitivos.jsx`) — líneas conectoras de igual ancho:** las líneas entre pasos son hermanas directas de los bloques icono+etiqueta en el mismo flex row (`Fragment`), cada una `flex-1 min-w-0`, NO anidadas dentro del contenedor de cada paso — si van anidadas, el ancho de la etiqueta más larga (p.ej. "Información general" vs "Fotos") empuja visualmente esa línea y las dos dejan de medir igual en mobile.
 
 ### Modales de confirmación (sin `window.confirm`)
 
@@ -340,6 +375,9 @@ Implementado en: `Tareas.jsx` (eliminar zona), `Calendario.jsx` (eliminar evento
 - **`MisFacturas` — histórico:** el `AreaChart` solo muestra la serie `pagado` (sin `pendiente`). El diff de tendencia compara `pagado` del último mes vs el anterior.
 - **Emails fire-and-forget:** Siempre `.then(() => {}).catch(() => {})` al llamar a `sendMail`. Nunca `await` en el handler de la ruta si el email no es crítico para la respuesta.
 - **Chat — nombre del solicitante clickable (solo admin):** en la cabecera de `Conversacion`, cuando `esAdmin && idOtro`, el nombre se renderiza como `<button onClick={() => navigate('/usuario/${idOtro}')} className='hover:text-emerald-600'>`. La prop `idOtro` viene de `chatActivo.solicitante_id` (campo devuelto por `GET /api/chats/como-admin`).
+- **Solicitudes de unión al grupo:** `AccesoGrupo.jsx` se eliminó — su funcionalidad (unirse con código) vive ahora en `Home.jsx` (`handleUnirseCodigo`). Al unirse con `codigo_acceso` ya no se entra al grupo al momento: la respuesta trae `{ solicitud, message }` (no `{ grupo }`), y `Home.jsx` muestra un banner emerald con `CheckCircle2` con el mensaje del backend en vez de `setTieneGrupo(true)` + redirigir. El flujo de `codigo_casero` no cambia (sigue uniendo directo, `{ grupo, esCasero }`). El admin gestiona las solicitudes en `/grupo/solicitudes-union` (link desde `Publicacion.jsx`, badge con el nº de pendientes). Todas las navegaciones que antes iban a `/acceso-grupo` (footer de `Home`/`FAQ`, `onSuccess` de registro de casero en `Home`/`FAQ`/`BuscarPage`, redirect tras `salirDelGrupo` en `GrupoPerfil`) ahora van a `/`.
+- **`BuscarPage` — "Contactar" sin sesión:** `PublicacionCard` recibe `onRequireLogin` desde `BuscarPage` (`() => setLoginOpen(true)`); si `!user` al contactar, abre el `LoginModal` en sitio en vez de `navigate('/')`.
+- **`Publicacion.jsx` — "Ver anuncio público":** usa `navigate(`/anuncio/${id}`)`, no `window.open(..., '_blank')` — abrir en pestaña nueva hacía que la vista no heredara el viewport/emulación mobile de la pestaña actual.
 
 ## Variables de entorno
 
@@ -371,20 +409,24 @@ VITE_GOOGLE_PLACES_KEY=
 ## Estado de implementación
 
 ### Completado
-- Auth completa: JWT httpOnly cookie, Google OAuth, modales de registro/login.
+- Auth completa: par de cookies httpOnly (access `token` + `refresh_token` con rotación), Google OAuth, modales de registro/login. Redirección forzada a completar perfil (`perfil_completo`) si faltan campos de convivencia.
+- Fotos extra de perfil (`foto_1`/`foto_2`): galería de hasta 3 fotos, gestionadas en `EditarUsuario.jsx`.
+- Algoritmo de compatibilidad (`backend/src/utils/compatibilidad.js`) con `limpieza_orden`/`nivel_ruido` incluidos en el matching y como filtros duros de búsqueda vía `preferencias_companero`.
+- Landing (`Home.jsx`) y `FAQ.jsx` como páginas propias con scroll-reveal, branding Housie (`housielogo.svg`, `housienegrologo.png`).
 - Google Calendar OAuth: flujo completo de conexión, `google_calendar_token` guardado en BD. `/api/auth/me` devuelve `tiene_calendar: bool`.
 - Middleware `requireAuth` centralizado en `backend/src/middleware/auth.js`.
 - Perfil usuario: editar datos (nombre, sobre_mi máx 399 chars con contador, género/país/fecha OBLIGATORIOS), foto Cloudinary, perfil de convivencia.
 - `EditarUsuario.jsx` — formulario standalone 2 pasos.
 - `PerfilUsuario.jsx` — solo lectura. Aviso naranja si perfil de convivencia vacío.
-- Grupos: crear (con check si ya perteneces), acceder con código de 6 chars (miembro o casero), dashboard.
-- `AccesoGrupo.jsx` — gateway page. Redirige a `/grupo` si ya tiene grupo.
-- Home CTA adaptativo: sin sesión / sesión sin grupo / sesión con grupo. Búsqueda sin ciudad navega a `/buscar` listando todos los pisos.
+- Grupos: crear (con check si ya perteneces), unirse con `codigo_casero` (directo) o `codigo_acceso` (crea `SolicitudUnion`, requiere aprobación del admin), dashboard.
+- Home CTA adaptativo: sin sesión / sesión sin grupo / sesión con grupo. Búsqueda sin ciudad navega a `/buscar` listando todos los pisos. Formulario de unirse con código integrado en la propia Home (`AccesoGrupo.jsx` se eliminó).
+- **Solicitudes de unión** (`/grupo/solicitudes-union`): admin acepta/rechaza con % de compatibilidad y desglose (mismo componente visual que `AnuncioPublico`). Aceptar crea el `MiembroGrupo`; rechazar solo cambia el estado.
+- **Eliminar miembro del grupo:** en `GrupoPerfil.jsx`, hover en la fila del miembro (`group` + `opacity-0 group-hover:opacity-100`) muestra botón rojo "Eliminar del grupo" (solo admin, no en la fila propia) con modal de confirmación. `DELETE /api/grupos/miembros/:usuarioId` marca `activo=false`.
 - `GrupoDashboard.jsx`: bento grid responsive (1→2→4 cols), TareasCard, FacturaCard, AvisoCard, AgendaCard, ListaCompraCard, HistoricoCard.
 - `GrupoPerfil.jsx` (`/grupo/perfil`): miembros con avatares (residentes clickables → `/usuario/:id`, casero no clickable), identidad del grupo, datos del piso, intereses en dark card, donuts de convivencia.
 - `LayoutGrupo.jsx` y `LayoutPerfil.jsx`: sidebar en desktop, **bottom nav** emerald en mobile.
 - `EditarPerfilGrupo.jsx` (`/grupo/perfil/editar`): 2 pasos — datos del grupo + convivencia + selector de intereses del catálogo.
-- `PublicacionFormulario.jsx` 3 pasos: info general → detalles → fotos + control de visibilidad (Publicado/Borrador).
+- `PublicacionFormulario.jsx` 3 pasos: info general → detalles → fotos + control de visibilidad (Publicado/Borrador). `tipo_piso`, `habitaciones_totales`, `tamano_piso`, `planta` y `ascensor` son obligatorios (antes opcionales); `ascensor` (`YesNo`) arranca en `undefined` en vez de `false` para forzar una elección explícita en vez de asumir "No" en silencio.
 - `/grupo/publicacion`: vista lectura con chips comodidades, normas, carrusel de fotos, botón editar (solo admin).
 - `BuscarPage.jsx`: búsqueda con Google Places, filtros en aside (desktop) / drawer (mobile), paginación, carrusel de fotos, favoritos, solicitud de contacto. Cards verticales en mobile.
 - **Chat funcional** (`/perfil/chat` y `/grupo/mensajes`): toggle de paneles en mobile (`mostrandoConversacion`), Socket.io en tiempo real, solicitudes con aceptar/rechazar (admin), `ModalCerrarChat`, nombre del solicitante clickable en vista admin.
@@ -395,7 +437,7 @@ VITE_GOOGLE_PLACES_KEY=
 - **Gastos / Facturas**: `Facturas.jsx` (casero) + `MisFacturas.jsx` (inquilino). Casero: subida PDF/imagen, división equitativa, confirmar pagos. Histórico solo muestra `pagado` (sin `pendiente`). Soporta múltiples pisos.
 - **Tareas — rotación de limpieza**: `ModalConfirmarEliminar` para zonas personalizadas (predefinidas no eliminables).
 - **Calendario** (`/grupo/calendario`): vista mensual con `ModalConfirmarEliminar` para eventos.
-- **Salir del grupo**: modal de transferencia de admin si hay otros miembros. Redirige a `/acceso-grupo`.
+- **Salir del grupo**: modal de transferencia de admin si hay otros miembros. Redirige a `/`.
 - **Notificaciones por email**: fire-and-forget en solicitudes y publicación.
 - **Re-envío de solicitud rechazada**: `UPDATE SET estado='PENDIENTE'` en lugar de INSERT duplicado.
 - **Perfil público de usuario** (`/usuario/:id`): sin auth, accesible desde `GrupoPerfil` y `PerfilPublicoGrupo` (solo residentes, no casero).

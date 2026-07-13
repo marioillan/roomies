@@ -186,7 +186,7 @@ function Calendario() {
       {/* Header */}
       <div className='flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
         <div>
-          <h1 className='font-display text-3xl sm:text-5xl font-bold text-slate-900'>
+          <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
             {MESES[mes]} {year}
           </h1>
         </div>

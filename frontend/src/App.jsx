@@ -9,7 +9,6 @@ import GrupoDashboard from './pages/GrupoDashboard.jsx'
 import PerfilUsuario from './pages/PerfilUsuario.jsx'
 import EditarUsuario from './pages/EditarUsuario.jsx'
 import EditarPerfilGrupo from './pages/EditarPerfilGrupo.jsx'
-import AccesoGrupo from './pages/AccesoGrupo.jsx'
 import CreacionGrupo from './pages/CreacionGrupo.jsx'
 import Publicacion from './pages/Publicacion.jsx'
 import PublicacionFormPage from './pages/PublicacionFormulario.jsx'
@@ -27,6 +26,7 @@ import MisFacturas from './pages/MisFacturas.jsx'
 import Tareas from './pages/Tareas.jsx'
 import Calendario from './pages/Calendario.jsx'
 import FAQ from './pages/FAQ.jsx'
+import SolicitudesUnion from './pages/SolicitudesUnion.jsx'
 
 
 function App() {
@@ -68,11 +68,11 @@ function App() {
         <Route path="facturas"    element={<MisFacturas />} />
         <Route path="compra"      element={<ListaCompra />} />
         <Route path="mensajes"    element={<Chat modo="admin" />} />
+        <Route path="solicitudes-union" element={<SolicitudesUnion />} />
       </Route>
       <Route path="/grupo/perfil/editar" element={<EditarPerfilGrupo />} />
       <Route path="/grupo/publicacion/formulario" element={<PublicacionFormPage />} />
       <Route path="/perfil/usuario/editar" element={<EditarUsuario />} />
-      <Route path="/acceso-grupo" element={<AccesoGrupo setTieneGrupo={setTieneGrupo} />} />
       <Route path="/creacion-grupo" element={<CreacionGrupo />} />
       <Route path="/buscar" element={<BuscarPage />} />
       <Route path="/anuncio/:id" element={<AnuncioPublico />} />

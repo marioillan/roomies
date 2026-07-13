@@ -109,7 +109,7 @@ function FotoCarrusel({ fotos, titulo, publicacionId, user, esFavorito, onToggle
 }
 
 // ── Card publicación ───────────────────────────────────────────────
-function PublicacionCard({ pub, user, esFavorito, onToggleFavorito }) {
+function PublicacionCard({ pub, user, esFavorito, onToggleFavorito, onRequireLogin }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [enviando, setEnviando] = useState(false)
@@ -117,7 +117,7 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito }) {
 
   const contactar = async (e) => {
     e.stopPropagation()
-    if (!user) { navigate('/'); return }
+    if (!user) { onRequireLogin?.(); return }
     setEnviando(true)
     try {
       const res = await apiFetch(`/api/chats/solicitar/${pub.id}`, { method: 'POST' })
@@ -550,6 +550,7 @@ export default function BuscarPage() {
   const [registroOpen, setRegistroOpen] = useState(false)
 
   const [ciudad, setCiudad]                         = useState(searchParams.get('ciudad') ?? '')
+  const [ciudadBuscada, setCiudadBuscada]           = useState(searchParams.get('ciudad') ?? '')
   const [precioMin, setPrecioMin]                   = useState(searchParams.get('precio_min') ?? '')
   const [precioMax, setPrecioMax]                   = useState(searchParams.get('precio_max') ?? '')
   const [habitacionesMin, setHabitacionesMin]       = useState(searchParams.get('habitaciones_min') ?? '')
@@ -615,6 +616,7 @@ export default function BuscarPage() {
   const buscar = async (c, p, overrides = {}) => {
     setLoading(true)
     setError(null)
+    setCiudadBuscada(c)
     const q = buildParams(c, p, overrides)
     setSearchParams(Object.fromEntries(q), { replace: true })
     try {
@@ -730,27 +732,26 @@ export default function BuscarPage() {
         <div className='max-w-[80rem] mx-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-6 lg:px-10 py-2.5'>
 
           <button onClick={() => navigate('/')} className='cursor-pointer! shrink-0 flex items-center'>
-            <img src='/housienegrologo.png' alt='Housie Logo' className='h-8 w-auto sm:hidden' />
-            <span className='hidden sm:block font-display text-2xl font-bold -tracking-[0.02em] text-slate-900'>Housie</span>
+            <span className='font-display text-xl sm:text-2xl font-bold -tracking-[0.02em] text-slate-900'>Housie</span>
           </button>
 
           <div className='flex-1 min-w-0 flex items-center gap-2 sm:max-w-[34rem] sm:mx-auto'>
             <InputCiudad value={ciudad} onChange={setCiudad} onBuscar={handleCiudadBuscar} />
-          </div>
 
-          {/* Botón filtros — solo mobile */}
-          <button
-            type='button'
-            onClick={() => setMobileFiltersOpen(true)}
-            className='cursor-pointer! md:hidden relative p-2 rounded-xl border border-slate-200 text-slate-600 hover:border-slate-300 transition'
-          >
-            <SlidersHorizontal size={18} />
-            {filtrosActivos && (
-              <span className='absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center'>
-                {nFiltros}
-              </span>
-            )}
-          </button>
+            {/* Botón filtros — solo mobile */}
+            <button
+              type='button'
+              onClick={() => setMobileFiltersOpen(true)}
+              className='cursor-pointer! md:hidden relative shrink-0 p-2 rounded-xl border border-slate-200 text-slate-600 hover:border-slate-300 transition'
+            >
+              <SlidersHorizontal size={18} />
+              {filtrosActivos && (
+                <span className='absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center'>
+                  {nFiltros}
+                </span>
+              )}
+            </button>
+          </div>
 
           {/* Nav usuario */}
           <div className='flex items-center gap-1.5 sm:gap-2 shrink-0'>
@@ -781,18 +782,18 @@ export default function BuscarPage() {
                 )}
                 {user.foto_perfil
                   ? <img src={user.foto_perfil} alt={user.nombre}
-                      className='w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover cursor-pointer shrink-0'
+                      className='hidden sm:block sm:w-10 sm:h-10 rounded-full object-cover cursor-pointer shrink-0'
                       onClick={() => navigate('/perfil/usuario')} />
                   : <button onClick={() => navigate('/perfil/usuario')}
-                      className='cursor-pointer! w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0'>
-                      <span className='text-xs sm:text-sm font-bold text-emerald-700'>{user.nombre?.[0]?.toUpperCase()}</span>
+                      className='cursor-pointer! hidden sm:flex sm:w-10 sm:h-10 rounded-full bg-emerald-100 items-center justify-center shrink-0'>
+                      <span className='text-sm font-bold text-emerald-700'>{user.nombre?.[0]?.toUpperCase()}</span>
                     </button>
                 }
               </>
             ) : (
               <button
                 onClick={() => setLoginOpen(true)}
-                className='cursor-pointer! text-sm font-semibold text-slate-700 hover:text-slate-900 transition px-4 py-2'
+                className='cursor-pointer! hidden sm:block text-sm font-semibold text-slate-700 hover:text-slate-900 transition px-4 py-2 whitespace-nowrap'
               >
                 Iniciar sesión
               </button>
@@ -837,7 +838,7 @@ export default function BuscarPage() {
             {!loading && total > 0 && (
               <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 sm:mb-5'>
                 <p className='text-sm sm:text-base lg:text-lg text-slate-500'>
-                  <span className='font-bold text-slate-800'>{total}</span> anuncio{total !== 1 ? 's' : ''}{ciudad ? <> en <span className='font-bold text-slate-800'>{ciudad}</span></> : ' disponibles'}
+                  <span className='font-bold text-slate-800'>{total}</span> anuncio{total !== 1 ? 's' : ''}{ciudadBuscada ? <> en <span className='font-bold text-slate-800'>{ciudadBuscada}</span></> : ' disponibles'}
                   {filtrosActivos && <span className='text-slate-400'> · con filtros activos</span>}
                 </p>
                 <select
@@ -898,8 +899,8 @@ export default function BuscarPage() {
                   <Search size={28} className='text-slate-300' />
                 </div>
                 <div className='text-center'>
-                  <p className='text-sm font-semibold text-slate-600'>{ciudad ? `Sin anuncios en ${ciudad}` : 'No hay anuncios disponibles'}</p>
-                  <p className='text-xs text-slate-400 mt-1'>{ciudad ? 'Prueba con otra ciudad o amplía los filtros' : 'Prueba con otra ciudad o amplía los filtros'}</p>
+                  <p className='text-sm font-semibold text-slate-600'>{ciudadBuscada ? `Sin anuncios en ${ciudadBuscada}` : 'No hay anuncios disponibles'}</p>
+                  <p className='text-xs text-slate-400 mt-1'>Prueba con otra ciudad o amplía los filtros</p>
                 </div>
                 {filtrosActivos && (
                   <button
@@ -924,7 +925,7 @@ export default function BuscarPage() {
                       user={user}
                       esFavorito={favoritosIds.has(pub.id)}
                       onToggleFavorito={toggleFavorito}
-
+                      onRequireLogin={() => setLoginOpen(true)}
                     />
                   ))}
                 </div>
@@ -979,7 +980,7 @@ export default function BuscarPage() {
       {registroOpen && (
         <RegistroModal
           onClose={() => setRegistroOpen(false)}
-          onSuccess={(u, esCasero) => { setUser(u); setRegistroOpen(false); navigate(esCasero ? '/acceso-grupo' : '/perfil/usuario/editar') }}
+          onSuccess={(u, esCasero) => { setUser(u); setRegistroOpen(false); navigate(esCasero ? '/' : '/perfil/usuario/editar') }}
           onSwitchToLogin={() => { setRegistroOpen(false); setLoginOpen(true) }}
         />
       )}

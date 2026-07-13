@@ -4,6 +4,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '../src/config/db.js';
 import cloudinary from '../src/config/cloudinary.js';
 import { sendMail, emailPublicacionConfirmada } from '../src/config/email.js';
+import { calcularCompatibilidad } from '../src/utils/compatibilidad.js';
 import {
   crearGrupoSchema,
   editarGrupoSchema,
@@ -113,6 +114,7 @@ export const unirseGrupo = async (req, res, next) => {
     if (!grupo) return res.status(404).json({ message: 'Código de acceso incorrecto' });
 
     const esCasero = grupo.codigo_casero === codigo;
+    const { codigo_casero: _cc, ...grupoPublico } = grupo;
 
     if (esCasero) {
       const yaEsCaseroAqui = await prisma.miembroGrupo.findFirst({
@@ -120,17 +122,38 @@ export const unirseGrupo = async (req, res, next) => {
         select: { id: true },
       });
       if (yaEsCaseroAqui) return res.status(400).json({ message: 'Ya eres casero de este grupo' });
-    } else {
-      const yaPertenece = await getMembership(req.userId);
-      if (yaPertenece) return res.status(400).json({ message: 'Ya perteneces a un grupo. Debes salir primero.' });
+
+      await prisma.miembroGrupo.create({
+        data: { id: randomUUID(), usuario_id: req.userId, grupo_id: grupo.id, rol: 'MEMBER', es_casero: true },
+      });
+      return res.json({ grupo: grupoPublico, esCasero: true });
     }
 
-    await prisma.miembroGrupo.create({
-      data: { id: randomUUID(), usuario_id: req.userId, grupo_id: grupo.id, rol: 'MEMBER', es_casero: esCasero },
+    // Unirse como miembro requiere aprobación del administrador
+    const yaPertenece = await getMembership(req.userId);
+    if (yaPertenece) return res.status(400).json({ message: 'Ya perteneces a un grupo. Debes salir primero.' });
+
+    const solicitudExistente = await prisma.solicitudUnion.findFirst({
+      where: { usuario_id: req.userId, grupo_id: grupo.id },
     });
 
-    const { codigo_casero: _cc, ...grupoPublico } = grupo;
-    res.json({ grupo: grupoPublico, esCasero });
+    if (solicitudExistente?.estado === 'PENDIENTE') {
+      return res.status(400).json({ message: 'Ya tienes una solicitud pendiente para este grupo' });
+    }
+
+    const solicitud = solicitudExistente
+      ? await prisma.solicitudUnion.update({
+          where: { id: solicitudExistente.id },
+          data: { estado: 'PENDIENTE', fecha_solicitud: new Date() },
+        })
+      : await prisma.solicitudUnion.create({
+          data: { id: randomUUID(), usuario_id: req.userId, grupo_id: grupo.id, estado: 'PENDIENTE' },
+        });
+
+    res.status(201).json({
+      solicitud: { id: solicitud.id, estado: solicitud.estado, fecha_solicitud: solicitud.fecha_solicitud },
+      message: 'Solicitud enviada. El administrador del grupo debe aceptarla para que puedas acceder.',
+    });
   } catch (err) {
     next(err);
   }
@@ -341,8 +364,8 @@ export const editarPublicacion = async (req, res, next) => {
     titulo: d.titulo, descripcion: d.descripcion, ciudad: d.ciudad,
     direccion: d.direccion ?? null, piso_puerta: d.piso_puerta ?? null,
     precio: d.precio, habitaciones_libres: d.habitaciones_libres,
-    tipo_piso: d.tipo_piso ?? null, habitaciones_totales: d.habitaciones_totales ?? null,
-    tamano_piso: d.tamano_piso ?? null, planta: d.planta ?? null, ascensor: d.ascensor,
+    tipo_piso: d.tipo_piso, habitaciones_totales: d.habitaciones_totales,
+    tamano_piso: d.tamano_piso, planta: d.planta, ascensor: d.ascensor,
     wifi: d.wifi, lavadora: d.lavadora, lavavajillas: d.lavavajillas,
     aire_acondicionado: d.aire_acondicionado, calefaccion: d.calefaccion,
     parking: d.parking, terraza: d.terraza, amueblado: d.amueblado,
@@ -746,6 +769,118 @@ export const salirGrupo = async (req, res, next) => {
       where: { usuario_id: req.userId, grupo_id: grupoId },
       data: { activo: false },
     });
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── DELETE /api/grupos/miembros/:usuarioId ────────────────────
+export const eliminarMiembro = async (req, res, next) => {
+  const grupoId = req.grupoId;
+  const { usuarioId } = req.params;
+
+  if (usuarioId === req.userId) {
+    return res.status(400).json({ message: 'No puedes eliminarte a ti mismo del grupo' });
+  }
+
+  try {
+    const miembro = await prisma.miembroGrupo.findFirst({
+      where: { usuario_id: usuarioId, grupo_id: grupoId, activo: true },
+      select: { id: true },
+    });
+    if (!miembro) return res.status(404).json({ message: 'El usuario no pertenece a este grupo' });
+
+    await prisma.miembroGrupo.update({
+      where: { id: miembro.id },
+      data: { activo: false },
+    });
+    res.json({ ok: true, message: 'Miembro eliminado del grupo' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── GET /api/grupos/solicitudes-union ─────────────────────────
+export const getSolicitudesUnion = async (req, res, next) => {
+  try {
+    const pcg = await prisma.perfilConvivenciaGrupo.findFirst({ where: { grupo_id: req.grupoId } });
+
+    const solicitudes = await prisma.solicitudUnion.findMany({
+      where: { grupo_id: req.grupoId, estado: 'PENDIENTE' },
+      select: {
+        id: true,
+        fecha_solicitud: true,
+        usuario: {
+          select: {
+            id: true,
+            nombre: true,
+            foto_perfil: true,
+            perfil_convivencia: true,
+            preferencias_companero: true,
+          },
+        },
+      },
+      orderBy: { fecha_solicitud: 'asc' },
+    });
+
+    const resultado = solicitudes.map(s => {
+      const perfilUsuario = s.usuario.preferencias_companero ?? s.usuario.perfil_convivencia;
+      const compatibilidad = (perfilUsuario && pcg) ? calcularCompatibilidad(perfilUsuario, pcg) : null;
+      return {
+        id: s.id,
+        fecha_solicitud: s.fecha_solicitud,
+        usuario: { id: s.usuario.id, nombre: s.usuario.nombre, foto_perfil: s.usuario.foto_perfil },
+        compatibilidad: compatibilidad?.score ?? null,
+        desglose: compatibilidad?.desglose ?? null,
+      };
+    });
+
+    res.json({ solicitudes: resultado });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── PUT /api/grupos/solicitudes-union/:solicitudId/aceptar ────
+export const aceptarSolicitudUnion = async (req, res, next) => {
+  try {
+    const solicitud = await prisma.solicitudUnion.findFirst({
+      where: { id: req.params.solicitudId, grupo_id: req.grupoId, estado: 'PENDIENTE' },
+    });
+    if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
+
+    const yaMiembro = await prisma.miembroGrupo.findFirst({
+      where: { usuario_id: solicitud.usuario_id, grupo_id: req.grupoId, activo: true },
+      select: { id: true },
+    });
+    if (yaMiembro) {
+      await prisma.solicitudUnion.update({ where: { id: solicitud.id }, data: { estado: 'ACEPTADA' } });
+      return res.status(400).json({ message: 'El usuario ya pertenece al grupo' });
+    }
+
+    await prisma.$transaction([
+      prisma.solicitudUnion.update({ where: { id: solicitud.id }, data: { estado: 'ACEPTADA' } }),
+      prisma.miembroGrupo.create({
+        data: { id: randomUUID(), usuario_id: solicitud.usuario_id, grupo_id: req.grupoId, rol: 'MEMBER', es_casero: false, activo: true },
+      }),
+    ]);
+
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── PUT /api/grupos/solicitudes-union/:solicitudId/rechazar ───
+export const rechazarSolicitudUnion = async (req, res, next) => {
+  try {
+    const solicitud = await prisma.solicitudUnion.findFirst({
+      where: { id: req.params.solicitudId, grupo_id: req.grupoId, estado: 'PENDIENTE' },
+    });
+    if (!solicitud) return res.status(404).json({ message: 'Solicitud no encontrada' });
+
+    await prisma.solicitudUnion.update({ where: { id: solicitud.id }, data: { estado: 'RECHAZADA' } });
     res.json({ ok: true });
   } catch (err) {
     next(err);

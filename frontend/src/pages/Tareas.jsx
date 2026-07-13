@@ -390,7 +390,7 @@ function Tareas() {
       {/* Header */}
       <div className='flex items-end justify-between gap-4'>
         <div>
-          <h1 className='font-display text-3xl sm:text-5xl font-bold text-slate-900'>Tareas</h1>
+          <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>Tareas</h1>
         </div>
       </div>
 

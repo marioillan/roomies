@@ -347,7 +347,7 @@ export default function MisFacturas() {
     <div className='flex flex-col gap-6'>
       {/* Encabezado */}
       <div className='flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between'>
-        <h1 className='font-display text-3xl sm:text-5xl font-bold text-slate-900'>Mis facturas</h1>
+        <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>Mis facturas</h1>
         {deuda > 0 && (
           <div className='bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 text-right self-start sm:self-auto'>
             <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-amber-500'>Deuda pendiente</p>

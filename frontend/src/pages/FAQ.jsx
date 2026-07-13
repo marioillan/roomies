@@ -338,7 +338,7 @@ export default function FAQ() {
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => navigate('/acceso-grupo')}
+                  <button onClick={() => navigate('/')}
                     className="cursor-pointer! text-slate-400 hover:text-white text-sm transition">
                     Mi grupo
                   </button>
@@ -390,7 +390,7 @@ export default function FAQ() {
       {registroOpen && (
         <RegistroModal
           onClose={() => setRegistroOpen(false)}
-          onSuccess={(u, esCasero) => { setUser(u); setRegistroOpen(false); navigate(esCasero ? '/acceso-grupo' : '/perfil/usuario/editar') }}
+          onSuccess={(u, esCasero) => { setUser(u); setRegistroOpen(false); navigate(esCasero ? '/' : '/perfil/usuario/editar') }}
           onSwitchToLogin={() => { setRegistroOpen(false); setLoginOpen(true) }}
         />
       )}

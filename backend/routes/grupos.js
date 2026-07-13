@@ -25,6 +25,10 @@ import {
   editarIntereses,
   transferirAdmin,
   salirGrupo,
+  eliminarMiembro,
+  getSolicitudesUnion,
+  aceptarSolicitudUnion,
+  rechazarSolicitudUnion,
 } from '../controllers/gruposController.js';
 
 const router = express.Router();
@@ -52,5 +56,9 @@ router.get('/mis-intereses',                requireAuth,                        
 router.put('/intereses',                    requireAuth, requireAdmin,                          editarIntereses);
 router.post('/transferir-admin',            requireAuth, requireAdmin,                          transferirAdmin);
 router.delete('/salir',                     requireAuth, requireMiembro,                        salirGrupo);
+router.delete('/miembros/:usuarioId',       requireAuth, requireAdmin,                          eliminarMiembro);
+router.get('/solicitudes-union',            requireAuth, requireAdmin,                          getSolicitudesUnion);
+router.put('/solicitudes-union/:solicitudId/aceptar',  requireAuth, requireAdmin,               aceptarSolicitudUnion);
+router.put('/solicitudes-union/:solicitudId/rechazar', requireAuth, requireAdmin,               rechazarSolicitudUnion);
 
 export default router;

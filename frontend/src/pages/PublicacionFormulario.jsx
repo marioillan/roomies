@@ -26,11 +26,11 @@ const schema = z.object({
   longitud:             z.number().nullable().optional(),
   precio:               z.coerce.number({ invalid_type_error: 'Introduce un precio válido' }).positive('El precio debe ser positivo'),
   habitaciones_libres:  z.coerce.number().int().min(1, 'Mínimo 1'),
-  tipo_piso:            z.string().optional(),
-  habitaciones_totales: z.coerce.number().int().positive().optional().or(z.literal('')),
-  tamano_piso:          z.coerce.number().positive().optional().or(z.literal('')),
-  planta:               z.coerce.number().int().optional().or(z.literal('')),
-  ascensor:             z.boolean().default(false),
+  tipo_piso:            z.string().min(1, 'Selecciona el tipo de vivienda'),
+  habitaciones_totales: z.coerce.number({ required_error: 'Obligatorio' }).int().positive('Debe ser mayor que 0'),
+  tamano_piso:          z.coerce.number({ required_error: 'Obligatorio' }).positive('Debe ser mayor que 0'),
+  planta:               z.coerce.number({ required_error: 'Obligatorio' }).int().min(0, 'No puede ser negativa'),
+  ascensor:             z.boolean({ required_error: 'Indica si el piso tiene ascensor' }),
   wifi:                 z.boolean().default(false),
   lavadora:             z.boolean().default(false),
   lavavajillas:         z.boolean().default(false),
@@ -370,6 +370,7 @@ function Paso2({ register, errors, control, watch }) {
             ]}
           />
         )} />
+        <FieldError message={errors.tipo_piso?.message} />
       </Section>
 
       <Section title='Dimensiones' accent='blue'>
@@ -405,6 +406,7 @@ function Paso2({ register, errors, control, watch }) {
             <Controller name='ascensor' control={control} render={({ field }) => (
               <YesNo value={field.value} onChange={field.onChange} />
             )} />
+            <FieldError message={errors.ascensor?.message} />
           </div>
         </div>
       </Section>
@@ -620,7 +622,7 @@ function PublicacionFormPage() {
   } : {
     titulo: '', descripcion: '', ciudad: '', direccion: '', latitud: null, longitud: null, precio: '',
     habitaciones_libres: 1, tipo_piso: '', habitaciones_totales: '',
-    tamano_piso: '', planta: '', ascensor: false,
+    tamano_piso: '', planta: '', ascensor: undefined,
     wifi: false, lavadora: false, lavavajillas: false, aire_acondicionado: false,
     calefaccion: false, parking: false, terraza: false, amueblado: false,
     permite_fumar: false, permite_mascotas: false,

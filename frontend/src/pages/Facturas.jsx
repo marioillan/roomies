@@ -918,7 +918,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
       {/* Fecha + título + selector */}
       <div className='flex flex-col gap-4'>
         <div>
-          <h1 className='font-display text-[2.5rem] font-bold text-slate-900 leading-none'>Tus facturas</h1>
+          <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>Tus facturas</h1>
         </div>
         {selectorGrupo}
       </div>

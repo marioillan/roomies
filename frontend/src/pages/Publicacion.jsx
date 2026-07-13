@@ -3,7 +3,7 @@ import { useOutletContext, useNavigate } from 'react-router-dom'
 import { apiFetch } from '../lib/apiFetch'
 import {
   Megaphone, MapPin, Eye, EyeOff, Plus, Pencil,
-  Trash2, MessageCircle, ChevronLeft, ChevronRight, ImageOff, Globe,
+  Trash2, MessageCircle, ChevronLeft, ChevronRight, ImageOff, Globe, UserPlus,
 } from 'lucide-react'
 
 // ── Constantes de estilo ──────────────────────────────────────────────
@@ -289,6 +289,7 @@ function Publicacion() {
   const [publicacion,   setPublicacion]   = useState(undefined)
   const [fotos,         setFotos]         = useState([])
   const [numChats,      setNumChats]      = useState(0)
+  const [numSolicitudesUnion, setNumSolicitudesUnion] = useState(0)
   const [toggling,        setToggling]        = useState(false)
   const [modalVisible,    setModalVisible]    = useState(null) // null | true | false
   const [modalEliminar,   setModalEliminar]   = useState(false)
@@ -311,6 +312,14 @@ function Publicacion() {
     apiFetch('/api/chats/como-admin')
       .then(r => r.json())
       .then(d => setNumChats(d.chats?.length ?? 0))
+      .catch(() => {})
+  }, [esAdmin])
+
+  useEffect(() => {
+    if (!esAdmin) return
+    apiFetch('/api/grupos/solicitudes-union')
+      .then(r => r.json())
+      .then(d => setNumSolicitudesUnion(d.solicitudes?.length ?? 0))
       .catch(() => {})
   }, [esAdmin])
 
@@ -402,7 +411,7 @@ function Publicacion() {
 
       {/* Header */}
       <div className='flex items-center justify-between gap-4'>
-        <h1 className='font-display text-[2.25rem] font-bold text-slate-900 leading-none'>
+        <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
           Tu anuncio
         </h1>
         {esAdmin && (
@@ -496,7 +505,7 @@ function Publicacion() {
               iconColor='text-emerald-600'
               title='Ver anuncio público'
               subtitle='Cómo lo ven los demás'
-              onClick={() => window.open(`/anuncio/${publicacion.id}`, '_blank')}
+              onClick={() => navigate(`/anuncio/${publicacion.id}`)}
             />
 
             {esAdmin && (
@@ -517,6 +526,15 @@ function Publicacion() {
                   subtitle='Solicitudes de contacto'
                   onClick={() => navigate('/grupo/mensajes')}
                   badge={numChats > 0 ? numChats : null}
+                />
+                <FilaAccion
+                  icon={UserPlus}
+                  iconBg='bg-amber-50'
+                  iconColor='text-amber-600'
+                  title='Solicitudes de acceso'
+                  subtitle='Peticiones para unirse al grupo'
+                  onClick={() => navigate('/grupo/solicitudes-union')}
+                  badge={numSolicitudesUnion > 0 ? numSolicitudesUnion : null}
                 />
                 <FilaAccion
                   icon={Trash2}

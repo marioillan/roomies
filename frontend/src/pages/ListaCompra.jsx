@@ -314,14 +314,8 @@ function ListaCompra() {
     <div className='flex flex-col gap-6'>
 
       {/* Cabecera */}
-      <div className='flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between'>
-        <h1 className='font-display text-3xl sm:text-5xl font-bold text-slate-900'>Lista de la compra</h1>
-        {pendientes.length > 0 && (
-          <div className='hidden lg:block bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 text-right'>
-            <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-amber-500'>Pendientes</p>
-            <p className='font-display text-[1.5rem] font-bold text-amber-700 leading-none mt-0.5'>{pendientes.length}</p>
-          </div>
-        )}
+      <div>
+        <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>Lista de la compra</h1>
       </div>
 
       {error && (

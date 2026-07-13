@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { AlertCircle, Check } from 'lucide-react'
 
 export function IconInput({ icon: Icon, error, children }) {
@@ -126,7 +127,7 @@ export function StepBar({ current, steps, stepMeta }) {
           const meta   = stepMeta[i]
           const Icon   = meta.icon
           return (
-            <div key={i} className='flex items-center flex-1 last:flex-none'>
+            <Fragment key={i}>
               <div className='flex flex-col items-center gap-2 shrink-0'>
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                   done
@@ -142,11 +143,11 @@ export function StepBar({ current, steps, stepMeta }) {
                 }`}>{label}</span>
               </div>
               {i < steps.length - 1 && (
-                <div className={`h-0.5 flex-1 mx-2.5 mb-5 rounded-full transition-colors duration-300 ${
+                <div className={`flex-1 min-w-0 h-0.5 mx-2.5 mt-5 rounded-full transition-colors duration-300 ${
                   done ? 'bg-emerald-300' : 'bg-slate-200'
                 }`} />
               )}
-            </div>
+            </Fragment>
           )
         })}
       </div>

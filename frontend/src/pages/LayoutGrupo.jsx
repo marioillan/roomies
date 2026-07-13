@@ -167,7 +167,7 @@ function LayoutGrupo({ onLogout }) {
       {/* Contenido principal */}
       <main className='flex-1 min-w-0 p-4 sm:p-6 md:p-12 overflow-y-auto pb-24 md:pb-13'>
         <div className='max-w-9xl mx-auto'>
-          <Outlet context={{ grupo, miembros, user }} />
+          <Outlet context={{ grupo, miembros, setMiembros, user }} />
         </div>
       </main>
 
