@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
@@ -22,6 +22,11 @@ function LayoutGrupo({ onLogout }) {
   const [grupo, setGrupo] = useState(null)
   const [miembros, setMiembros] = useState([])
   const [loading, setLoading] = useState(true)
+  const mainRef = useRef(null)
+
+  useEffect(() => {
+    mainRef.current?.scrollTo(0, 0)
+  }, [pathname])
 
   useEffect(() => {
     apiFetch('/api/grupos/mi-grupo')
@@ -165,7 +170,7 @@ function LayoutGrupo({ onLogout }) {
       </aside>
 
       {/* Contenido principal */}
-      <main className='flex-1 min-w-0 p-4 sm:p-6 md:p-12 overflow-y-auto pb-24 md:pb-13'>
+      <main ref={mainRef} className='flex-1 min-w-0 p-4 sm:p-6 md:p-12 overflow-y-auto pb-24 md:pb-13'>
         <div className='max-w-9xl mx-auto'>
           <Outlet context={{ grupo, miembros, setMiembros, user }} />
         </div>

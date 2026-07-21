@@ -237,10 +237,16 @@ export default function Home({ tieneGrupo, setTieneGrupo }) {
             {user ? (
               <>
                 {user.es_casero ? (
-                  <button onClick={() => navigate('/casero/facturas')}
-                    className="cursor-pointer! hidden sm:inline-flex px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:underline underline-offset-4 decoration-2 transition">
-                    Gestión de facturas
-                  </button>
+                  <>
+                    <button onClick={() => navigate('/casero/facturas')} title="Gestión de facturas"
+                      className="cursor-pointer! sm:hidden w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
+                      <Receipt size={20} />
+                    </button>
+                    <button onClick={() => navigate('/casero/facturas')}
+                      className="cursor-pointer! hidden sm:inline-flex px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:underline underline-offset-4 decoration-2 transition">
+                      Gestión de facturas
+                    </button>
+                  </>
                 ) : (
                   <>
                     {tieneGrupo ? (

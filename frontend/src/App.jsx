@@ -27,6 +27,7 @@ import Tareas from './pages/Tareas.jsx'
 import Calendario from './pages/Calendario.jsx'
 import FAQ from './pages/FAQ.jsx'
 import SolicitudesUnion from './pages/SolicitudesUnion.jsx'
+import ScrollToTop from './components/ScrollToTop.jsx'
 
 
 function App() {
@@ -52,6 +53,8 @@ function App() {
   }
 
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       <Route path="/perfil" element={<LayoutPerfil onLogout={handleLogout} />}>
         <Route path="usuario" element={<PerfilUsuario />} />
@@ -83,6 +86,7 @@ function App() {
         <Home tieneGrupo={tieneGrupo} setTieneGrupo={setTieneGrupo} />
       } />
     </Routes>
+    </>
   )
 }
 

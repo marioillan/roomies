@@ -160,9 +160,9 @@ model Usuario {
   google_id             String?   @unique @db.VarChar(255)
   google_refresh_token  String?
   google_calendar_token String?
-  fecha_registro        DateTime? @default(now()) @db.Timestamp(6)
-  created_at            DateTime? @default(now()) @db.Timestamp(6)
-  updated_at            DateTime? @default(now()) @db.Timestamp(6)
+  fecha_registro        DateTime  @default(now()) @db.Timestamp(6)
+  created_at            DateTime  @default(now()) @db.Timestamp(6)
+  updated_at            DateTime  @default(now()) @db.Timestamp(6)
 
   miembros_grupo       MiembroGrupo[]
   perfil_convivencia   PerfilConvivenciaUsuario?
@@ -192,12 +192,11 @@ model Grupo {
   descripcion            String
   ciudad                 String?    @db.VarChar(100)
   buscar_companero       Boolean?   @default(false)
-  activo                 Boolean?   @default(true)
   dia_limpieza           DiaSemana?
   semana_rotacion        Int?       @default(0)
   rotacion_semana_actual DateTime?  @db.Date
-  created_at             DateTime?  @default(now()) @db.Timestamp(6)
-  updated_at             DateTime?  @default(now()) @db.Timestamp(6)
+  created_at             DateTime   @default(now()) @db.Timestamp(6)
+  updated_at             DateTime   @default(now()) @db.Timestamp(6)
 
   miembros             MiembroGrupo[]
   perfil_convivencia   PerfilConvivenciaGrupo?
@@ -220,7 +219,7 @@ model MiembroGrupo {
   rol         RolGrupo  @default(MEMBER)
   es_casero   Boolean?  @default(false)
   activo      Boolean?  @default(true)
-  fecha_union DateTime? @default(now()) @db.Timestamp(6)
+  fecha_union DateTime  @default(now()) @db.Timestamp(6)
 
   usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   grupo   Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
@@ -234,7 +233,7 @@ model SolicitudUnion {
   usuario_id       String          @db.VarChar(36)
   grupo_id         String          @db.VarChar(36)
   estado           EstadoSolicitud @default(PENDIENTE)
-  fecha_solicitud  DateTime?       @default(now()) @db.Timestamp(6)
+  fecha_solicitud  DateTime        @default(now()) @db.Timestamp(6)
 
   usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   grupo   Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
@@ -263,8 +262,8 @@ model PerfilConvivenciaUsuario {
   limpieza_orden     LimpiezaOrden?
   nivel_ruido        NivelRuido?
   sobre_mi           String
-  created_at         DateTime?          @default(now()) @db.Timestamp(6)
-  updated_at         DateTime?          @default(now()) @db.Timestamp(6)
+  created_at         DateTime           @default(now()) @db.Timestamp(6)
+  updated_at         DateTime           @default(now()) @db.Timestamp(6)
 
   usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
 
@@ -296,8 +295,8 @@ model PreferenciasCompanero {
   limpieza_orden_req       Boolean?           @default(false)
   nivel_ruido              NivelRuido?
   nivel_ruido_req          Boolean?           @default(false)
-  created_at               DateTime?          @default(now()) @db.Timestamp(6)
-  updated_at               DateTime?          @default(now()) @db.Timestamp(6)
+  created_at               DateTime           @default(now()) @db.Timestamp(6)
+  updated_at               DateTime           @default(now()) @db.Timestamp(6)
 
   usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
 
@@ -318,8 +317,8 @@ model PerfilConvivenciaGrupo {
   lgbtq_friendly     Boolean?
   limpieza_orden     LimpiezaOrden?
   nivel_ruido        NivelRuido?
-  created_at         DateTime?          @default(now()) @db.Timestamp(6)
-  updated_at         DateTime?          @default(now()) @db.Timestamp(6)
+  created_at         DateTime           @default(now()) @db.Timestamp(6)
+  updated_at         DateTime           @default(now()) @db.Timestamp(6)
 
   grupo Grupo @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
 
@@ -351,8 +350,6 @@ model Publicacion {
   amueblado            Boolean?  @default(false)
   permite_fumar        Boolean?  @default(false)
   permite_mascotas     Boolean?  @default(false)
-  visitas              String?   @db.VarChar(50)
-  horario_silencio     String?   @db.VarChar(50)
   genero_preferido     String?   @db.VarChar(50)
   normas_adicionales   String?
   telefono_contacto    String?   @db.VarChar(20)
@@ -360,8 +357,8 @@ model Publicacion {
   visible              Boolean?  @default(true)
   latitud              Decimal?  @db.Decimal(10, 7)
   longitud             Decimal?  @db.Decimal(10, 7)
-  fecha_publicacion    DateTime? @default(now()) @db.Timestamp(6)
-  updated_at           DateTime? @default(now()) @db.Timestamp(6)
+  fecha_publicacion    DateTime  @default(now()) @db.Timestamp(6)
+  updated_at           DateTime  @default(now()) @db.Timestamp(6)
 
   grupo     Grupo             @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
   fotos     FotoPublicacion[]
@@ -385,7 +382,7 @@ model Favorito {
   id             String    @id @db.VarChar(36)
   usuario_id     String    @db.VarChar(36)
   publicacion_id String    @db.VarChar(36)
-  fecha_guardado DateTime? @default(now()) @db.Timestamp(6)
+  fecha_guardado DateTime  @default(now()) @db.Timestamp(6)
 
   usuario     Usuario     @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   publicacion Publicacion @relation(fields: [publicacion_id], references: [id], onDelete: Cascade)
@@ -399,7 +396,7 @@ model SolicitudContacto {
   usuario_id  String          @db.VarChar(36)
   grupo_id    String          @db.VarChar(36)
   estado      EstadoSolicitud @default(PENDIENTE)
-  fecha_envio DateTime?       @default(now()) @db.Timestamp(6)
+  fecha_envio DateTime        @default(now()) @db.Timestamp(6)
 
   usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   grupo   Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
@@ -413,7 +410,7 @@ model Chat {
   id           String     @id @db.VarChar(36)
   solicitud_id String     @unique @db.VarChar(36)
   estado       EstadoChat @default(ACTIVO)
-  created_at   DateTime?  @default(now()) @db.Timestamp(6)
+  created_at   DateTime   @default(now()) @db.Timestamp(6)
 
   solicitud SolicitudContacto @relation(fields: [solicitud_id], references: [id], onDelete: Cascade)
   mensajes  Mensaje[]
@@ -426,7 +423,7 @@ model Mensaje {
   chat_id      String    @db.VarChar(36)
   remitente_id String    @db.VarChar(36)
   contenido    String
-  enviado_en   DateTime? @default(now()) @db.Timestamp(6)
+  enviado_en   DateTime  @default(now()) @db.Timestamp(6)
 
   chat      Chat    @relation(fields: [chat_id], references: [id], onDelete: Cascade)
   remitente Usuario @relation(fields: [remitente_id], references: [id])
@@ -440,7 +437,7 @@ model Tarea {
   nombre        String    @db.VarChar(255)
   descripcion   String?
   es_recurrente Boolean?  @default(false)
-  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  created_at    DateTime  @default(now()) @db.Timestamp(6)
 
   grupo        Grupo             @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
   asignaciones AsignacionTarea[]
@@ -474,8 +471,8 @@ model Factura {
   fecha_emision     DateTime     @db.Date
   fecha_vencimiento DateTime     @db.Date
   url_documento     String?
-  created_at        DateTime?    @default(now()) @db.Timestamp(6)
-  updated_at        DateTime?    @default(now()) @db.Timestamp(6)
+  created_at        DateTime     @default(now()) @db.Timestamp(6)
+  updated_at        DateTime     @default(now()) @db.Timestamp(6)
 
   grupo  Grupo       @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
   casero Usuario     @relation("CaseroFacturas", fields: [casero_id], references: [id])
@@ -508,8 +505,8 @@ model Evento {
   fecha_inicio             DateTime  @db.Timestamp(6)
   fecha_fin                DateTime? @db.Timestamp(6)
   google_calendar_event_id String?
-  created_at               DateTime? @default(now()) @db.Timestamp(6)
-  updated_at               DateTime? @default(now()) @db.Timestamp(6)
+  created_at               DateTime  @default(now()) @db.Timestamp(6)
+  updated_at               DateTime  @default(now()) @db.Timestamp(6)
 
   grupo      Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
   creado_por Usuario @relation(fields: [creado_por_id], references: [id])
@@ -526,7 +523,7 @@ model Producto {
   comprado        Boolean?  @default(false)
   comprado_por_id String?   @db.VarChar(36)
   fecha_compra    DateTime? @db.Timestamp(6)
-  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  created_at      DateTime  @default(now()) @db.Timestamp(6)
 
   grupo        Grupo    @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
   anadido_por  Usuario  @relation("ProductoAnadidoPor", fields: [anadido_por_id], references: [id])

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
@@ -16,6 +17,11 @@ function LayoutPerfil({ onLogout }) {
   const { user, tieneGrupo } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const mainRef = useRef(null)
+
+  useEffect(() => {
+    mainRef.current?.scrollTo(0, 0)
+  }, [pathname])
 
   return (
     <div className='min-h-screen bg-slate-100 md:h-screen md:overflow-hidden md:flex'>
@@ -101,7 +107,7 @@ function LayoutPerfil({ onLogout }) {
       </aside>
 
       {/* Contenido principal */}
-      <main className='flex-1 min-w-0 p-4 sm:p-6 md:p-15 overflow-y-auto pb-24 md:pb-10'>
+      <main ref={mainRef} className='flex-1 min-w-0 p-4 sm:p-6 md:p-15 overflow-y-auto pb-24 md:pb-10'>
         <div className='max-w-7xl mx-auto'>
           <Outlet />
         </div>
@@ -112,7 +118,7 @@ function LayoutPerfil({ onLogout }) {
         className='md:hidden fixed bottom-0 inset-x-0 z-40 flex items-center justify-around px-1 py-1.5 border-t border-emerald-700'
         style={{ backgroundColor: '#0b8059' }}
       >
-        {navItems.filter(n => n.path !== '/').map(({ icon: Icon, path, exact, title }) => {
+        {navItems.map(({ icon: Icon, path, exact, title }) => {
           const active = exact ? pathname === path : pathname.startsWith(path)
           return (
             <button

@@ -791,7 +791,7 @@ function EditarUsuario() {
       if (todosRes.status === 'fulfilled') setTodosIntereses(todosRes.value.categorias ?? {})
       if (misRes.status   === 'fulfilled') setInteresesSeleccionados(new Set((misRes.value.intereses ?? []).map(i => i.id)))
     }).finally(() => setLoading(false))
-  }, [reset, user])
+  }, [])
 
   useEffect(() => {
     if (user?.foto_perfil) setFotoPreview(user.foto_perfil)

@@ -806,41 +806,42 @@ function Header({ user, esCasero, onLogout, onVolver }) {
   const navigate = useNavigate()
   return (
     <header className='bg-white border-b border-slate-100'>
-      <div className='max-w-5xl mx-auto px-8 py-4 flex items-center justify-between'>
-        <div className='flex items-center gap-3'>
-          {onVolver && (
-            <button onClick={onVolver} className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition mr-1'>
-              <ArrowLeft size={17} />
-            </button>
-          )}
+      <div className='max-w-5xl mx-auto px-4 sm:px-8 py-3.5 sm:py-4 flex items-center gap-3'>
+        {onVolver && (
+          <button onClick={onVolver} className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'>
+            <ArrowLeft size={17} />
+          </button>
+        )}
 
-          {esCasero ? (
-            <button onClick={() => navigate('/')} className='cursor-pointer! font-display text-[1.5rem] font-bold text-slate-900'>
-              Housie
-            </button>
-          ) : (
-            <span className='font-display text-[1.5rem] font-bold text-slate-900'>
-              Mis facturas
-            </span>
-          )}
+        {esCasero ? (
+          <button onClick={() => navigate('/')} className='cursor-pointer! font-display text-2xl font-bold -tracking-[0.02em] text-slate-900 shrink-0'>
+            Housie
+          </button>
+        ) : (
+          <span className='font-display text-[1.5rem] font-bold text-slate-900 shrink-0'>
+            Mis facturas
+          </span>
+        )}
+
+        <div className='flex-1' />
+
+        <div className='hidden sm:flex flex-col items-end'>
+          <span className='text-sm font-semibold text-slate-900 leading-tight'>{user?.nombre}</span>
+          <span className={`font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] ${esCasero ? 'text-emerald-600' : 'text-slate-400'}`}>
+            {esCasero ? 'Casero' : 'Inquilino'}
+          </span>
         </div>
 
-        <div className='flex items-center gap-3'>
-          <div className='flex items-center gap-3'>
-            <div className='flex flex-col'>
-              <span className='text-sm font-semibold text-slate-900 leading-tight'>{user?.nombre}</span>
-              <span className={`font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] ${esCasero ? 'text-emerald-600' : 'text-slate-400'}`}>
-                {esCasero ? 'Casero' : 'Inquilino'}
-              </span>
-            </div>
-          </div>
-          {onLogout && (
-            <button onClick={onLogout} title='Cerrar sesión'
-              className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'>
-              <LogOut size={16} />
-            </button>
-          )}
+        <div className='sm:hidden w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0'>
+          <span className='text-sm font-bold text-emerald-700'>{user?.nombre?.[0]?.toUpperCase()}</span>
         </div>
+
+        {onLogout && (
+          <button onClick={onLogout} title='Cerrar sesión'
+            className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'>
+            <LogOut size={16} />
+          </button>
+        )}
       </div>
     </header>
   )

@@ -370,7 +370,6 @@ export const editarPublicacion = async (req, res, next) => {
     aire_acondicionado: d.aire_acondicionado, calefaccion: d.calefaccion,
     parking: d.parking, terraza: d.terraza, amueblado: d.amueblado,
     permite_fumar: d.permite_fumar, permite_mascotas: d.permite_mascotas,
-    visitas: d.visitas ?? null, horario_silencio: d.horario_silencio ?? null,
     genero_preferido: d.genero_preferido ?? null, normas_adicionales: d.normas_adicionales ?? null,
     modo_contacto: d.modo_contacto, telefono_contacto: d.telefono_contacto ?? null,
     visible: d.visible, latitud: d.latitud ?? null, longitud: d.longitud ?? null,

@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
 import { CARD_SHADOW } from '../lib/convivencia.js'
+import LoginModal from '../components/LoginModal.jsx'
+import RegistroModal from '../components/RegistroModal.jsx'
 import {
   Heart, MessageCircle, ArrowLeft, MapPin, Euro, Bed, Ruler,
   Home, House, Layers, MoveUp, Wifi, WashingMachine, Wind, Flame, Car, Trees,
@@ -430,7 +432,7 @@ function InputCiudad({ value, onChange, onBuscar }) {
 // ── AnuncioPublico ────────────────────────────────────────────────────
 
 export default function AnuncioPublico() {
-  const { user, tieneGrupo } = useAuth()
+  const { user, setUser, tieneGrupo } = useAuth()
   const { id }     = useParams()
   const navigate   = useNavigate()
   const location   = useLocation()
@@ -443,6 +445,8 @@ export default function AnuncioPublico() {
   const [ciudad,          setCiudad]          = useState('')
   const [copiado,         setCopiado]         = useState(false)
   const [menuFav,         setMenuFav]         = useState(false)
+  const [loginOpen,       setLoginOpen]       = useState(false)
+  const [registroOpen,    setRegistroOpen]    = useState(false)
   const refMenuFav = useRef(null)
 
   useEffect(() => {
@@ -477,7 +481,7 @@ export default function AnuncioPublico() {
   }, [menuFav])
 
   const solicitar = async () => {
-    if (!user) { navigate('/'); return }
+    if (!user) { setLoginOpen(true); return }
     setEstadoSolicitud('enviando')
     try {
       const r = await apiFetch(`/api/chats/solicitar/${id}`, { method: 'POST' })
@@ -701,7 +705,7 @@ export default function AnuncioPublico() {
                   type='button'
                   disabled={perteneceAlGrupo}
                   onClick={async () => {
-                    if (!user) { navigate('/'); return }
+                    if (!user) { setLoginOpen(true); return }
                     if (esFavorito) { setMenuFav(v => !v); return }
                     await toggleFavorito()
                   }}
@@ -777,6 +781,21 @@ export default function AnuncioPublico() {
           </button>
         </div>
       </main>
+
+      {loginOpen && (
+        <LoginModal
+          onClose={() => setLoginOpen(false)}
+          onSuccess={(u) => { setUser(u); setLoginOpen(false) }}
+          onSwitchToRegistro={() => { setLoginOpen(false); setRegistroOpen(true) }}
+        />
+      )}
+      {registroOpen && (
+        <RegistroModal
+          onClose={() => setRegistroOpen(false)}
+          onSuccess={(u) => { setUser(u); setRegistroOpen(false) }}
+          onSwitchToLogin={() => { setRegistroOpen(false); setLoginOpen(true) }}
+        />
+      )}
     </div>
   )
 }

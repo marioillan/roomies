@@ -52,8 +52,6 @@ export const publicacionSchema = z.object({
   amueblado:            z.boolean().default(false),
   permite_fumar:        z.boolean().default(false),
   permite_mascotas:     z.boolean().default(false),
-  visitas:              z.string().nullable().optional(),
-  horario_silencio:     z.string().nullable().optional(),
   genero_preferido:     z.string().nullable().optional(),
   normas_adicionales:   z.string().nullable().optional(),
   modo_contacto:        z.enum(['CHAT', 'TELEFONO', 'AMBOS']).default('CHAT'),

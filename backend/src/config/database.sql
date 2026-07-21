@@ -70,9 +70,9 @@ CREATE TABLE usuarios (
   google_id     VARCHAR(255) UNIQUE,
   google_refresh_token TEXT,
   google_calendar_token TEXT,
-  fecha_registro TIMESTAMP DEFAULT NOW(),
-  created_at    TIMESTAMP DEFAULT NOW(),
-  updated_at    TIMESTAMP DEFAULT NOW()
+  fecha_registro TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -87,12 +87,11 @@ CREATE TABLE grupos (
   descripcion             TEXT         NOT NULL,
   ciudad                  VARCHAR(100),
   buscar_companero        BOOLEAN      DEFAULT FALSE,
-  activo                  BOOLEAN      DEFAULT TRUE,
   dia_limpieza            dia_semana_enum,
   semana_rotacion         INT          DEFAULT 0,
   rotacion_semana_actual  DATE,
-  created_at              TIMESTAMP    DEFAULT NOW(),
-  updated_at              TIMESTAMP    DEFAULT NOW()
+  created_at              TIMESTAMP    NOT NULL DEFAULT NOW(),
+  updated_at              TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -105,7 +104,7 @@ CREATE TABLE miembros_grupo (
   rol         rol_grupo   NOT NULL DEFAULT 'MEMBER',
   es_casero   BOOLEAN     DEFAULT FALSE,
   activo      BOOLEAN     DEFAULT TRUE,
-  fecha_union TIMESTAMP   DEFAULT NOW(),
+  fecha_union TIMESTAMP   NOT NULL DEFAULT NOW(),
   UNIQUE(usuario_id, grupo_id)
 );
 
@@ -130,8 +129,8 @@ CREATE TABLE perfiles_convivencia_usuario (
   acepta_mascotas     acepta_mascotas_enum,
   lgbtq_friendly      BOOLEAN,
   sobre_mi            TEXT         NOT NULL,
-  created_at          TIMESTAMP DEFAULT NOW(),
-  updated_at          TIMESTAMP DEFAULT NOW()
+  created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -158,8 +157,8 @@ CREATE TABLE preferencias_companero (
   acepta_mascotas_req      BOOLEAN DEFAULT FALSE,
   lgbtq_friendly           BOOLEAN,
   lgbtq_friendly_req       BOOLEAN DEFAULT FALSE,
-  created_at               TIMESTAMP DEFAULT NOW(),
-  updated_at               TIMESTAMP DEFAULT NOW()
+  created_at               TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at               TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -177,8 +176,8 @@ CREATE TABLE perfiles_convivencia_grupo (
   acepta_fumadores    acepta_fumadores_enum,
   acepta_mascotas     acepta_mascotas_enum,
   lgbtq_friendly      BOOLEAN,
-  created_at          TIMESTAMP DEFAULT NOW(),
-  updated_at          TIMESTAMP DEFAULT NOW()
+  created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -213,8 +212,6 @@ CREATE TABLE publicaciones (
   -- Paso 4: Normas de la casa
   permite_fumar          BOOLEAN         DEFAULT FALSE,
   permite_mascotas       BOOLEAN         DEFAULT FALSE,
-  visitas                VARCHAR(50),
-  horario_silencio       VARCHAR(50),
   genero_preferido       VARCHAR(50),
   normas_adicionales     TEXT,
   -- Contacto
@@ -224,8 +221,8 @@ CREATE TABLE publicaciones (
   visible                BOOLEAN         DEFAULT TRUE,
   latitud                DECIMAL(10,7),
   longitud               DECIMAL(10,7),
-  fecha_publicacion      TIMESTAMP       DEFAULT NOW(),
-  updated_at             TIMESTAMP       DEFAULT NOW()
+  fecha_publicacion      TIMESTAMP       NOT NULL DEFAULT NOW(),
+  updated_at             TIMESTAMP       NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -245,7 +242,7 @@ CREATE TABLE favoritos (
   id             VARCHAR(36) PRIMARY KEY,
   usuario_id     VARCHAR(36) NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
   publicacion_id VARCHAR(36) NOT NULL REFERENCES publicaciones(id) ON DELETE CASCADE,
-  fecha_guardado TIMESTAMP   DEFAULT NOW(),
+  fecha_guardado TIMESTAMP   NOT NULL DEFAULT NOW(),
   UNIQUE(usuario_id, publicacion_id)
 );
 
@@ -257,7 +254,7 @@ CREATE TABLE solicitudes_contacto (
   usuario_id      VARCHAR(36)          NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
   grupo_id        VARCHAR(36)          NOT NULL REFERENCES grupos(id)   ON DELETE CASCADE,
   estado          estado_solicitud_enum NOT NULL DEFAULT 'PENDIENTE',
-  fecha_envio     TIMESTAMP            DEFAULT NOW(),
+  fecha_envio     TIMESTAMP            NOT NULL DEFAULT NOW(),
   UNIQUE(usuario_id, grupo_id)
 );
 
@@ -268,7 +265,7 @@ CREATE TABLE chats (
   id             VARCHAR(36)      PRIMARY KEY,
   solicitud_id   VARCHAR(36)      UNIQUE NOT NULL REFERENCES solicitudes_contacto(id) ON DELETE CASCADE,
   estado         estado_chat_enum DEFAULT 'ACTIVO',
-  created_at     TIMESTAMP        DEFAULT NOW()
+  created_at     TIMESTAMP        NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -279,7 +276,7 @@ CREATE TABLE mensajes (
   chat_id      VARCHAR(36) NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
   remitente_id VARCHAR(36) NOT NULL REFERENCES usuarios(id),
   contenido    TEXT        NOT NULL,
-  enviado_en   TIMESTAMP   DEFAULT NOW()
+  enviado_en   TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_mensajes_chat_id ON mensajes(chat_id, enviado_en DESC);
@@ -293,7 +290,7 @@ CREATE TABLE tareas (
   nombre       VARCHAR(255) NOT NULL,
   descripcion  TEXT,
   es_recurrente BOOLEAN    DEFAULT FALSE,
-  created_at   TIMESTAMP   DEFAULT NOW()
+  created_at   TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -323,8 +320,8 @@ CREATE TABLE facturas (
   fecha_emision     DATE              NOT NULL,
   fecha_vencimiento DATE          NOT NULL,
   url_documento     TEXT,
-  created_at        TIMESTAMP         DEFAULT NOW(),
-  updated_at        TIMESTAMP         DEFAULT NOW()
+  created_at        TIMESTAMP         NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMP         NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -352,8 +349,8 @@ CREATE TABLE eventos (
   fecha_inicio             TIMESTAMP   NOT NULL,
   fecha_fin                TIMESTAMP,
   google_calendar_event_id TEXT,
-  created_at               TIMESTAMP   DEFAULT NOW(),
-  updated_at               TIMESTAMP   DEFAULT NOW()
+  created_at               TIMESTAMP   NOT NULL DEFAULT NOW(),
+  updated_at               TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
@@ -370,7 +367,7 @@ CREATE TABLE productos (
   comprado        BOOLEAN      DEFAULT FALSE,
   comprado_por_id VARCHAR(36)  REFERENCES usuarios(id),
   fecha_compra    TIMESTAMP,
-  created_at      TIMESTAMP    DEFAULT NOW()
+  created_at      TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================
