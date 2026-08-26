@@ -42,7 +42,7 @@ function TareasCard({ grupo, navigate, datosTareas }) {
       {/* Cabecera: texto + flecha */}
       <div className='flex items-start justify-between gap-3'>
         <div>
-          <p className='font-mono text-[0.8rem] font-semibold tracking-[0.18em] uppercase text-slate-400'>
+          <p className='font-mono text-[0.8rem] font-semibold tracking-[0.18em] uppercase text-slate-300'>
             Limpieza de la semana
           </p>
           {mensajeMotivacion && (
@@ -64,11 +64,11 @@ function TareasCard({ grupo, navigate, datosTareas }) {
             <span className='font-mono text-[3.5rem] font-bold text-white tabular-nums leading-none'>
               {datosTareas === null ? '–' : tareasHechas}
             </span>
-            <span className='font-mono text-2xl text-slate-500'>
+            <span className='font-mono text-2xl text-slate-300'>
               /{datosTareas === null ? '–' : tareasTotal}
             </span>
           </div>
-          <p className='text-slate-400 text-base mt-1'>
+          <p className='text-slate-300 text-base mt-1'>
             {datosTareas === null
               ? 'Cargando...'
               : tareasTotal === 0
@@ -121,7 +121,7 @@ function AgendaCard({ eventos, user, esAdmin, onNuevo, onEditar = null, onElimin
           <div className='w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin' />
         </div>
       ) : proximos.length === 0 ? (
-        <p className='text-sm text-slate-400 italic flex-1'>Sin eventos próximos</p>
+        <p className='text-sm text-slate-500 italic flex-1'>Sin eventos próximos</p>
       ) : (
         <div className='no-scrollbar flex flex-col gap-2 overflow-y-auto' style={{ maxHeight: '296px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {proximos.map((ev, i) => {
@@ -132,12 +132,12 @@ function AgendaCard({ eventos, user, esAdmin, onNuevo, onEditar = null, onElimin
             return (
               <div key={ev.id} className='flex items-center gap-3 bg-slate-50 rounded-2xl px-4 py-3'>
                 <div className='w-12 shrink-0 text-center bg-white rounded-xl py-1.5'>
-                  <p className='font-mono text-[10px] text-slate-400 uppercase leading-none'>{mes}</p>
+                  <p className='font-mono text-[10px] text-slate-500 uppercase leading-none'>{mes}</p>
                   <p className='font-mono text-xl font-bold text-slate-900 leading-tight'>{dia}</p>
                 </div>
                 <div className='flex-1 min-w-0'>
                   <p className='text-sm font-semibold text-slate-800 truncate'>{ev.titulo}</p>
-                  <p className='text-xs text-slate-400 font-mono uppercase'>
+                  <p className='text-xs text-slate-500 font-mono uppercase'>
                     {hora}{ev.creado_por_nombre ? ` · ${ev.creado_por_nombre}` : ''}
                   </p>
                 </div>
@@ -150,9 +150,9 @@ function AgendaCard({ eventos, user, esAdmin, onNuevo, onEditar = null, onElimin
 
       <button
         onClick={onNuevo}
-        className='cursor-pointer! mt-5 w-full flex items-center justify-center gap-2 py-3 border border-dashed border-slate-200 rounded-2xl text-sm text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition'
+        className='cursor-pointer! mt-5 w-full flex items-center justify-center gap-2 py-3 border border-dashed border-slate-200 rounded-2xl text-sm text-slate-500 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition'
       >
-        <Plus size={14} /> Nuevo evento
+        <Plus aria-hidden='true' size={14} /> Nuevo evento
       </button>
 
       {!user?.tiene_calendar && (
@@ -160,7 +160,7 @@ function AgendaCard({ eventos, user, esAdmin, onNuevo, onEditar = null, onElimin
           href={`${import.meta.env.VITE_API_URL}/api/auth/google/calendar`}
           className='mt-2 w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-blue-50 border border-blue-100 hover:bg-blue-100 transition group'
         >
-          <CalendarDays size={15} className='text-blue-500 shrink-0' />
+          <CalendarDays aria-hidden='true' size={15} className='text-blue-500 shrink-0' />
           <div className='flex-1 min-w-0'>
             <p className='text-xs font-semibold text-blue-700 leading-tight'>Conectar Google Calendar</p>
             <p className='text-[11px] text-blue-400 leading-tight mt-0.5'>Sincroniza los eventos del grupo</p>
@@ -199,7 +199,7 @@ function FacturaCard({ factura, todasPagadas, cargando, navigate }) {
         <p className='font-mono text-[0.8rem] font-semibold tracking-[0.18em] uppercase text-emerald-700'>Mis pagos</p>
         <div className='flex-1 flex flex-col items-center justify-center gap-2 text-center'>
           <div className='w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center'>
-            <Check size={22} className='text-emerald-600' />
+            <Check aria-hidden='true' size={22} className='text-emerald-600' />
           </div>
           <p className='font-display text-xl font-bold text-emerald-800'>¡Todo al día!</p>
           <p className='text-sm text-emerald-600'>Todas las facturas están pagadas</p>
@@ -215,8 +215,8 @@ function FacturaCard({ factura, todasPagadas, cargando, navigate }) {
   if (!factura) {
     return (
       <div className='bg-slate-50 rounded-3xl p-6 flex flex-col gap-3 border border-slate-100 h-full'>
-        <p className='font-mono text-[0.8rem] font-semibold tracking-[0.18em] uppercase text-slate-400'>Mis pagos</p>
-        <p className='text-sm text-slate-400 italic flex-1 flex items-center'>Sin facturas asignadas</p>
+        <p className='font-mono text-[0.8rem] font-semibold tracking-[0.18em] uppercase text-slate-500'>Mis pagos</p>
+        <p className='text-sm text-slate-500 italic flex-1 flex items-center'>Sin facturas asignadas</p>
       </div>
     )
   }
@@ -258,7 +258,7 @@ function FacturaCard({ factura, todasPagadas, cargando, navigate }) {
 function AvisoCard({ evento }) {
   const iconoAviso = (
     <div className='w-9 h-9 rounded-xl bg-orange-400 flex items-center justify-center shrink-0'>
-      <AlertTriangle size={16} className='text-white' />
+      <AlertTriangle aria-hidden='true' size={16} className='text-white' />
     </div>
   )
 
@@ -355,7 +355,7 @@ function ListaCompraCard({ productos, navigate }) {
                     style={{ width: total > 0 ? `${(cat.count / total) * 100}%` : '0%', backgroundColor: cat.color }}
                   />
                 </div>
-                <span className='text-xs font-mono text-slate-400 tabular-nums w-4 text-right'>{cat.count}</span>
+                <span className='text-xs font-mono text-slate-500 tabular-nums w-4 text-right'>{cat.count}</span>
               </div>
             ))}
           </div>
@@ -404,7 +404,7 @@ function HistoricoCard({ grupoId, navigate }) {
           Histórico gastos
         </p>
         {diff !== null && (
-          <span className={`font-mono text-[0.65rem] font-semibold uppercase tracking-wide ${igual ? 'text-slate-400' : diff > 0 ? 'text-red-400' : 'text-emerald-500'}`}>
+          <span className={`font-mono text-[0.65rem] font-semibold uppercase tracking-wide ${igual ? 'text-slate-500' : diff > 0 ? 'text-red-400' : 'text-emerald-500'}`}>
             {igual ? '= Estable' : diff > 0 ? `↑ +${diff.toFixed(0)}€` : `↓ ${diff.toFixed(0)}€`}
           </span>
         )}
@@ -415,12 +415,12 @@ function HistoricoCard({ grupoId, navigate }) {
           <div className='w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin' />
         </div>
       ) : datos.length === 0 ? (
-        <p className='text-xs text-slate-400 italic'>Sin datos todavía</p>
+        <p className='text-xs text-slate-500 italic'>Sin datos todavía</p>
       ) : (
         <>
           {ultimo && (
             <p className='font-display text-xl font-bold text-slate-900'>
-              {ultimo.total.toFixed(0)} <span className='text-base font-semibold text-slate-400'>€ / mes</span>
+              {ultimo.total.toFixed(0)} <span className='text-base font-semibold text-slate-500'>€ / mes</span>
             </p>
           )}
           <ChartContainer config={chartConfigHistorico} className='h-14'>
@@ -471,6 +471,14 @@ function GrupoDashboard() {
 
   const esAdmin = miembros.find(m => m.id === user?.id)?.rol_en_grupo === 'ADMIN'
 
+  // El anillo del avatar codifica el rol con el mismo criterio de color que la
+  // lista de miembros de GrupoPerfil: ámbar para quien administra, teal para
+  // quien solo reside. Se usan tonos -400/-600 y no los de GrupoPerfil porque
+  // aquí es una línea de 1px sobre fondo claro y necesita algo más de cuerpo.
+  const anilloRol = esAdmin
+    ? 'ring-1 ring-amber-400 ring-offset-2 ring-offset-slate-200'
+    : 'ring-1 ring-teal-600 ring-offset-2 ring-offset-slate-200'
+
   useEffect(() => {
     apiFetch('/api/compra')
       .then(r => r.json()).then(d => setProductosCompra(d.productos ?? [])).catch(() => setProductosCompra([]))
@@ -518,15 +526,43 @@ function GrupoDashboard() {
     <div className='flex flex-col'>
 
       {/* Header */}
-      <div className='flex items-start justify-between gap-4 mb-5 shrink-0'>
-        <h1 className='font-display text-3xl sm:text-[3.1rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
+      <div className='flex items-start justify-between gap-3 mb-5 shrink-0'>
+        <h1 className='font-display min-w-0 text-[1.75rem] sm:text-[3.1rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
           {getSaludo()}, {user?.nombre?.split(' ')[0]}
         </h1>
-        {esAdmin && (
-          <span className='inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-full shrink-0'>
-            <Crown size={11} /> Administrador
-          </span>
-        )}
+
+        <div className='flex flex-col items-end gap-2 shrink-0'>
+          {/* Acceso al perfil, solo en móvil: en escritorio ya está en la barra
+              lateral del layout. Es el único acceso al perfil dentro del grupo
+              en móvil, por eso vive aquí y no en la barra inferior. */}
+          <button
+            type='button'
+            onClick={() => navigate('/perfil/usuario')}
+            aria-label='Mi perfil'
+            className='cursor-pointer! md:hidden rounded-full transition hover:opacity-90 active:scale-95'
+          >
+            {user?.foto_perfil
+              ? <img
+                  src={user.foto_perfil}
+                  alt=''
+                  className={`w-11 h-11 rounded-full object-cover ${anilloRol}`}
+                />
+              : <div
+                  className={`w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center ${anilloRol}`}
+                >
+                  <span className='text-base font-bold text-emerald-700'>
+                    {user?.nombre?.[0]?.toUpperCase() ?? '?'}
+                  </span>
+                </div>
+            }
+          </button>
+
+          {esAdmin && (
+            <span className='inline-flex items-center gap-1.5 text-[0.6875rem] sm:text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full whitespace-nowrap'>
+              <Crown aria-hidden='true' size={11} /> Administrador
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Bento — 1 col mobile / 2 col tablet / 4 col desktop */}

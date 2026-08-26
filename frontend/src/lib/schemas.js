@@ -35,7 +35,6 @@ export const convivenciaSchema = z.object({
   frecuencia_visitas: z.string().optional(),
   ambiente: z.string().optional(),
   tolerancia_fiestas: z.string().optional(),
-  frecuencia_salidas: z.string().optional(),
   fumador: z.boolean().optional(),
   acepta_fumadores: z.string().optional(),
   tiene_mascotas: z.boolean().optional(),

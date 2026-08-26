@@ -1,5 +1,5 @@
 import express from 'express';
-import { requireAuth, requireMiembro, requireAdmin } from '../src/middleware/auth.js';
+import { requireAuth, requireMiembro, requireInquilino, requireAdmin } from '../src/middleware/auth.js';
 import {
   upload,
   unirseGrupo,
@@ -38,21 +38,21 @@ router.post('/crear',                       requireAuth,                        
 router.put('/editar',                       requireAuth, requireAdmin,                          editarGrupo);
 router.get('/mis-grupos',                   requireAuth,                                        getMisGrupos);
 router.get('/mi-grupo',                     requireAuth,                                        getMiGrupo);
-router.get('/convivencia',                  requireAuth,                                        getConvivencia);
+router.get('/convivencia',                  requireAuth, requireMiembro,                        getConvivencia);
 router.put('/convivencia',                  requireAuth, requireAdmin,                          editarConvivencia);
-router.get('/publicacion',                  requireAuth,                                        getPublicacion);
+router.get('/publicacion',                  requireAuth, requireMiembro,                        getPublicacion);
 router.put('/publicacion',                  requireAuth, requireAdmin,                          editarPublicacion);
 router.patch('/publicacion/visible',         requireAuth, requireAdmin,                          actualizarVisibilidad);
 router.delete('/publicacion',               requireAuth, requireAdmin,                          eliminarPublicacion);
 router.put('/publicacion/fotos',            requireAuth, requireAdmin, upload.array('fotos', 10), subirFotosPublicacion);
 router.delete('/publicacion/fotos/:fotoId', requireAuth, requireAdmin,                          eliminarFotoPublicacion);
 router.put('/foto',                         requireAuth, requireAdmin, upload.single('foto'),    subirFotoGrupo);
-router.get('/eventos',                      requireAuth,                                        getEventos);
-router.post('/eventos',                     requireAuth, requireMiembro,                        crearEvento);
-router.put('/eventos/:id',                  requireAuth, requireMiembro,                        editarEvento);
-router.delete('/eventos/:id',               requireAuth, requireMiembro,                        eliminarEvento);
+router.get('/eventos',                      requireAuth, requireMiembro,                       getEventos);
+router.post('/eventos',                     requireAuth, requireInquilino,                        crearEvento);
+router.put('/eventos/:id',                  requireAuth, requireInquilino,                        editarEvento);
+router.delete('/eventos/:id',               requireAuth, requireInquilino,                        eliminarEvento);
 router.get('/intereses',                                                                        getIntereses);
-router.get('/mis-intereses',                requireAuth,                                        getMisIntereses);
+router.get('/mis-intereses',                requireAuth, requireMiembro,                      getMisIntereses);
 router.put('/intereses',                    requireAuth, requireAdmin,                          editarIntereses);
 router.post('/transferir-admin',            requireAuth, requireAdmin,                          transferirAdmin);
 router.delete('/salir',                     requireAuth, requireMiembro,                        salirGrupo);

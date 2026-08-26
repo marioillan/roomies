@@ -79,7 +79,6 @@ Resumen de todos los modelos definidos en `backend/prisma/schema.prisma`, con su
 | frecuencia_visitas | FrecuenciaVisitas? (enum) | No |
 | ambiente | Ambiente? (enum) | No |
 | tolerancia_fiestas | FrecuenciaFiestas? (enum) | No |
-| frecuencia_salidas | FrecuenciaSalidas? (enum) | No |
 | fumador | Boolean? | No |
 | acepta_fumadores | AceptaFumadores? (enum) | No |
 | tiene_mascotas | Boolean? | No |
@@ -111,8 +110,6 @@ Resumen de todos los modelos definidos en `backend/prisma/schema.prisma`, con su
 | ambiente_req | Boolean? (default false) | No |
 | tolerancia_fiestas | FrecuenciaFiestas? (enum) | No |
 | tolerancia_fiestas_req | Boolean? (default false) | No |
-| frecuencia_salidas | FrecuenciaSalidas? (enum) | No |
-| frecuencia_salidas_req | Boolean? (default false) | No |
 | acepta_fumadores | AceptaFumadores? (enum) | No |
 | acepta_fumadores_req | Boolean? (default false) | No |
 | acepta_mascotas | AceptaMascotas? (enum) | No |
@@ -141,7 +138,6 @@ Resumen de todos los modelos definidos en `backend/prisma/schema.prisma`, con su
 | frecuencia_visitas | FrecuenciaVisitas? (enum) | No |
 | ambiente | Ambiente? (enum) | No |
 | tolerancia_fiestas | FrecuenciaFiestas? (enum) | No |
-| frecuencia_salidas | FrecuenciaSalidas? (enum) | No |
 | acepta_fumadores | AceptaFumadores? (enum) | No |
 | acepta_mascotas | AceptaMascotas? (enum) | No |
 | lgbtq_friendly | Boolean? | No |
@@ -426,7 +422,6 @@ Resumen de todos los modelos definidos en `backend/prisma/schema.prisma`, con su
 | FrecuenciaVisitas | CASI_NUNCA, A_VECES, FRECUENTE | frecuencia_visitas_enum |
 | Ambiente | TRANQUILO, EQUILIBRADO, SOCIAL | ambiente_enum |
 | FrecuenciaFiestas | NUNCA, OCASIONAL, FRECUENTE | frecuencia_fiestas_enum |
-| FrecuenciaSalidas | NUNCA, OCASIONAL, FRECUENTE | frecuencia_salidas_enum |
 | AceptaFumadores | SI, NO, INDIFERENTE | acepta_fumadores_enum |
 | AceptaMascotas | SI, NO, DEPENDE | acepta_mascotas_enum |
 | DiaSemana | LUNES, MARTES, MIERCOLES, JUEVES, VIERNES, SABADO, DOMINGO | dia_semana_enum |

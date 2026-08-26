@@ -17,10 +17,7 @@ function getLunesActual() {
 // ── GET /api/tareas ───────────────────────────────────────────
 export const getTareas = async (req, res, next) => {
   try {
-    if (req.miembro.es_casero) return res.status(403).json({ message: 'Las tareas son solo para inquilinos' });
-
     const grupo_id = req.grupoId;
-
     const grupo = await prisma.grupo.findFirst({
       where: { id: grupo_id },
       select: { id: true, nombre: true, dia_limpieza: true, semana_rotacion: true, rotacion_semana_actual: true },
@@ -34,7 +31,7 @@ export const getTareas = async (req, res, next) => {
         orderBy: { created_at: 'asc' },
       }),
       prisma.miembroGrupo.findMany({
-        where: { grupo_id, activo: true, es_casero: false },
+        where: { grupo_id, activo: true, rol: { not: 'CASERO' } },
         select: {
           rol: true,
           usuario: { select: { id: true, nombre: true, foto_perfil: true } },

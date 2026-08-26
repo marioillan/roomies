@@ -42,7 +42,7 @@ export const labelsUsuario = {
   nivel_ruido: {
     SILENCIO_TOTAL: 'Prefiero silencio en casa',
     MODERADO:       'Tolero un nivel moderado de ruido',
-    INDIFERENTE:    'El ruido no me molesta',
+    ALTO:           'El ruido no me molesta',
   },
 }
 
@@ -80,11 +80,11 @@ export const labelsGrupo = {
   nivel_ruido: {
     SILENCIO_TOTAL: 'Preferimos silencio en casa',
     MODERADO:       'Toleramos un nivel moderado de ruido',
-    INDIFERENTE:    'El ruido no nos molesta',
+    ALTO:    'El ruido no nos molesta',
   },
 }
 
-export const DONUTS_CONFIG_USUARIO = [
+export const TARJETAS_CONVIVENCIA_USUARIO = [
   { campo: 'horario',            sublabel: 'Horario',  color: '#f59e0b' },
   { campo: 'ambiente',           sublabel: 'Ambiente', color: '#10b981' },
   { campo: 'frecuencia_visitas', sublabel: 'Visitas',  color: '#06b6d4' },
@@ -93,7 +93,7 @@ export const DONUTS_CONFIG_USUARIO = [
   { campo: 'nivel_ruido',        sublabel: 'Ruido',    color: '#f97316' },
 ]
 
-export const DONUTS_CONFIG_GRUPO = [
+export const TARJETAS_CONVIVENCIA_GRUPO = [
   { campo: 'horario',            sublabel: 'Ritmo',    color: '#f59e0b' },
   { campo: 'ambiente',           sublabel: 'Ambiente', color: '#10b981' },
   { campo: 'frecuencia_visitas', sublabel: 'Visitas',  color: '#06b6d4' },
@@ -108,7 +108,6 @@ export const CHIPS_META = {
   frecuencia_visitas: { labels: { CASI_NUNCA: 'Pocas visitas', A_VECES: 'Visitas ocasionales', FRECUENTE: 'Muchas visitas' } },
   ambiente:           { labels: { TRANQUILO: 'Ambiente tranquilo', EQUILIBRADO: 'Equilibrado', SOCIAL: 'Ambiente social' } },
   tolerancia_fiestas: { labels: { NUNCA: 'Sin fiestas', OCASIONAL: 'Fiestas ocasionales', FRECUENTE: 'Fiestas frecuentes' } },
-  frecuencia_salidas: { labels: { NUNCA: 'No sale de noche', OCASIONAL: 'Sale ocasionalmente', FRECUENTE: 'Sale frecuentemente' } },
   fumador:            { labels: { true: 'Fumador/a', false: 'No fumador/a' } },
   acepta_fumadores:   { labels: { SI: 'Acepta fumadores', NO: 'No acepta fumadores', INDIFERENTE: 'Indiferente al tabaco' } },
   tiene_mascotas:     { labels: { true: 'Tiene mascotas', false: 'Sin mascotas' } },
@@ -116,12 +115,6 @@ export const CHIPS_META = {
   lgbtq_friendly:     { labels: { true: 'LGBTQ+ friendly' } },
 }
 
-const CAMPOS_CONVIVENCIA = [
-  'ocupacion', 'horario', 'frecuencia_visitas', 'ambiente',
-  'tolerancia_fiestas', 'frecuencia_salidas', 'fumador',
-  'acepta_fumadores', 'tiene_mascotas', 'acepta_mascotas', 'lgbtq_friendly',
-  'limpieza_orden', 'nivel_ruido',
-]
 
 export function calcEdad(fecha) {
   if (!fecha) return null
@@ -142,14 +135,4 @@ export function calcChips(convivencia) {
     if (label) chips.push(label)
   }
   return chips
-}
-
-export function calcPct(convivencia) {
-  if (!convivencia) return 0
-  return Math.round(
-    CAMPOS_CONVIVENCIA.filter(c => {
-      const v = convivencia[c]
-      return v !== null && v !== undefined
-    }).length / CAMPOS_CONVIVENCIA.length * 100
-  )
 }

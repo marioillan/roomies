@@ -19,3 +19,63 @@ html, body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Accesibilidad (WCAG 2.2)
+   --------------------------------------------------------------------------- */
+
+/* 2.4.7 Foco visible — muchos componentes usan `outline-none` de Tailwind para
+   dibujar su propio anillo con `focus:ring`. Este bloque garantiza que, aunque
+   un elemento se olvide de definirlo, la navegación por teclado siempre deja
+   un indicador de foco con contraste suficiente (>= 3:1 sobre fondo claro).
+   Se usa :focus-visible para no molestar a quien navega con ratón. */
+:focus-visible {
+  outline: 2px solid #047857;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 2.4.11 El foco no debe quedar oculto — la app usa cabeceras sticky y una
+   barra de navegación inferior en móvil, así que reservamos ese espacio al
+   desplazar el elemento enfocado hasta la vista. */
+:focus-visible,
+:target {
+  scroll-margin-top: 6rem;
+  scroll-margin-bottom: 6rem;
+}
+
+/* 2.5.8 Tamaño del área táctil — mínimo 24x24 CSS px para cualquier control. */
+button,
+a[href],
+[role='button'],
+input[type='checkbox'],
+input[type='radio'] {
+  min-width: 24px;
+  min-height: 24px;
+}
+
+/* Los enlaces dentro de un párrafo están exentos del criterio 2.5.8
+   (excepción "inline"), y forzarles una altura mínima rompe el interlineado. */
+p a[href],
+li a[href],
+label a[href] {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 2.3.3 Animación desde interacciones — respetar la preferencia del sistema. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

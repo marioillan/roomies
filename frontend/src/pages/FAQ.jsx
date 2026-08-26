@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { ChevronDown, HelpCircle, Users, House, Shield, Receipt, MessageCircle, Heart, ArrowRight } from 'lucide-react'
 import LoginModal from '../components/LoginModal.jsx'
 import RegistroModal from '../components/RegistroModal.jsx'
+import PieDePagina from '../components/PieDePagina.jsx'
+import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 
 const ESMERALDA = '#10b981'
 
@@ -39,6 +41,20 @@ function AccordionItem({ pregunta, respuesta, abierto, onToggle }) {
   const contentRef = useRef(null)
   const [height, setHeight] = useState(0)
 
+  // Patrón "acordeón" de las WAI-ARIA Authoring Practices: el botón declara si
+  // el panel está desplegado (aria-expanded) y a qué panel controla
+  // (aria-controls); el panel se oculta con `hidden` cuando está cerrado para
+  // que su contenido no sea alcanzable por el tabulador ni por el lector.
+  const idBase   = useId()
+  const idBoton  = `${idBase}-boton`
+  const idPanel  = `${idBase}-panel`
+
+  // `hidden` saca el panel cerrado del orden de tabulación y del lector de
+  // pantalla, pero aplicarlo de golpe cortaría la animación de plegado: se
+  // marca como cerrado solo cuando la transición de altura ha terminado.
+  const [cerrado, setCerrado] = useState(!abierto)
+  const oculto = cerrado && !abierto
+
   useEffect(() => {
     if (contentRef.current) {
       setHeight(abierto ? contentRef.current.scrollHeight : 0)
@@ -49,19 +65,27 @@ function AccordionItem({ pregunta, respuesta, abierto, onToggle }) {
     <div className={`border-b border-slate-100 last:border-0 transition-colors ${abierto ? 'bg-emerald-50/40' : ''}`}>
       <button
         type="button"
+        id={idBoton}
         onClick={onToggle}
+        aria-expanded={abierto}
+        aria-controls={idPanel}
         className="cursor-pointer! w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
       >
         <span className={`font-semibold text-base leading-snug transition-colors ${abierto ? 'text-emerald-700' : 'text-slate-800'}`}>
           {pregunta}
         </span>
         <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
-          abierto ? 'bg-emerald-500 text-white rotate-180' : 'bg-slate-100 text-slate-400'
+          abierto ? 'bg-emerald-500 text-white rotate-180' : 'bg-slate-100 text-slate-500'
         }`}>
-          <ChevronDown size={15} />
+          <ChevronDown size={15} aria-hidden="true" />
         </div>
       </button>
       <div
+        id={idPanel}
+        role="region"
+        aria-labelledby={idBoton}
+        hidden={oculto}
+        onTransitionEnd={() => setCerrado(!abierto)}
         style={{ height, overflow: 'hidden', transition: 'height 0.3s ease' }}
       >
         <div ref={contentRef} className="px-6 pb-5">
@@ -222,7 +246,7 @@ const CATEGORIAS = [
 
 export default function FAQ() {
   const navigate = useNavigate()
-  const { user, setUser, tieneGrupo } = useAuth()
+  const { user, recargarUsuario, tieneGrupo } = useAuth()
   const [loginOpen, setLoginOpen] = useState(false)
   const [registroOpen, setRegistroOpen] = useState(false)
 
@@ -232,6 +256,7 @@ export default function FAQ() {
     <div className="min-h-screen bg-slate-50">
 
       {/* Header — mismo que Home */}
+      <SaltarAlContenido />
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-[80rem] mx-auto flex items-center gap-3 sm:gap-6 px-4 sm:px-10 py-3.5">
           <button onClick={() => navigate('/')} className="cursor-pointer! font-display text-2xl font-bold -tracking-[0.02em] text-slate-900 shrink-0">
@@ -246,32 +271,32 @@ export default function FAQ() {
                     onClick={() => navigate('/casero/facturas')}
                     className="cursor-pointer! inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition hover:opacity-90 active:scale-95"
                     style={{ backgroundColor: ESMERALDA }}>
-                    <Receipt size={15} />
+                    <Receipt aria-hidden='true' size={15} />
                     Gestión de facturas
                   </button>
                 ) : (
                   <>
                     {tieneGrupo ? (
-                      <button onClick={() => navigate('/grupo')} title="Mi grupo"
+                      <button onClick={() => navigate('/grupo')} aria-label="Mi grupo"
                         className="cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
-                        <House size={20} />
+                        <House aria-hidden='true' size={20} />
                       </button>
                     ) : (
                       <>
-                        <button onClick={() => navigate('/perfil/favoritos')} title="Favoritos"
+                        <button onClick={() => navigate('/perfil/favoritos')} aria-label="Favoritos"
                           className="cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
-                          <Heart size={20} />
+                          <Heart aria-hidden='true' size={20} />
                         </button>
-                        <button onClick={() => navigate('/perfil/chat')} title="Mensajes"
+                        <button onClick={() => navigate('/perfil/chat')} aria-label="Mensajes"
                           className="cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
-                          <MessageCircle size={20} />
+                          <MessageCircle aria-hidden='true' size={20} />
                         </button>
                       </>
                     )}
                     <button onClick={() => navigate('/perfil/usuario')} title="Mi perfil"
                       className="cursor-pointer! p-0 rounded-full overflow-hidden">
                       {user.foto_perfil
-                        ? <img src={user.foto_perfil} alt="Perfil" className="w-10 h-10 rounded-full object-cover" />
+                        ? <img src={user.foto_perfil} alt="" className="w-10 h-10 rounded-full object-cover" />
                         : <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
                             <span className="text-sm font-bold text-emerald-700">{user.nombre?.[0]?.toUpperCase()}</span>
                           </div>
@@ -290,13 +315,14 @@ export default function FAQ() {
                   className="cursor-pointer! inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white transition hover:opacity-90 active:scale-95"
                   style={{ backgroundColor: ESMERALDA }}>
                   Crear cuenta
-                  <ArrowRight size={15} />
+                  <ArrowRight aria-hidden='true' size={15} />
                 </button>
               </>
             )}
           </div>
         </div>
       </header>
+      <main id='contenido-principal' tabIndex={-1}>
 
       {/* Hero */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white px-6 sm:px-10 py-16 sm:py-20">
@@ -318,57 +344,10 @@ export default function FAQ() {
         ))}
       </div>
 
-      {/* Footer — mismo que Home */}
-      <footer className="bg-slate-900 text-white pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 mb-12">
-            <div className="md:col-span-2">
-              <span className="font-display font-bold text-white text-2xl">Housie</span>
-              <p className="mt-3 text-slate-400 text-sm max-w-xs leading-relaxed">
-                La plataforma para encontrar compañeros de piso compatibles y gestionar la convivencia.
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Plataforma</p>
-              <ul className="flex flex-col gap-2.5">
-                <li>
-                  <button onClick={() => navigate('/buscar')}
-                    className="cursor-pointer! text-slate-400 hover:text-white text-sm transition">
-                    Buscar habitación
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => navigate('/')}
-                    className="cursor-pointer! text-slate-400 hover:text-white text-sm transition">
-                    Mi grupo
-                  </button>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Ayuda</p>
-              <ul className="flex flex-col gap-2.5">
-                <li>
-                  <button onClick={() => navigate('/faq')}
-                    className="cursor-pointer! text-slate-400 hover:text-white text-sm transition">
-                    Preguntas frecuentes
-                  </button>
-                </li>
-                <li>
-                  <a href="mailto:housie.app@gmail.com"
-                    className="text-slate-400 hover:text-white text-sm transition">
-                    Contacto
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 text-sm">© 2026 Housie. Todos los derechos reservados.</p>
-            <p className="text-slate-600 text-xs">Hecho con ♥ para estudiantes y jóvenes de España</p>
-          </div>
-        </div>
-      </footer>
+      </main>
+
+      {/* Pie de página compartido con la Home (components/PieDePagina.jsx) */}
+      <PieDePagina />
 
       <style>{`
         @keyframes fadeUp {
@@ -383,14 +362,14 @@ export default function FAQ() {
       {loginOpen && (
         <LoginModal
           onClose={() => setLoginOpen(false)}
-          onSuccess={(u) => { setUser(u); setLoginOpen(false) }}
+          onSuccess={async () => { await recargarUsuario(); setLoginOpen(false) }}
           onSwitchToRegistro={() => { setLoginOpen(false); setRegistroOpen(true) }}
         />
       )}
       {registroOpen && (
         <RegistroModal
           onClose={() => setRegistroOpen(false)}
-          onSuccess={(u, esCasero) => { setUser(u); setRegistroOpen(false); navigate(esCasero ? '/' : '/perfil/usuario/editar') }}
+          onSuccess={async (esCasero) => { await recargarUsuario(); setRegistroOpen(false); navigate(esCasero ? '/' : '/perfil/usuario/editar') }}
           onSwitchToLogin={() => { setRegistroOpen(false); setLoginOpen(true) }}
         />
       )}

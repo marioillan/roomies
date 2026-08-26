@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Pencil, Link, Check, LogOut, AlertCircle } from 'lucide-react'
-import { CARD_SHADOW, DONUTS_CONFIG_GRUPO, PASTEL, labelsGrupo, calcEdad } from '../lib/convivencia.js'
+import { Pencil, Link, Check, LogOut, AlertCircle, TriangleAlert } from 'lucide-react'
+import { CARD_SHADOW, TARJETAS_CONVIVENCIA_GRUPO, PASTEL, labelsGrupo, calcEdad } from '../lib/convivencia.js'
+import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
+import { useModalAccesible } from '../lib/useModalAccesible.js'
 
 // ── Componente principal ───────────────────────────────────────────
 
@@ -16,7 +18,7 @@ function TraitCard({ cfg, valor }) {
       </span>
       {frase
         ? <p className='text-[0.9375rem] font-medium text-slate-800 leading-snug'>{frase}</p>
-        : <p className='text-[0.9375rem] text-slate-300 italic'>Sin rellenar</p>
+        : <p className='text-[0.9375rem] text-slate-500 italic'>Sin rellenar</p>
       }
     </div>
   )
@@ -25,6 +27,7 @@ function TraitCard({ cfg, valor }) {
 function GrupoPerfil() {
   const navigate = useNavigate()
   const { grupo, miembros, setMiembros, user } = useOutletContext()
+  const { setTieneGrupo } = useAuth()
 
   const [convivencia, setConvivencia] = useState(null)
   const [intereses,   setIntereses]   = useState([])
@@ -42,6 +45,15 @@ function GrupoPerfil() {
   const [eliminandoMiembro, setEliminandoMiembro] = useState(false)
   const [errorEliminarMiembro, setErrorEliminarMiembro] = useState('')
 
+  // Diálogos modales accesibles: cada uno atrapa el foco mientras está abierto,
+  // se cierra con Escape y devuelve el foco al botón que lo abrió.
+  const refModalSalir       = useModalAccesible(() => setMostrarModalSalir(false), mostrarModalSalir)
+  const refModalTransferir  = useModalAccesible(() => setMostrarModalTransferir(false), mostrarModalTransferir)
+  const refModalEliminar    = useModalAccesible(
+    () => { setMiembroAEliminar(null); setErrorEliminarMiembro('') },
+    !!miembroAEliminar,
+  )
+
   useEffect(() => {
     Promise.allSettled([
       apiFetch('/api/grupos/convivencia').then(r => r.json()),
@@ -56,8 +68,8 @@ function GrupoPerfil() {
 
   const miembroActual = miembros.find(m => m.id === user?.id)
   const esAdmin   = miembroActual?.rol_en_grupo === 'ADMIN'
-  const esCasero  = miembroActual?.es_casero === true
-  const miembrosParaTransferir = miembros.filter(m => !m.es_casero && m.id !== user?.id)
+  const esCasero  = miembroActual?.rol_en_grupo === 'CASERO'
+  const miembrosParaTransferir = miembros.filter(m => m.rol_en_grupo !== 'CASERO' && m.id !== user?.id)
 
   const handleSalirClick = () => {
     setErrorSalir('')
@@ -82,6 +94,9 @@ function GrupoPerfil() {
         setErrorSalir(data.message ?? 'Error al salir del grupo')
         return
       }
+      // Sin esto, `tieneGrupo` se queda en true hasta recargar la página y el
+      // acceso "Mi grupo" sigue apareciendo en la navegación de perfil.
+      setTieneGrupo(false)
       navigate('/')
     } catch {
       setErrorSalir('Error de conexión')
@@ -148,7 +163,7 @@ function GrupoPerfil() {
 
   if (loading) return (
     <div className='flex justify-center py-16'>
-      <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+      <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
     </div>
   )
 
@@ -158,7 +173,7 @@ function GrupoPerfil() {
         onClick={() => copiarCodigo('miembro')}
         className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-white text-slate-900 border border-slate-200 hover:border-slate-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
       >
-        {copiadoTipo === 'miembro' ? <Check size={14} className='text-emerald-500' /> : <Link size={14} />}
+        {copiadoTipo === 'miembro' ? <Check aria-hidden='true' size={14} className='text-emerald-500' /> : <Link aria-hidden='true' size={14} />}
         {copiadoTipo === 'miembro' ? '¡Copiado!' : 'Invitar miembro'}
       </button>
       {esAdmin && (
@@ -166,7 +181,7 @@ function GrupoPerfil() {
           onClick={() => copiarCodigo('casero')}
           className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-white text-slate-900 border border-slate-200 hover:border-slate-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
         >
-          {copiadoTipo === 'casero' ? <Check size={14} className='text-emerald-500' /> : <Link size={14} />}
+          {copiadoTipo === 'casero' ? <Check aria-hidden='true' size={14} className='text-emerald-500' /> : <Link aria-hidden='true' size={14} />}
           {copiadoTipo === 'casero' ? '¡Copiado!' : 'Código casero'}
         </button>
       )}
@@ -175,7 +190,7 @@ function GrupoPerfil() {
           onClick={() => navigate('/grupo/perfil/editar')}
           className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
         >
-          <Pencil size={14} /> Editar grupo
+          <Pencil aria-hidden='true' size={14} /> Editar grupo
         </button>
       )}
       {!esCasero && (
@@ -183,7 +198,7 @@ function GrupoPerfil() {
           onClick={handleSalirClick}
           className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 hover:border-red-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
         >
-          <LogOut size={14} /> Salir del grupo
+          <LogOut aria-hidden='true' size={14} /> Salir del grupo
         </button>
       )}
     </>
@@ -204,7 +219,8 @@ function GrupoPerfil() {
       {/* ── Modal: confirmar salida ── */}
       {mostrarModalSalir && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'>
-          <div className='bg-white rounded-3xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5 shadow-2xl'>
+          <div ref={refModalSalir} role='dialog' aria-modal='true' aria-label='¿Salir del grupo?' tabIndex={-1}
+            className='bg-white rounded-3xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5 shadow-2xl'>
             <div className='flex flex-col gap-1.5'>
               <h2 className='font-display text-[1.375rem] font-semibold text-slate-900'>¿Salir del grupo?</h2>
               <p className='text-[0.875rem] text-slate-500 leading-relaxed'>
@@ -214,8 +230,8 @@ function GrupoPerfil() {
               </p>
             </div>
             {errorSalir && (
-              <div className='flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-3'>
-                <AlertCircle size={16} className='text-red-500 shrink-0' />
+              <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-3'>
+                <AlertCircle aria-hidden='true' size={16} className='text-red-500 shrink-0' />
                 <p className='text-[0.8125rem] font-medium text-red-700'>{errorSalir}</p>
               </div>
             )}
@@ -244,7 +260,8 @@ function GrupoPerfil() {
       {/* ── Modal: transferir admin antes de salir ── */}
       {mostrarModalTransferir && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'>
-          <div className='bg-white rounded-3xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5 shadow-2xl'>
+          <div ref={refModalTransferir} role='dialog' aria-modal='true' aria-label='Transferir administración' tabIndex={-1}
+            className='bg-white rounded-3xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5 shadow-2xl'>
             <div className='flex flex-col gap-1.5'>
               <h2 className='font-display text-[1.375rem] font-semibold text-slate-900'>Transferir administración</h2>
               <p className='text-[0.875rem] text-slate-500 leading-relaxed'>
@@ -272,13 +289,13 @@ function GrupoPerfil() {
                       </div>
                   }
                   <span className='font-display text-[0.9375rem] font-semibold text-slate-800 flex-1 text-left truncate'>{m.username}</span>
-                  {nuevoAdminId === m.id && <Check size={16} className='text-emerald-600 shrink-0' />}
+                  {nuevoAdminId === m.id && <Check aria-hidden='true' size={16} className='text-emerald-600 shrink-0' />}
                 </button>
               ))}
             </div>
             {errorSalir && (
-              <div className='flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-3'>
-                <AlertCircle size={16} className='text-red-500 shrink-0' />
+              <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-3'>
+                <AlertCircle aria-hidden='true' size={16} className='text-red-500 shrink-0' />
                 <p className='text-[0.8125rem] font-medium text-red-700'>{errorSalir}</p>
               </div>
             )}
@@ -304,19 +321,31 @@ function GrupoPerfil() {
         </div>
       )}
 
-      {/* ── Modal: confirmar eliminación de miembro ── */}
       {miembroAEliminar && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm' onClick={() => { setMiembroAEliminar(null); setErrorEliminarMiembro('') }}>
-          <div className='bg-white rounded-3xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5 shadow-2xl' onClick={e => e.stopPropagation()}>
+          <div ref={refModalEliminar} role='dialog' aria-modal='true' aria-label='Eliminar miembro del grupo' tabIndex={-1}
+            className='bg-white rounded-3xl p-8 w-full max-w-sm mx-4 flex flex-col gap-5 shadow-2xl' onClick={e => e.stopPropagation()}>
             <div className='flex flex-col gap-1.5'>
               <h2 className='font-display text-[1.375rem] font-semibold text-slate-900'>¿Eliminar a {miembroAEliminar.username} del grupo?</h2>
               <p className='text-[0.875rem] text-slate-500 leading-relaxed'>
                 Esta acción eliminará al miembro del grupo de convivencia.
               </p>
             </div>
+
+            {miembroAEliminar.rol_en_grupo === 'CASERO' && (
+              <div className='flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3'>
+                <TriangleAlert aria-hidden='true' size={16} className='text-amber-500 shrink-0 mt-0.5' />
+                <p className='text-[0.8125rem] text-amber-700 leading-relaxed'>
+                  Es el casero del grupo. Las facturas existentes se conservarán, pero nadie
+                  podrá registrar nuevas ni actualizar los pagos hasta que otro casero se
+                  vincule con el código.
+                </p>
+              </div>
+            )}
+
             {errorEliminarMiembro && (
-              <div className='flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-3'>
-                <AlertCircle size={16} className='text-red-500 shrink-0' />
+              <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-3'>
+                <AlertCircle aria-hidden='true' size={16} className='text-red-500 shrink-0' />
                 <p className='text-[0.8125rem] font-medium text-red-700'>{errorEliminarMiembro}</p>
               </div>
             )}
@@ -377,7 +406,7 @@ function GrupoPerfil() {
             ? <p className='font-display text-[1.0625rem] font-normal text-slate-700 leading-[1.6] bg-slate-50 rounded-2xl px-4 py-4 break-words'>
                 {grupo.descripcion}
               </p>
-            : <p className='font-display text-[1.0625rem] font-normal text-slate-400 italic leading-[1.4]'>
+            : <p className='font-display text-[1.0625rem] font-normal text-slate-500 italic leading-[1.4]'>
                 Sin descripción todavía.
               </p>
           }
@@ -387,7 +416,7 @@ function GrupoPerfil() {
         <div className='flex flex-col gap-4 pt-6 sm:pt-0 sm:pl-8'>
           <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Miembros</p>
           <div className='flex flex-col divide-y divide-dashed divide-slate-200'>
-            {[...miembros].sort((a, b) => (a.es_casero === b.es_casero ? 0 : a.es_casero ? 1 : -1)).map((m, i) => {
+            {[...miembros].sort((a, b) => (a.rol_en_grupo === 'CASERO' ? 1 : 0) - (b.rol_en_grupo === 'CASERO' ? 1 : 0)).map((m, i) => {
               const edad  = calcEdad(m.fecha_nacimiento)
               const desde = m.fecha_union ? new Date(m.fecha_union).getFullYear() : null
               const pastel = PASTEL[i % PASTEL.length]
@@ -406,7 +435,7 @@ function GrupoPerfil() {
                       </div>
                   }
                   <div className='flex-1 min-w-0'>
-                    {m.es_casero ? (
+                    {m.rol_en_grupo === 'CASERO' ? (
                       <p className='font-display text-[1.0625rem] font-semibold text-slate-800 leading-tight truncate'>{m.username}</p>
                     ) : (
                       <button
@@ -417,7 +446,7 @@ function GrupoPerfil() {
                         {m.username}
                       </button>
                     )}
-                    <p className='font-mono text-[0.7rem] text-slate-400 mt-0.5'>
+                    <p className='font-mono text-[0.7rem] text-slate-500 mt-0.5'>
                       {[edad != null ? `${edad} años` : null, desde ? `desde ${desde}` : null].filter(Boolean).join(' · ')}
                     </p>
                   </div>
@@ -425,13 +454,13 @@ function GrupoPerfil() {
                     <button
                       type='button'
                       onClick={() => setMiembroAEliminar(m)}
-                      className='cursor-pointer! shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-[0.75rem] font-semibold text-red-600 hover:text-red-700'
+                      className='cursor-pointer! shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-[0.75rem] font-semibold text-red-600 hover:text-red-700'
                     >
                       Eliminar del grupo
                     </button>
                   )}
                   <div className='shrink-0'>
-                    {m.es_casero
+                    {m.rol_en_grupo === 'CASERO'
                       ? <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-amber-500'>Casero</span>
                       : <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-teal-500'>Residente</span>
                     }
@@ -457,7 +486,7 @@ function GrupoPerfil() {
               },
               {
                 label: 'Miembros',
-                value: (() => { const n = miembros.filter(m => !m.es_casero).length; return `${n} ${n === 1 ? 'persona' : 'personas'}` })(),
+                value: (() => { const n = miembros.filter(m => m.rol_en_grupo !== 'CASERO').length; return `${n} ${n === 1 ? 'persona' : 'personas'}` })(),
               },
               {
                 label: 'Buscando',
@@ -480,7 +509,7 @@ function GrupoPerfil() {
                 key={label}
                 className={`flex justify-between items-center py-[0.875rem] ${i < arr.length - 1 ? 'border-b border-dashed border-slate-200' : ''}`}
               >
-                <span className='font-mono text-[0.6875rem] font-semibold text-slate-400 uppercase tracking-[0.10em]'>{label}</span>
+                <span className='font-mono text-[0.6875rem] font-semibold text-slate-500 uppercase tracking-[0.10em]'>{label}</span>
                 {chip
                   ? <span className='inline-flex items-center gap-2 text-[0.9375rem] font-medium text-emerald-600'>
                       <span className='w-2 h-2 rounded-full bg-emerald-500 shrink-0' />
@@ -499,7 +528,7 @@ function GrupoPerfil() {
           {/* Estilo de vida */}
           {convivencia && (convivencia.ocupacion || convivencia.acepta_fumadores || convivencia.acepta_mascotas || convivencia.lgbtq_friendly === true) && (
             <div className='flex flex-col gap-2'>
-              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Estilo de vida</p>
+              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-300'>Estilo de vida</p>
               <div className='flex flex-wrap gap-2'>
                 {convivencia.ocupacion === 'ESTUDIO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Estudiantes</span>}
                 {convivencia.ocupacion === 'TRABAJO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Trabajadores</span>}
@@ -517,10 +546,10 @@ function GrupoPerfil() {
 
           {/* Intereses del grupo */}
           <div className='flex flex-col gap-2'>
-            <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Intereses del grupo</p>
+            <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-300'>Intereses del grupo</p>
             {intereses.length === 0 ? (
               <div className='flex flex-col gap-2'>
-                <p className='text-[0.8125rem] font-medium text-slate-500'>Sin intereses todavía.</p>
+                <p className='text-[0.8125rem] font-medium text-slate-300'>Sin intereses todavía.</p>
                 {esAdmin && (
                   <button
                     onClick={() => navigate('/grupo/perfil/editar')}
@@ -571,7 +600,7 @@ function GrupoPerfil() {
           </div>
         ) : (
           <div className='grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4'>
-            {DONUTS_CONFIG_GRUPO.map(cfg => (
+            {TARJETAS_CONVIVENCIA_GRUPO.map(cfg => (
               <TraitCard key={cfg.campo} cfg={cfg} valor={convivencia[cfg.campo]} />
             ))}
           </div>

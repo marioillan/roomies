@@ -10,6 +10,8 @@ Antes de ejecutar cualquier tarea, comprobar si alguna de estas skills aplica e 
 - `ui-ux-pro-max` — diseño UI/UX, paletas, tipografía, accesibilidad, patrones visuales.
 - `vercel-react-best-practices` — optimización de componentes React/Next.js, data fetching, bundle.
 - `web-design-guidelines` — auditoría de UI: accesibilidad, buenas prácticas, revisión de diseño.
+- `accessibility` — auditoría WCAG 2.2: navegación por teclado, lectores de pantalla, contraste, ARIA.
+- `seo` — meta tags, Open Graph, datos estructurados, sitemap (páginas públicas: Home, FAQ, AnuncioPublico).
 - `simplify` — revisar código cambiado en busca de mejoras de calidad y eficiencia.
 - `security-review` — revisar cambios en la rama actual en busca de vulnerabilidades.
 - `review` — revisar un pull request completo.
@@ -77,7 +79,7 @@ Monorepo con dos carpetas independientes: `backend/` y `frontend/`. Sin workspac
 ### Frontend — React + Vite + Tailwind
 
 - **Entrada:** `frontend/src/main.jsx` → `App.jsx`.
-- **Estado global:** `AuthContext` (`frontend/src/context/AuthContext.jsx`) es la fuente de verdad para `user`, `tieneGrupo` y `cargando`. Exporta `{ user, setUser, tieneGrupo, setTieneGrupo, recargarUsuario, cargando }`. `cargando` empieza en `true` y pasa a `false` cuando la llamada inicial a `/api/auth/me` termina — úsalo para evitar race conditions al decidir si hay sesión (ej. `if (cargando) return` al inicio de efectos que dependan de `user`). Páginas públicas con header propio usan `const { user, tieneGrupo } = useAuth()`. `recargarUsuario` llama a `/api/auth/me`; si devuelve 401, hace `POST /api/auth/refresh` y reintenta `/api/auth/me` una vez antes de dar por no autenticado (ver refresh token en la sección de backend). Tras un `/me` exitoso, también carga `/api/grupos/mi-grupo` para poblar `tieneGrupo`. Usa `useLocation`/`useNavigate` para forzar la redirección a `/perfil/usuario/editar` cuando `user.perfil_completo === false` y la ruta actual no está en `RUTAS_EXCLUIDAS_PERFIL_INCOMPLETO` (`['/', '/perfil/usuario/editar']`). `perfil_completo` lo calcula `authController.js` (`me`): requiere `sobre_mi, genero, pais, fecha_nacimiento, ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas, limpieza_orden, nivel_ruido` todos no-nulos, salvo que el usuario sea `es_casero`.
+- **Estado global:** `AuthContext` (`frontend/src/context/AuthContext.jsx`) es la fuente de verdad para `user`, `tieneGrupo` y `cargando`. Exporta `{ user, setUser, tieneGrupo, setTieneGrupo, recargarUsuario, cargando }`. `cargando` empieza en `true` y pasa a `false` cuando la llamada inicial a `/api/auth/me` termina — úsalo para evitar race conditions al decidir si hay sesión (ej. `if (cargando) return` al inicio de efectos que dependan de `user`). Páginas públicas con header propio usan `const { user, tieneGrupo } = useAuth()`. `recargarUsuario` llama a `/api/auth/me`; si devuelve 401, hace `POST /api/auth/refresh` y reintenta `/api/auth/me` una vez antes de dar por no autenticado (ver refresh token en la sección de backend). Tras un `/me` exitoso, también carga `/api/grupos/mi-grupo` para poblar `tieneGrupo`. **`tieneGrupo` solo se calcula al montar**, así que toda acción que cambie la pertenencia al grupo tiene que actualizarlo a mano: `CreacionGrupo` (`setTieneGrupo(true)` al crear), `Home` (`setTieneGrupo(true)` al unirse con `codigo_casero`) y `GrupoPerfil` (`setTieneGrupo(false)` al salir). Si se olvida, la navegación de `LayoutPerfil` enseña u oculta el acceso "Mi grupo" de forma incorrecta hasta que se recarga la página. Usa `useLocation`/`useNavigate` para forzar la redirección a `/perfil/usuario/editar` cuando `user.perfil_completo === false` y la ruta actual no está en `RUTAS_EXCLUIDAS_PERFIL_INCOMPLETO` (`['/', '/perfil/usuario/editar']`). `perfil_completo` lo calcula `authController.js` (`me`): requiere `sobre_mi, genero, pais, fecha_nacimiento, ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas, limpieza_orden, nivel_ruido` todos no-nulos, salvo que el usuario sea `es_casero`.
 - **Routing:** React Router v7. Layouts anidados por sección.
 - **Formularios:** `react-hook-form` + `zodResolver`. Schemas en `frontend/src/lib/schemas.js`.
 - **Componentes:** `frontend/src/components/` — `CustomSelect`, `LoginModal`, `RegistroModal`, `DonutChart`, `ui/chart.jsx` (wrapper recharts), `FormPrimitivos.jsx` (primitivos de formulario compartidos).
@@ -103,7 +105,7 @@ Monorepo con dos carpetas independientes: `backend/` y `frontend/`. Sin workspac
   /grupo/facturas              — MisFacturas (inquilino: sus facturas y estado de pago)
   /grupo/compra                — ListaCompra (funcional)
   /grupo/mensajes              — Chat (modo admin — funcional con Socket.io)
-  /grupo/solicitudes-union     — SolicitudesUnion (admin: aceptar/rechazar solicitudes de unión con % compatibilidad)
+  /grupo/solicitudes-union     — SolicitudesUnion (admin: aceptar/rechazar solicitudes de unión; sin % de compatibilidad, ver nota abajo)
 /casero/facturas               — Gastos (standalone, casero: gestión de facturas de múltiples pisos)
 — Rutas standalone (sin layout) —
 /grupo/perfil/editar           — EditarPerfilGrupo (2 pasos: datos + convivencia + intereses)
@@ -167,6 +169,8 @@ POST   /api/grupos/transferir-admin              # admin transfiere el rol ADMIN
 DELETE /api/grupos/salir                         # sale del grupo (body: { grupo_id? }). Si admin con otros miembros, devuelve 400
 DELETE /api/grupos/miembros/:usuarioId           # admin elimina un miembro (activo=false, no borra fila). 400 si usuarioId === admin
 GET    /api/grupos/solicitudes-union             # admin: solicitudes PENDIENTE con usuario + compatibilidad (0-100) + desglose
+                                               # OJO: compatibilidad/desglose ya NO se pintan (ver nota sobre el flujo); el
+                                               # frontend solo usa `usuario`. Se mantienen por si se reintroducen
 PUT    /api/grupos/solicitudes-union/:id/aceptar # admin: ACEPTADA + crea MiembroGrupo (rol MEMBER)
 PUT    /api/grupos/solicitudes-union/:id/rechazar # admin: RECHAZADA
 
@@ -175,7 +179,9 @@ GET    /api/favoritos/publicaciones              # devuelve compatibilidad (numb
 POST   /api/favoritos/:publicacionId
 
 POST   /api/chats/solicitar/:publicacionId       # crea solicitud; si estaba RECHAZADA hace UPDATE en lugar de INSERT; envía emails al usuario y al admin
-GET    /api/chats/solicitudes                    # admin: solicitudes recibidas
+GET    /api/chats/solicitudes                    # admin: solicitudes recibidas. Devuelve compatibilidad (0-100|null) e
+                                               # intereses_comunes (string[]). Usa preferencias_companero con prioridad
+                                               # sobre perfil_convivencia y selecciona las 7 dimensiones del algoritmo
 PUT    /api/chats/solicitudes/:solicitudId       # admin: aceptar o rechazar; envía email al solicitante (body: { accion: 'ACEPTADA'|'RECHAZADA' })
 GET    /api/chats/mis-solicitudes                # solicitante: estado de sus solicitudes (incluye grupo_id)
 GET    /api/chats/como-solicitante               # chats donde el usuario fue quien solicitó
@@ -312,6 +318,7 @@ La tabla `tareas` se usa como contenedor de zonas (`es_recurrente = TRUE`). El s
 La app es completamente responsive con breakpoints Tailwind: `sm` (640px), `md` (768px), `lg` (1024px).
 
 - **Layouts con sidebar:** `LayoutGrupo` y `LayoutPerfil` usan `hidden md:flex` en el sidebar de escritorio y un **bottom nav** fijo emerald (`md:hidden fixed bottom-0 inset-x-0 z-40`) en mobile. El `main` tiene `p-4 sm:p-6 md:p-12 pb-24 md:pb-12` para dejar espacio al bottom nav en mobile.
+- **Acceso al perfil dentro del grupo (móvil) — regla:** el bottom nav de `LayoutGrupo` tiene 7 botones y **ninguno lleva al perfil**. En móvil el único acceso está en la **esquina superior derecha de `GrupoDashboard`** (la ruta índice `/grupo`): la foto del usuario, `md:hidden`, con `aria-label='Mi perfil'`. Si el usuario es admin, el avatar lleva `ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-200` y el chip "Administrador" va **debajo** del avatar, no al lado. En escritorio ese avatar se oculta porque el sidebar ya tiene su propio "Mi perfil". **No volver a añadir el avatar al bottom nav**: se quitó a propósito para descargar la barra y porque saltar al perfil no es navegación del grupo.
 - **Grids de 2 columnas:** siempre `grid-cols-1 sm:grid-cols-2` (o `lg:grid-cols-4` para el bento). Nunca `grid-cols-2` sin breakpoint.
 - **Cards horizontales (BuscarPage, Favoritos):** `flex flex-col sm:flex-row` — foto arriba en mobile, izquierda en desktop.
 - **AnuncioPublico:** `grid-cols-1 lg:grid-cols-[1fr_20rem]` — columna única en mobile/tablet, dos columnas en desktop.
@@ -344,7 +351,35 @@ Implementado en: `Tareas.jsx` (eliminar zona), `Calendario.jsx` (eliminar evento
 
 `frontend/src/components/FormPrimitivos.jsx` exporta `IconInput`, `baseCls` (con icono, `pl-11`), `baseClsPlain` (sin icono, `px-4`), `textareaCls`, `Label`, `FieldError`, `Section`, `PillGroup`, `BoolPillGroup`, `StepBar`. Usado en `EditarUsuario.jsx`, `EditarPerfilGrupo.jsx` y `PublicacionFormulario.jsx`. `EditarPerfilGrupo.jsx` importa `baseClsPlain as baseCls` porque sus inputs no tienen icono. `YesNo` en `PublicacionFormulario.jsx` **no** se extrajo — llama `onChange(v)` directamente sin toggle a `null`, comportamiento distinto a `BoolPillGroup`.
 
+### Accesibilidad (WCAG 2.2 nivel AA)
+
+La app se auditó y adaptó a la WCAG 2.2 nivel AA. Piezas clave:
+
+- **`frontend/src/components/Accesibilidad.jsx`** — `SaltarAlContenido` (enlace de salto, 2.4.1), `Cargando` (spinner con `role="status"`), `AvisoError` (`role="alert"`).
+- **`frontend/src/lib/useModalAccesible.js`** — hook con el patrón de diálogo modal: foco inicial dentro del diálogo, trampa de tabulador, cierre con `Escape`, devolución del foco al elemento que lo abrió y bloqueo del scroll de fondo. Acepta `(onCerrar, abierto)`; el segundo parámetro solo hace falta en modales que se renderizan condicionalmente dentro de una página (`GrupoPerfil`, cajón de filtros de `BuscarPage`). **Todo modal nuevo debe usarlo** y llevar `role='dialog' aria-modal='true' aria-label|aria-labelledby tabIndex={-1}` en la caja blanca.
+- **`frontend/src/components/TituloPagina.jsx`** — al ser una SPA el `<title>` no cambiaba nunca (2.4.2). Este componente, montado en `App.jsx` junto a `ScrollToTop`, mapea ruta → título, actualiza `document.title` y anuncia el cambio en una región `aria-live`. **Al añadir una ruta nueva hay que añadirla al array `TITULOS`.**
+- **`App.css`** — capa global: `:focus-visible` con outline verde (la app usa `outline-none` en muchos sitios), `scroll-margin` para que las cabeceras sticky y el bottom nav no tapen el elemento enfocado (2.4.11), tamaño mínimo 24×24 px en controles (2.5.8) y bloque `prefers-reduced-motion`.
+- **Contraste (1.4.3 / 1.4.11):** `text-slate-400` (2,56:1) y `text-slate-300` estaban por debajo del mínimo sobre fondo claro → se usa `text-slate-500` (4,76:1). Sobre las **tarjetas oscuras** (`bg-slate-900`) y el footer pasa lo contrario: ahí se usa `text-slate-300`. Los bordes de input son `border-slate-500` (antes `slate-300`, 1,47:1). El panel de filtros de `BuscarPage` es `bg-emerald-700` (sobre `emerald-600` ni el blanco puro llegaba a 4,5:1).
+- **Formularios:** `Label` acepta `htmlFor`; los inputs llevan `id`, `aria-invalid` y `aria-describedby` apuntando al `id` del `FieldError` (que es `role="alert"`). Los grupos de pills (`PillGroup`/`BoolPillGroup`) son `role="group"` con prop `etiqueta` y `aria-pressed` por botón.
+- **`CustomSelect`** implementa el patrón *combobox* de las WAI-ARIA APG: `role="combobox"`/`listbox`/`option`, `aria-expanded`, `aria-activedescendant` y teclado completo (flechas, Inicio/Fin, Enter, Espacio, Escape, Tab). Acepta `ariaLabel` y `describedBy`.
+- **Convenciones al escribir UI nueva:** botón de solo icono → `aria-label` (nunca `title`); icono decorativo → `aria-hidden='true'`; botón de alternancia → `aria-pressed`; pestaña/enlace activo → `aria-current='page'`; imagen cuyo botón ya tiene nombre → `alt=''`; controles que aparecen en hover → añadir también `focus-visible:opacity-100`.
+- El acordeón de `FAQ.jsx` usa `aria-expanded`/`aria-controls` y oculta el panel con `hidden` **solo cuando termina la transición de altura** (si no, se corta la animación de plegado).
+
+### SEO y landing page
+
+- **`frontend/index.html`** concentra el SEO estático: title/description optimizados, canonical, `robots`, Open Graph, Twitter Card y un bloque JSON-LD con `@graph` (Organization + WebSite con SearchAction + WebApplication). La imagen social es `public/portada-housie.jpg`.
+- **`public/robots.txt`** permite el rastreo público y bloquea `/perfil/`, `/grupo/`, `/casero/` y `/creacion-grupo` (requieren sesión). **`public/sitemap.xml`** lista las tres rutas públicas: `/`, `/buscar` y `/faq` — **hay que añadir ahí cualquier ruta pública nueva** y actualizar `lastmod`.
+- **`TituloPagina.jsx`** admite un tercer elemento opcional en `TITULOS` con el `<title>` completo: las rutas públicas lo usan para conservar las palabras clave (si no, se generaría `Nombre · Housie`, que desperdicia el title en SEO).
+- **Navegación rastreable:** en páginas públicas los enlaces de navegación deben ser `<Link>` de React Router (renderiza `<a href>`), **nunca `<button onClick={navigate}>`** — un botón no lo sigue ningún rastreador ni se puede abrir en otra pestaña.
+- **`components/PieDePagina.jsx`** — pie de página único de la aplicación. Estaba duplicado en `Home.jsx` y `FAQ.jsx` y las copias se habían desincronizado (distinto tamaño de logo y espaciado, y FAQ navegaba con botones en lugar de enlaces). **No volver a escribir un `<footer>` dentro de una página: importar este componente.** Es el único `<footer>` de todo `src/`.
+- **Dónde va el pie de página — regla:** lo llevan las páginas **sin layout propio y accesibles sin sesión**, que son las que actúan de puerta de entrada desde Google: `Home`, `FAQ`, `BuscarPage`, `AnuncioPublico`, `PerfilPublicoGrupo` y `PerfilPublicoUsuario`. **No** lo llevan las páginas del módulo de convivencia (`GrupoDashboard`, `GrupoPerfil`, `Publicacion`, `Tareas`, `Calendario`, `MisFacturas`, `ListaCompra`, `Chat`, `PerfilUsuario`, `Favoritos`…), porque `LayoutGrupo`/`LayoutPerfil` ya aportan navegación y en móvil el **bottom nav fijo** se solaparía con el footer. Tampoco lo llevan los formularios standalone (`EditarUsuario`, `EditarPerfilGrupo`, `PublicacionFormulario`, `CreacionGrupo`): invitarían a abandonar el formulario a medias.
+- **Una sola landmark `<main>` por página.** `BuscarPage` llegó a tener dos `<main>` anidados (el exterior como destino del enlace de salto y el interior, preexistente, como columna de resultados); el interior pasó a ser un `<div>`.
+- **`Home.jsx`** — hero oscuro con tres capas decorativas (halos difuminados, rejilla de puntos con máscara y grano SVG en línea, constantes `REJILLA` y `GRANO`). Las tarjetas de producto (`TARJETAS_HERO`) flotan sobre la foto en escritorio y se convierten en una tira desplazable en móvil. El titular lleva un subrayado SVG que se dibuja solo (`.trazo-subrayado`). `Reveal` acepta `as` para que el contenedor animado sea el elemento correcto (`li` dentro de un `ol`).
+
 ### Otros patrones
+
+- **Iconos de la barra inferior de `LayoutPerfil`:** "Inicio" (landing) usa `Home` y "Mi grupo" usa `Users` — no `House`, porque los dos iconos quedan a pocos píxeles en la barra móvil y ambos son una casa. `Users` además coincide con el icono de "Mi grupo" en `LayoutGrupo`.
+
 
 - **`StepBar` basado en props:** recibe `current`, `steps` (array de strings) y `stepMeta` (array de objetos `{ label, icon }`). No lee constantes del módulo padre.
 - **`CARD_SHADOW`:** definida en `frontend/src/lib/convivencia.js` y compartida. Importar desde ahí en lugar de redefinirla localmente.
@@ -370,7 +405,11 @@ Implementado en: `Tareas.jsx` (eliminar zona), `Calendario.jsx` (eliminar evento
 - **`AnuncioPublico` — mapa:** iframe al final de la columna izquierda con `https://maps.google.com/maps?q=ENCODED_ADDRESS&output=embed&hl=es&z=15`. No requiere API key. Enlace "Ver en Google Maps →" abre en nueva pestaña. Solo se muestra si hay `pub.direccion` o `pub.ciudad`.
 - **`BuscarPage` — filtros:** aside emerald sticky en desktop; en mobile, drawer (izquierda) activado por botón `SlidersHorizontal` (`md:hidden`) en la cabecera. El `FilterAside` ya gestiona ambos casos internamente.
 - **`BuscarPage` — race condition auth:** el check del perfil de convivencia y favoritos vive en un `useEffect([user, cargando])` separado (no en el `useEffect([])` de la búsqueda inicial). El patrón `if (cargando) return` al inicio evita que `user === null` transitorio active el `else { setTienePerfilConvivencia(false) }`. Aplicar este mismo patrón en cualquier página que tome decisiones basadas en `user` al montar.
-- **Intereses en común — display estándar:** etiqueta `"En común:"` en `font-mono text-[0.6rem] uppercase tracking-[0.12em] text-slate-600` + chips `bg-emerald-200 text-emerald-900 rounded-full` con dot `bg-emerald-400`. Usado igual en `BuscarPage` y `Favoritos`.
+- **Dónde se muestra la compatibilidad — decisión de producto:** el orden real del flujo es (1) el solicitante pide contacto desde el anuncio, (2) el administrador ve esa solicitud en **Mensajes** y decide ahí, con el % de compatibilidad y los intereses en común, si abre el chat, (3) hablan, (4) si le convence, el administrador le pasa **él mismo** el `codigo_acceso`, (5) el solicitante lo usa y se crea la `SolicitudUnion`. Por eso el porcentaje se muestra en `Chat.jsx` (punto de decisión) y **no** en `SolicitudesUnion.jsx` (confirmación final de alguien con quien ya se ha hablado). No volver a añadirlo allí "por consistencia".
+  El `codigo_acceso` es una señal de confianza, no un dato público: solo lo tiene quien el administrador o un miembro ha decidido dárselo. Si alguien llega con el código sin haber pasado por el chat, es porque un miembro ya lo dio por compatible, así que tampoco en ese caso hace falta recalcular la afinidad. Decisión explícita del autor del proyecto, no un descuido.
+
+- **`components/Compatibilidad.jsx`** — piezas visuales del matching, compartidas: `DonutCompatibilidad`, `DesgloseCompatibilidad`, `TarjetaCompatibilidad` (donut + frase + desglose opcional; prop `sujeto` para "con este grupo" vs "con el grupo") e `InteresesComunes` (chips "En común:"). **No duplicar estos bloques en una página: importarlos.** El donut y el desglose estaban copiados en `AnuncioPublico` y `SolicitudesUnion`, y los chips en `BuscarPage` y `Favoritos`. Lo usan `AnuncioPublico` y `Chat` (detalle de solicitud de contacto).
+- **Intereses en común — display estándar:** el componente `InteresesComunes`. `BuscarPage` y `Favoritos` aún llevan el marcado en línea (etiqueta `"En común:"` en `font-mono text-[0.6rem] uppercase tracking-[0.12em] text-slate-600` + chips `bg-emerald-200 text-emerald-900 rounded-full` con dot `bg-emerald-400`); migrarlas al componente cuando se toquen.
 - **`PublicacionFormulario` — visibilidad:** campo `visible` (boolean, default `true`) al final del paso 1. Dos pill buttons: "Publicado" (emerald) → aparece en búsquedas; "Borrador" (slate) → no aparece. Guardado en `publicaciones.visible`.
 - **`MisFacturas` — histórico:** el `AreaChart` solo muestra la serie `pagado` (sin `pendiente`). El diff de tendencia compara `pagado` del último mes vs el anterior.
 - **Emails fire-and-forget:** Siempre `.then(() => {}).catch(() => {})` al llamar a `sendMail`. Nunca `await` en el handler de la ruta si el email no es crítico para la respuesta.

@@ -23,7 +23,7 @@ async function getMiembroActivo(req) {
     : { usuario_id: req.userId, activo: true };
   return prisma.miembroGrupo.findFirst({
     where,
-    select: { grupo_id: true, rol: true, es_casero: true },
+    select: { grupo_id: true, rol: true},
   });
 }
 
@@ -33,6 +33,19 @@ export const requireMiembro = async (req, res, next) => {
   try {
     const miembro = await getMiembroActivo(req);
     if (!miembro) return res.status(403).json({ message: 'No perteneces a ningún grupo' });
+    req.grupoId = miembro.grupo_id;
+    req.miembro = miembro;
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const requireInquilino = async (req, res, next) => {
+  try {
+    const miembro = await getMiembroActivo(req);
+    if (!miembro) return res.status(403).json({ message: 'No perteneces a ningún grupo' });
+    if (miembro.rol === 'CASERO') return res.status(403).json({ message: 'El casero no tiene acceso a este módulo' });
     req.grupoId = miembro.grupo_id;
     req.miembro = miembro;
     next();
@@ -58,7 +71,7 @@ export const requireCasero = async (req, res, next) => {
   try {
     const miembro = await getMiembroActivo(req);
     if (!miembro) return res.status(403).json({ message: 'No perteneces a ningún grupo' });
-    if (!miembro.es_casero) return res.status(403).json({ message: 'Solo el casero puede realizar esta acción' });
+    if (miembro.rol !== 'CASERO') return res.status(403).json({ message: 'Solo el casero puede realizar esta acción' });
     req.grupoId = miembro.grupo_id;
     req.miembro = miembro;
     next();
@@ -66,3 +79,4 @@ export const requireCasero = async (req, res, next) => {
     next(err);
   }
 };
+

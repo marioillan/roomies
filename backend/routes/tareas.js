@@ -1,5 +1,5 @@
 import express from 'express';
-import { requireAuth, requireMiembro, requireAdmin } from '../src/middleware/auth.js';
+import { requireAuth, requireInquilino, requireAdmin } from '../src/middleware/auth.js';
 import {
   getTareas,
   iniciarTareas,
@@ -10,10 +10,10 @@ import {
 
 const router = express.Router();
 
-router.get('/',                    requireAuth, requireMiembro, getTareas);
+router.get('/',                    requireAuth, requireInquilino, getTareas);
 router.post('/iniciar',            requireAuth, requireAdmin,   iniciarTareas);
 router.post('/zonas',              requireAuth, requireAdmin,   añadirZona);
 router.delete('/zonas/:id',        requireAuth, requireAdmin,   eliminarZona);
-router.patch('/turnos/:id/estado', requireAuth, requireMiembro, toggleEstadoTurno);
+router.patch('/turnos/:id/estado', requireAuth, requireInquilino, toggleEstadoTurno);
 
 export default router;

@@ -3,8 +3,10 @@ import { z } from 'zod';
 export const registroSchema = z.object({
   nombre: z
     .string()
+    .trim()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(100, 'El nombre es demasiado largo'),
+    .max(50, 'El nombre es demasiado largo')
+    .regex(/^[\p{L}][\p{L}\s'’-]*$/u, 'El nombre solo puede contener letras'),
   email: z.string().email('Email inválido'),
   password: z
     .string()

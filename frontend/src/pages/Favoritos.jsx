@@ -71,7 +71,7 @@ function FavCard({ pub, onQuitar }) {
           className='cursor-pointer! absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition hover:bg-white'
           style={{ background: 'rgba(255,255,255,0.9)' }}
         >
-          <Heart size={15} className='text-pink-500 fill-pink-500' />
+          <Heart aria-hidden='true' size={15} className='text-pink-500 fill-pink-500' />
         </button>
       </div>
 
@@ -83,7 +83,7 @@ function FavCard({ pub, onQuitar }) {
           <div className='min-w-0'>
             <h3 className='font-display text-[1.25rem] font-medium text-slate-900 leading-snug truncate'>{pub.titulo}</h3>
             <p className='flex items-center gap-1 mt-0.5 text-[0.8125rem] text-slate-900'>
-              <MapPin size={12} className='shrink-0 text-slate-900' />
+              <MapPin aria-hidden='true' size={12} className='shrink-0 text-slate-900' />
               {pub.ciudad}
               {pub.tipo_piso && (
                 <><span className='text-slate-900 mx-0.5'>·</span>{pub.tipo_piso.charAt(0) + pub.tipo_piso.slice(1).toLowerCase()}</>
@@ -153,7 +153,7 @@ function FavCard({ pub, onQuitar }) {
             <div className='min-w-0'>
               <p className='text-[0.8125rem] font-semibold text-slate-700 truncate'>{pub.nombre_grupo}</p>
               {guardado && (
-                <p className='font-mono text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-slate-400 leading-none mt-0.5'>
+                <p className='font-mono text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-slate-500 leading-none mt-0.5'>
                   Guardado {guardado}
                 </p>
               )}
@@ -164,7 +164,7 @@ function FavCard({ pub, onQuitar }) {
           <div className='flex items-center gap-2 shrink-0' onClick={e => e.stopPropagation()}>
             {solicitud === 'enviada' ? (
               <span className='flex items-center gap-1.5 text-[0.8125rem] font-semibold text-emerald-600 px-1'>
-                <MessageCircle size={14} />
+                <MessageCircle aria-hidden='true' size={14} />
                 Enviado
               </span>
             ) : (
@@ -178,7 +178,7 @@ function FavCard({ pub, onQuitar }) {
                   >
                     {solicitud === 'enviando'
                       ? <span className='w-3 h-3 border border-white border-t-transparent rounded-full animate-spin' />
-                      : <MessageCircle size={14} />
+                      : <MessageCircle aria-hidden='true' size={14} />
                     }
                     Mensaje
                   </button>
@@ -192,7 +192,7 @@ function FavCard({ pub, onQuitar }) {
                       modo === 'AMBOS' ? 'w-10 h-10' : 'px-4 py-2.5 gap-1.5'
                     }`}
                   >
-                    <Phone size={14} />
+                    <Phone aria-hidden='true' size={14} />
                     {modo !== 'AMBOS' && 'Llamar'}
                   </a>
                 )}
@@ -241,7 +241,7 @@ export default function Favoritos() {
 
   if (loading) return (
     <div className='flex justify-center py-24'>
-      <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+      <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
     </div>
   )
 
@@ -284,7 +284,7 @@ export default function Favoritos() {
       {publicaciones.length === 0 && (
         <div className='flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center'>
           <div className='w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center'>
-            <Heart size={28} className='text-emerald-500' />
+            <Heart aria-hidden='true' size={28} className='text-emerald-500' />
           </div>
           <div>
             <h2 className='font-display text-2xl font-bold text-slate-900'>Aún no tienes favoritos</h2>
@@ -295,7 +295,7 @@ export default function Favoritos() {
             onClick={() => navigate('/buscar')}
             className='cursor-pointer! inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition'
           >
-            <Search size={16} /> Buscar habitaciones
+            <Search aria-hidden='true' size={16} /> Buscar habitaciones
           </button>
         </div>
       )}

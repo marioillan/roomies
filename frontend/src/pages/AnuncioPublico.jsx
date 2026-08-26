@@ -5,12 +5,15 @@ import { apiFetch } from '../lib/apiFetch'
 import { CARD_SHADOW } from '../lib/convivencia.js'
 import LoginModal from '../components/LoginModal.jsx'
 import RegistroModal from '../components/RegistroModal.jsx'
+import PieDePagina from '../components/PieDePagina.jsx'
+import { TarjetaCompatibilidad } from '../components/Compatibilidad.jsx'
 import {
   Heart, MessageCircle, ArrowLeft, MapPin, Euro, Bed, Ruler,
   Home, House, Layers, MoveUp, Wifi, WashingMachine, Wind, Flame, Car, Trees,
   Cigarette, PawPrint, Phone, ChevronLeft, ChevronRight, ImageOff,
-  Users, Check, Search, Link2, CheckCircle, MinusCircle, XCircle,
+  Users, Check, Search, Link2,
 } from 'lucide-react'
+import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -55,8 +58,8 @@ function Galeria({ fotos, publicacionId, user, esFavorito, onToggleFavorito }) {
   if (!fotos.length) {
     return (
       <div className='w-full aspect-video bg-slate-100 rounded-[1.25rem] flex flex-col items-center justify-center gap-3 border border-slate-200'>
-        <ImageOff size={32} className='text-slate-300' />
-        <p className='text-sm text-slate-400'>Sin fotos</p>
+        <ImageOff aria-hidden='true' size={32} className='text-slate-500' />
+        <p className='text-sm text-slate-500'>Sin fotos</p>
       </div>
     )
   }
@@ -82,13 +85,13 @@ function Galeria({ fotos, publicacionId, user, esFavorito, onToggleFavorito }) {
         {/* Flechas */}
         {fotos.length > 1 && (
           <>
-            <button onClick={prev}
-              className='cursor-pointer! absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition opacity-0 group-hover:opacity-100'>
-              <ChevronLeft size={18} />
+            <button aria-label='Foto anterior' onClick={prev}
+              className='cursor-pointer! absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100'>
+              <ChevronLeft aria-hidden='true' size={18} />
             </button>
-            <button onClick={next}
-              className='cursor-pointer! absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition opacity-0 group-hover:opacity-100'>
-              <ChevronRight size={18} />
+            <button aria-label='Foto siguiente' onClick={next}
+              className='cursor-pointer! absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100'>
+              <ChevronRight aria-hidden='true' size={18} />
             </button>
           </>
         )}
@@ -139,12 +142,12 @@ function CardContacto({ pub, miembros, user, navigate, onSolicitar, estadoSolici
 
       {/* Grupo */}
       <div>
-        <p className='font-mono text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-slate-400 mb-3'>Publicado por</p>
+        <p className='font-mono text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3'>Publicado por</p>
         <div className='flex items-center gap-3'>
           {pub.foto_grupo
             ? <img src={pub.foto_grupo} alt={pub.nombre_grupo} className='w-11 h-11 rounded-full object-cover shrink-0' />
             : <div className='w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center shrink-0'>
-                <Users size={18} className='text-emerald-600' />
+                <Users aria-hidden='true' size={18} className='text-emerald-600' />
               </div>
           }
           <div className='min-w-0'>
@@ -159,12 +162,12 @@ function CardContacto({ pub, miembros, user, navigate, onSolicitar, estadoSolici
       {/* Botones */}
       <div className='flex flex-col gap-2'>
         {perteneceAlGrupo ? (
-          <div className='flex items-center justify-center gap-2 w-full py-3 rounded-full bg-slate-50 border border-slate-200 text-slate-400 text-sm font-semibold'>
-            <Check size={15} /> Ya perteneces a este grupo
+          <div className='flex items-center justify-center gap-2 w-full py-3 rounded-full bg-slate-50 border border-slate-200 text-slate-500 text-sm font-semibold'>
+            <Check aria-hidden='true' size={15} /> Ya perteneces a este grupo
           </div>
         ) : estadoSolicitud === 'enviada' ? (
           <div className='flex items-center justify-center gap-2 w-full py-3 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-semibold'>
-            <Check size={15} /> Solicitud enviada
+            <Check aria-hidden='true' size={15} /> Solicitud enviada
           </div>
         ) : (
           <button
@@ -174,7 +177,7 @@ function CardContacto({ pub, miembros, user, navigate, onSolicitar, estadoSolici
           >
             {estadoSolicitud === 'enviando'
               ? <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-              : <MessageCircle size={15} />
+              : <MessageCircle aria-hidden='true' size={15} />
             }
             {!user ? 'Inicia sesión para contactar' : 'Enviar mensaje'}
           </button>
@@ -184,79 +187,10 @@ function CardContacto({ pub, miembros, user, navigate, onSolicitar, estadoSolici
             href={`tel:${pub.telefono_contacto}`}
             className='flex items-center justify-center gap-2 w-full py-3 rounded-full bg-slate-100 hover:bg-white border border-slate-200 text-slate-900 text-sm font-semibold transition'
           >
-            <Phone size={15} /> Llamar
+            <Phone aria-hidden='true' size={15} /> Llamar
           </a>
         )}
       </div>
-    </div>
-  )
-}
-
-// ── Donut pequeño ────────────────────────────────────────────────────
-
-function MiniDonut({ score }) {
-  const r    = 28
-  const circ = 2 * Math.PI * r
-  const dash = circ * (score / 100)
-  return (
-    <div className='relative w-20 h-20 shrink-0'>
-      <svg className='w-full h-full -rotate-90' viewBox='0 0 72 72'>
-        <circle cx='36' cy='36' r={r} fill='none' stroke='#d1fae5' strokeWidth='6' />
-        <circle cx='36' cy='36' r={r} fill='none' stroke='#059669' strokeWidth='6'
-          strokeDasharray={`${dash} ${circ}`} strokeLinecap='round' />
-      </svg>
-      <div className='absolute inset-0 flex items-center justify-center'>
-        <span className='font-display text-[1.125rem] font-bold text-emerald-700'>{score}%</span>
-      </div>
-    </div>
-  )
-}
-
-const TAGLINE = (s) =>
-  s >= 85 ? 'Muy buena afinidad con este grupo' :
-  s >= 70 ? 'Buena afinidad con este grupo'     :
-  s >= 50 ? 'Afinidad moderada con este grupo'  :
-            'Baja afinidad con este grupo'
-
-const DIMENSIONES = [
-  { key: 'horario',            label: 'Horario'   },
-  { key: 'ambiente',           label: 'Ambiente'  },
-  { key: 'frecuencia_visitas', label: 'Visitas'   },
-  { key: 'tolerancia_fiestas', label: 'Fiestas'   },
-  { key: 'ocupacion',          label: 'Ocupación' },
-  { key: 'limpieza_orden',     label: 'Limpieza'  },
-  { key: 'nivel_ruido',        label: 'Ruido'     },
-]
-
-function GrupoCompatibilidad({ desglose }) {
-  const coinciden = DIMENSIONES.filter(d => desglose[d.key] === 1.0)
-  const parecido  = DIMENSIONES.filter(d => desglose[d.key] === 0.5)
-  const diferente = DIMENSIONES.filter(d => desglose[d.key] === 0.0)
-
-  const Seccion = ({ icono: Icono, titulo, color, items }) => {
-    if (!items.length) return null
-    return (
-      <div className='flex flex-col gap-1.5'>
-        <div className='flex items-center gap-1.5'>
-          <Icono size={13} style={{ color }} />
-          <span className='font-mono text-[0.6rem] font-bold uppercase tracking-widest' style={{ color }}>{titulo}</span>
-        </div>
-        <div className='flex flex-wrap gap-1.5'>
-          {items.map(d => (
-            <span key={d.key} className='text-[0.75rem] font-medium px-2.5 py-1 rounded-full border' style={{ color, borderColor: color + '40', background: color + '10' }}>
-              {d.label}
-            </span>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className='flex flex-col gap-3'>
-      <Seccion icono={CheckCircle} titulo='Coincidís en'  color='#059669' items={coinciden} />
-      <Seccion icono={MinusCircle} titulo='Parecido en'   color='#ea580c' items={parecido}  />
-      <Seccion icono={XCircle}     titulo='Diferente en'  color='#dc2626' items={diferente} />
     </div>
   )
 }
@@ -272,20 +206,11 @@ function CardCompaneros({ miembros, compatibilidad, grupoTieneConvivencia, user,
 
       {/* Bloque de compatibilidad */}
       {compatibilidad ? (
-        <div className='flex flex-col gap-3'>
-          {/* Score destacado */}
-          <div className='flex items-center gap-4 bg-emerald-50 border border-emerald-100 rounded-[0.875rem] p-4'>
-            <MiniDonut score={compatibilidad.score} />
-            <div className='min-w-0'>
-              <p className='font-display text-[1.0625rem] font-semibold text-slate-900 leading-tight'>
-                {compatibilidad.score}% de compatibilidad
-              </p>
-              <p className='text-xs text-emerald-700 mt-0.5'>{TAGLINE(compatibilidad.score)}</p>
-            </div>
-          </div>
-          {/* Desglose agrupado */}
-          <GrupoCompatibilidad desglose={compatibilidad.desglose} />
-        </div>
+        <TarjetaCompatibilidad
+          score={compatibilidad.score}
+          desglose={compatibilidad.desglose}
+          sujeto='este grupo'
+        />
       ) : (
         <div className='bg-slate-50 border border-slate-100 rounded-[0.875rem] p-4'>
           {!user ? (
@@ -357,7 +282,7 @@ function Chip({ icon: Icon, children, variant = 'default' }) {
     : 'bg-white border-slate-200 text-slate-700'
   return (
     <span className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-[0.8125rem] font-semibold ${cls}`}>
-      {Icon && <Icon size={14} className='shrink-0' />}
+      {Icon && <Icon aria-hidden='true' size={14} className='shrink-0' />}
       {children}
     </span>
   )
@@ -409,21 +334,23 @@ function InputCiudad({ value, onChange, onBuscar }) {
 
   return (
     <div className='flex-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition'>
-      <MapPin size={14} className='text-slate-400 shrink-0' />
+      <MapPin size={14} aria-hidden='true' className='text-slate-500 shrink-0' />
       <input
         ref={inputRef}
         type='text'
+        aria-label='Buscar por ciudad'
         value={value}
         onChange={e => onChange(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') onBuscar(value) }}
         placeholder='Ciudad...'
-        className='flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none'
+        className='flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-500 outline-none'
       />
       <button
         onClick={() => onBuscar(value)}
-        className='cursor-pointer! shrink-0 w-7 h-7 bg-emerald-500 hover:bg-emerald-600 rounded-lg flex items-center justify-center transition'
+        aria-label='Buscar'
+        className='cursor-pointer! shrink-0 w-7 h-7 bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center justify-center transition'
       >
-        <Search size={13} className='text-white' />
+        <Search size={13} aria-hidden='true' className='text-white' />
       </button>
     </div>
   )
@@ -432,7 +359,7 @@ function InputCiudad({ value, onChange, onBuscar }) {
 // ── AnuncioPublico ────────────────────────────────────────────────────
 
 export default function AnuncioPublico() {
-  const { user, setUser, tieneGrupo } = useAuth()
+  const { user, recargarUsuario, tieneGrupo } = useAuth()
   const { id }     = useParams()
   const navigate   = useNavigate()
   const location   = useLocation()
@@ -496,7 +423,7 @@ export default function AnuncioPublico() {
   if (cargando) {
     return (
       <div className='min-h-screen bg-slate-100 flex items-center justify-center'>
-        <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+        <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
       </div>
     )
   }
@@ -531,6 +458,7 @@ export default function AnuncioPublico() {
     <div className='min-h-screen bg-slate-100'>
 
       {/* Header */}
+      <SaltarAlContenido />
       <header className='sticky top-0 z-20 bg-white border-b border-slate-200'>
         <div className='max-w-[80rem] mx-auto flex items-center gap-3 sm:gap-6 px-4 sm:px-10 py-3.5'>
           <button onClick={() => navigate('/buscar')} className='cursor-pointer! shrink-0 flex items-center'>
@@ -545,19 +473,19 @@ export default function AnuncioPublico() {
             {user ? (
               <>
                 {tieneGrupo ? (
-                  <button onClick={() => navigate('/grupo')} title='Mi grupo'
+                  <button onClick={() => navigate('/grupo')} aria-label='Mi grupo'
                     className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                    <House size={20} />
+                    <House aria-hidden='true' size={20} />
                   </button>
                 ) : (
                   <>
                     <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
                       className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <Heart size={20} />
+                      <Heart aria-hidden='true' size={20} />
                     </button>
                     <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
                       className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <MessageCircle size={20} />
+                      <MessageCircle aria-hidden='true' size={20} />
                     </button>
                   </>
                 )}
@@ -582,14 +510,14 @@ export default function AnuncioPublico() {
       </header>
 
       {/* Contenido */}
-      <main className='max-w-[80rem] mx-auto px-4 sm:px-10 py-8'>
+      <main id='contenido-principal' tabIndex={-1} className='max-w-[80rem] mx-auto px-4 sm:px-10 py-8'>
 
         {/* Volver */}
         <button
           onClick={() => navigate(`/buscar${busqueda}`)}
           className='cursor-pointer! hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 mb-6 transition bg-slate-100 hover:bg-white border border-slate-200 px-[1.125rem] py-3 rounded-full'
         >
-          <ArrowLeft size={15} /> Volver a la búsqueda
+          <ArrowLeft aria-hidden='true' size={15} /> Volver a la búsqueda
         </button>
 
         {/* Grid principal — 1 col mobile, 2 col desktop */}
@@ -614,7 +542,7 @@ export default function AnuncioPublico() {
               </h1>
               {(pub.direccion || pub.ciudad) && (
                 <p className='flex items-center gap-1.5 text-[0.9375rem] text-slate-500 mt-2'>
-                  <MapPin size={14} className='shrink-0 text-slate-400' />
+                  <MapPin aria-hidden='true' size={14} className='shrink-0 text-slate-500' />
                   {pub.direccion ? `${pub.direccion}${pub.piso_puerta ? `, ${pub.piso_puerta}` : ''}, ${pub.ciudad}` : pub.ciudad}
                 </p>
               )}
@@ -646,7 +574,7 @@ export default function AnuncioPublico() {
                     return (
                       <div key={k} className='flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-3 py-3'>
                         <div className='w-9 h-9 rounded-[0.625rem] bg-emerald-50 flex items-center justify-center shrink-0'>
-                          <Icon size={16} className='text-emerald-600' />
+                          <Icon aria-hidden='true' size={16} className='text-emerald-600' />
                         </div>
                         <span className='text-[0.875rem] font-semibold text-slate-700'>{label}</span>
                       </div>
@@ -663,7 +591,7 @@ export default function AnuncioPublico() {
                   <div className='flex flex-wrap gap-2'>
                     {normas.map(({ Icon, label }) => (
                       <span key={label} className='inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-full'>
-                        <Icon size={14} className='shrink-0' /> {label}
+                        <Icon aria-hidden='true' size={14} className='shrink-0' /> {label}
                       </span>
                     ))}
                   </div>
@@ -711,12 +639,12 @@ export default function AnuncioPublico() {
                   }}
                   className={`cursor-pointer! w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold transition
                     ${perteneceAlGrupo
-                      ? 'border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed!'
+                      ? 'border-slate-100 bg-slate-50 text-slate-500 cursor-not-allowed!'
                       : esFavorito
                         ? 'border-pink-200 bg-pink-50 text-pink-600 hover:bg-pink-100'
                         : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'}`}
                 >
-                  <Heart size={15} fill={esFavorito && !perteneceAlGrupo ? 'currentColor' : 'none'} />
+                  <Heart aria-hidden='true' size={15} fill={esFavorito && !perteneceAlGrupo ? 'currentColor' : 'none'} />
                   {perteneceAlGrupo ? 'Ya eres miembro' : esFavorito ? 'Guardado' : 'Guardar'}
                 </button>
                 {menuFav && (
@@ -747,7 +675,7 @@ export default function AnuncioPublico() {
                 }}
                 className='cursor-pointer! flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-slate-300 text-sm font-semibold transition'
               >
-                {copiado ? <Check size={15} className='text-emerald-500' /> : <Link2 size={15} />}
+                {copiado ? <Check aria-hidden='true' size={15} className='text-emerald-500' /> : <Link2 aria-hidden='true' size={15} />}
                 {copiado ? '¡Copiado!' : 'Compartir'}
               </button>
             </div>
@@ -777,22 +705,24 @@ export default function AnuncioPublico() {
         <div className='sm:hidden bg-white border border-slate-100 rounded-3xl p-4 mt-6' style={CARD_SHADOW}>
           <button onClick={() => navigate(`/buscar${busqueda}`)}
             className='cursor-pointer! w-full inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition bg-slate-100 hover:bg-white border border-slate-200 px-[1.125rem] py-3 rounded-full'>
-            <ArrowLeft size={15} /> Volver a la búsqueda
+            <ArrowLeft aria-hidden='true' size={15} /> Volver a la búsqueda
           </button>
         </div>
       </main>
 
+      <PieDePagina />
+
       {loginOpen && (
         <LoginModal
           onClose={() => setLoginOpen(false)}
-          onSuccess={(u) => { setUser(u); setLoginOpen(false) }}
+          onSuccess={async () => { await recargarUsuario(); setLoginOpen(false) }}
           onSwitchToRegistro={() => { setLoginOpen(false); setRegistroOpen(true) }}
         />
       )}
       {registroOpen && (
         <RegistroModal
           onClose={() => setRegistroOpen(false)}
-          onSuccess={(u) => { setUser(u); setRegistroOpen(false) }}
+          onSuccess={async () => { await recargarUsuario(); setRegistroOpen(false) }}
           onSwitchToLogin={() => { setRegistroOpen(false); setLoginOpen(true) }}
         />
       )}

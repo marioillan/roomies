@@ -1,10 +1,27 @@
+const DIMENSIONES_FUSIONABLES = [
+  'ocupacion', 'horario', 'ambiente', 'frecuencia_visitas',
+  'tolerancia_fiestas', 'limpieza_orden', 'nivel_ruido',
+]
+
+export function fusionarPerfil(perfil, preferencias) {
+  if (!perfil)       return preferencias ?? null
+  if (!preferencias) return perfil
+
+  const fusionado = { ...perfil }
+  for (const campo of DIMENSIONES_FUSIONABLES) {
+    const valor = preferencias[campo]
+    if (valor !== null && valor !== undefined) fusionado[campo] = valor
+  }
+  return fusionado
+}
+
 const ORDEN = {
   horario:            { MADRUGADOR: 0, INTERMEDIO: 1, NOCTURNO: 2 },
   ambiente:           { TRANQUILO: 0, EQUILIBRADO: 1, SOCIAL: 2 },
   frecuencia_visitas: { CASI_NUNCA: 0, A_VECES: 1, FRECUENTE: 2 },
   tolerancia_fiestas: { NUNCA: 0, OCASIONAL: 1, FRECUENTE: 2 },
   limpieza_orden:     { DESPREOCUPADO: 0, FLEXIBLE: 1, ORDENADO: 2 },
-  nivel_ruido:        { SILENCIO_TOTAL: 0, MODERADO: 1, INDIFERENTE: 2 },
+  nivel_ruido:        { SILENCIO_TOTAL: 0, MODERADO: 1, ALTO: 2 },
 }
 
 function matchOrdinal(valorUsuario, valorGrupo, campo) {

@@ -1,4 +1,76 @@
 -- =================================================================
+-- HOUSIE - Carga completa de datos de demostracion
+--
+-- Uso:   psql "$URL" -f seed_completo.sql
+-- Antes: npx prisma migrate deploy  (el esquema debe existir)
+--
+-- Contiene, en una sola transaccion:
+--   1. Catalogo de intereses (46 filas, necesario para el matching)
+--   2. Datos de demostracion (23 usuarios, 15 grupos, 15 publicaciones)
+--   3. Fechas desplazadas al dia de ejecucion
+--   4. Coordenadas de las publicaciones para el mapa
+--
+-- Idempotente: puede ejecutarse varias veces sin duplicar nada.
+-- Contrasena de todos los usuarios: housie123
+-- =================================================================
+
+BEGIN;
+
+-- ===== 1. CATALOGO DE INTERESES ==================================
+INSERT INTO intereses (nombre, categoria)
+SELECT v.nombre, v.categoria
+FROM (VALUES
+    ('Gimnasio', 'Deporte y actividad física'),
+    ('Yoga', 'Deporte y actividad física'),
+    ('Crossfit', 'Deporte y actividad física'),
+    ('Senderismo', 'Deporte y actividad física'),
+    ('Dar paseos', 'Deporte y actividad física'),
+    ('Ciclismo', 'Deporte y actividad física'),
+    ('Running', 'Deporte y actividad física'),
+    ('Escalada', 'Deporte y actividad física'),
+    ('Natación', 'Deporte y actividad física'),
+    ('Fútbol', 'Deporte y actividad física'),
+    ('Baloncesto', 'Deporte y actividad física'),
+    ('Padel', 'Deporte y actividad física'),
+    ('Artes marciales', 'Deporte y actividad física'),
+    ('Surf', 'Deporte y actividad física'),
+    ('Esquí', 'Deporte y actividad física'),
+    ('Vegano', 'Alimentación'),
+    ('Vegetariano', 'Alimentación'),
+    ('Café de especialidad', 'Alimentación'),
+    ('Cocina en casa', 'Alimentación'),
+    ('Repostería', 'Alimentación'),
+    ('Comida internacional', 'Alimentación'),
+    ('Streetfood', 'Alimentación'),
+    ('Lectura', 'Cultura y ocio'),
+    ('Cine', 'Cultura y ocio'),
+    ('Series', 'Cultura y ocio'),
+    ('Teatro', 'Cultura y ocio'),
+    ('Música en directo', 'Cultura y ocio'),
+    ('Museos', 'Cultura y ocio'),
+    ('Fotografía', 'Cultura y ocio'),
+    ('Videojuegos', 'Cultura y ocio'),
+    ('Podcasts', 'Cultura y ocio'),
+    ('Arte', 'Cultura y ocio'),
+    ('Salir de noche', 'Vida social'),
+    ('Bares y copas', 'Vida social'),
+    ('Viajes', 'Vida social'),
+    ('Festivales', 'Vida social'),
+    ('Voluntariado', 'Vida social'),
+    ('Networking', 'Vida social'),
+    ('Salir de tiendas', 'Vida social'),
+    ('Miradores', 'Vida social'),
+    ('Cafeterías', 'Vida social'),
+    ('Meditación', 'Bienestar'),
+    ('Pilates', 'Bienestar'),
+    ('Vida sostenible', 'Bienestar'),
+    ('Mindfulness', 'Bienestar'),
+    ('Bienestar mental', 'Bienestar')
+) AS v(nombre, categoria)
+WHERE NOT EXISTS (SELECT 1 FROM intereses i WHERE i.nombre = v.nombre);
+
+-- ===== 2. DATOS DE DEMOSTRACION ==================================
+-- =================================================================
 -- HOUSIE — Datos de demostración
 -- Contraseña para TODOS los usuarios nuevos: housie123
 -- =================================================================
@@ -50,16 +122,16 @@ ON CONFLICT (id) DO NOTHING;
 -- MIEMBROS_GRUPO
 -- =================================================================
 
-INSERT INTO miembros_grupo (id, usuario_id, grupo_id, rol, es_casero) VALUES
-  ('m1a2b3c4-d5e6-4f7a-8b9c-000000000001', (SELECT id FROM usuarios WHERE email='maria@housie.com'),   '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'ADMIN',  FALSE),
-  ('m1a2b3c4-d5e6-4f7a-8b9c-000000000002', (SELECT id FROM usuarios WHERE email='carlos@housie.com'),  '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'MEMBER', FALSE),
-  ('m1a2b3c4-d5e6-4f7a-8b9c-000000000003', (SELECT id FROM usuarios WHERE email='ana@housie.com'),     '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'MEMBER', FALSE),
-  ('m1a2b3c4-d5e6-4f7a-8b9c-000000000004', (SELECT id FROM usuarios WHERE email='roberto@housie.com'), '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'MEMBER', TRUE),
-  ('m2b3c4d5-e6f7-4a8b-9c0d-000000000005', (SELECT id FROM usuarios WHERE email='david@housie.com'),   '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'ADMIN',  FALSE),
-  ('m2b3c4d5-e6f7-4a8b-9c0d-000000000006', (SELECT id FROM usuarios WHERE email='laura@housie.com'),   '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'MEMBER', FALSE),
-  ('m2b3c4d5-e6f7-4a8b-9c0d-000000000007', (SELECT id FROM usuarios WHERE email='elena@housie.com'),   '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'MEMBER', TRUE),
-  ('m3c4d5e6-f7a8-4b9c-0d1e-000000000008', (SELECT id FROM usuarios WHERE email='javier@housie.com'),  '33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', 'ADMIN',  FALSE),
-  ('m3c4d5e6-f7a8-4b9c-0d1e-000000000009', (SELECT id FROM usuarios WHERE email='sofia@housie.com'),   '33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', 'MEMBER', FALSE)
+INSERT INTO miembros_grupo (id, usuario_id, grupo_id, rol) VALUES
+  ('m1a2b3c4-d5e6-4f7a-8b9c-000000000001', (SELECT id FROM usuarios WHERE email='maria@housie.com'),   '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'ADMIN'),
+  ('m1a2b3c4-d5e6-4f7a-8b9c-000000000002', (SELECT id FROM usuarios WHERE email='carlos@housie.com'),  '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'MIEMBRO'),
+  ('m1a2b3c4-d5e6-4f7a-8b9c-000000000003', (SELECT id FROM usuarios WHERE email='ana@housie.com'),     '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'MIEMBRO'),
+  ('m1a2b3c4-d5e6-4f7a-8b9c-000000000004', (SELECT id FROM usuarios WHERE email='roberto@housie.com'), '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'CASERO'),
+  ('m2b3c4d5-e6f7-4a8b-9c0d-000000000005', (SELECT id FROM usuarios WHERE email='david@housie.com'),   '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'ADMIN'),
+  ('m2b3c4d5-e6f7-4a8b-9c0d-000000000006', (SELECT id FROM usuarios WHERE email='laura@housie.com'),   '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'MIEMBRO'),
+  ('m2b3c4d5-e6f7-4a8b-9c0d-000000000007', (SELECT id FROM usuarios WHERE email='elena@housie.com'),   '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'CASERO'),
+  ('m3c4d5e6-f7a8-4b9c-0d1e-000000000008', (SELECT id FROM usuarios WHERE email='javier@housie.com'),  '33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', 'ADMIN'),
+  ('m3c4d5e6-f7a8-4b9c-0d1e-000000000009', (SELECT id FROM usuarios WHERE email='sofia@housie.com'),   '33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', 'MIEMBRO')
 ON CONFLICT (id) DO NOTHING;
 
 -- =================================================================
@@ -68,51 +140,51 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO perfiles_convivencia_usuario
   (id, usuario_id, pais, genero, fecha_nacimiento, ocupacion, horario, frecuencia_visitas,
-   ambiente, tolerancia_fiestas, frecuencia_salidas, fumador, acepta_fumadores,
+   ambiente, tolerancia_fiestas, fumador, acepta_fumadores,
    tiene_mascotas, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido, sobre_mi)
 VALUES
   ('pc000001-0000-4000-8000-000000000001', (SELECT id FROM usuarios WHERE email='maria@housie.com'),
-   'España','Mujer','2002-03-15','ESTUDIO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','OCASIONAL',
+   'España','Mujer','2002-03-15','ESTUDIO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL',
    FALSE,'NO',FALSE,'DEPENDE',TRUE,'ORDENADO','MODERADO',
    'Soy estudiante de Arquitectura en la UGR. Soy ordenada y me gusta mantener el piso limpio. Busco compañeros responsables y tranquilos.'),
   ('pc000001-0000-4000-8000-000000000002', (SELECT id FROM usuarios WHERE email='carlos@housie.com'),
-   'España','Hombre','2001-07-22','ESTUDIO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
+   'España','Hombre','2001-07-22','ESTUDIO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA',
    FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'FLEXIBLE','SILENCIO_TOTAL',
    'Estudio Informática. Soy tranquilo y respeto el espacio de los demás. Me gusta cocinar y suelo hacer cenas para el piso los fines de semana.'),
   ('pc000001-0000-4000-8000-000000000003', (SELECT id FROM usuarios WHERE email='ana@housie.com'),
-   'España','Mujer','2002-11-08','ESTUDIO','INTERMEDIO','A_VECES','SOCIAL','OCASIONAL','FRECUENTE',
-   FALSE,'NO',FALSE,'NO',TRUE,'FLEXIBLE','INDIFERENTE',
+   'España','Mujer','2002-11-08','ESTUDIO','INTERMEDIO','A_VECES','SOCIAL','OCASIONAL',
+   FALSE,'NO',FALSE,'NO',TRUE,'FLEXIBLE','ALTO',
    'Estudiante de Medicina. Sé separar el tiempo de estudio del ocio. Salgo a correr casi cada mañana.'),
   ('pc000001-0000-4000-8000-000000000004', (SELECT id FROM usuarios WHERE email='david@housie.com'),
-   'España','Hombre','1995-04-30','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
+   'España','Hombre','1995-04-30','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA',
    FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Trabajo en una consultora tecnológica. Soy muy ordenado y puntual con los pagos.'),
   ('pc000001-0000-4000-8000-000000000005', (SELECT id FROM usuarios WHERE email='laura@housie.com'),
-   'España','Mujer','1997-09-12','TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','FRECUENTE',
+   'España','Mujer','1997-09-12','TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL',
    FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'FLEXIBLE','SILENCIO_TOTAL',
    'Diseñadora gráfica freelance. Valoro un ambiente tranquilo durante el día.'),
   ('pc000001-0000-4000-8000-000000000006', (SELECT id FROM usuarios WHERE email='javier@housie.com'),
-   'España','Hombre','1999-02-18','ESTUDIO_Y_TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','FRECUENTE',
+   'España','Hombre','1999-02-18','ESTUDIO_Y_TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL',
    FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'FLEXIBLE','MODERADO',
    'Máster de Marketing digital mientras trabajo media jornada. Me gusta el cine y explorar Gràcia.'),
   ('pc000001-0000-4000-8000-000000000007', (SELECT id FROM usuarios WHERE email='sofia@housie.com'),
-   'China','Mujer','2000-06-25','ESTUDIO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
+   'China','Mujer','2000-06-25','ESTUDIO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA',
    FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Intercambio en la UB, estudio Económicas. Muy limpia y ordenada. Me gusta cocinar comida asiática.'),
   ('pc000001-0000-4000-8000-000000000008', (SELECT id FROM usuarios WHERE email='pablo@housie.com'),
-   'España','Hombre','2001-12-03','ESTUDIO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'FLEXIBLE','INDIFERENTE',
+   'España','Hombre','2001-12-03','ESTUDIO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL',
+   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'FLEXIBLE','ALTO',
    'Estudiante de Derecho que empieza en Granada en septiembre. Soy sociable y nunca me he retrasado en los pagos.'),
   ('pc000001-0000-4000-8000-000000000009', (SELECT id FROM usuarios WHERE email='isabel@housie.com'),
-   'España','Mujer','2000-08-19','ESTUDIO','NOCTURNO','A_VECES','SOCIAL','FRECUENTE','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'DESPREOCUPADO','INDIFERENTE',
+   'España','Mujer','2000-08-19','ESTUDIO','NOCTURNO','A_VECES','SOCIAL','FRECUENTE',
+   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'DESPREOCUPADO','ALTO',
    'Estudiante de Bellas Artes con horarios atípicos. Me encantan el arte, la música y la cultura.'),
   ('pc000001-0000-4000-8000-000000000010', (SELECT id FROM usuarios WHERE email='roberto@housie.com'),
-   'España','Hombre','1972-06-10','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
+   'España','Hombre','1972-06-10','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA',
    FALSE,'NO',FALSE,'NO',FALSE,'ORDENADO','SILENCIO_TOTAL',
    'Propietario de varios pisos en Granada. Llevo más de 20 años en el sector inmobiliario.'),
   ('pc000001-0000-4000-8000-000000000011', (SELECT id FROM usuarios WHERE email='elena@housie.com'),
-   'España','Mujer','1975-09-23','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
+   'España','Mujer','1975-09-23','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA',
    FALSE,'NO',FALSE,'NO',FALSE,'ORDENADO','SILENCIO_TOTAL',
    'Propietaria y gestora de inmuebles en Madrid. Busco inquilinos responsables y comprometidos.')
 ON CONFLICT (usuario_id) DO NOTHING;
@@ -123,11 +195,11 @@ ON CONFLICT (usuario_id) DO NOTHING;
 
 INSERT INTO perfiles_convivencia_grupo
   (id, grupo_id, ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas,
-   frecuencia_salidas, acepta_fumadores, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido)
+   acepta_fumadores, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido)
 VALUES
-  ('pg000001-0000-4000-8000-000000000001', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'NO',          'DEPENDE', TRUE, 'ORDENADO',  'MODERADO'),
-  ('pg000001-0000-4000-8000-000000000002', '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',  'SILENCIO_TOTAL'),
-  ('pg000001-0000-4000-8000-000000000003', '33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',  'MODERADO')
+  ('pg000001-0000-4000-8000-000000000001', '11a2b3c4-d5e6-4f7a-8b9c-d0e1f2a3b4c5', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL',  'NO',          'DEPENDE', TRUE, 'ORDENADO',  'MODERADO'),
+  ('pg000001-0000-4000-8000-000000000002', '22b3c4d5-e6f7-4a8b-9c0d-e1f2a3b4c5d6', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',      'NO',          'NO',      TRUE, 'ORDENADO',  'SILENCIO_TOTAL'),
+  ('pg000001-0000-4000-8000-000000000003', '33c4d5e6-f7a8-4b9c-0d1e-f2a3b4c5d6e7', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL',  'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',  'MODERADO')
 ON CONFLICT (grupo_id) DO NOTHING;
 
 -- =================================================================
@@ -138,7 +210,7 @@ INSERT INTO publicaciones
   (id, grupo_id, titulo, descripcion, ciudad, direccion, precio, habitaciones_libres,
    tipo_piso, habitaciones_totales, tamano_piso, planta, ascensor,
    wifi, lavadora, aire_acondicionado, calefaccion, amueblado, parking, terraza,
-   permite_fumar, permite_mascotas, visitas, horario_silencio, genero_preferido,
+   permite_fumar, permite_mascotas, genero_preferido,
    normas_adicionales, telefono_contacto, modo_contacto, visible)
 VALUES
   ('44d5e6f7-a8b9-4c0d-1e2f-a3b4c5d6e7f8',
@@ -146,7 +218,7 @@ VALUES
    'Habitación en piso universitario - Granada Sol',
    'Piso luminoso y reformado a 5 minutos de la Facultad de Ciencias y de Medicina. Somos tres estudiantes tranquilos que buscamos un cuarto compañero. Doble ventana en todas las habitaciones. Incluye gastos de comunidad.',
    'Granada','Calle Recogidas, 14',350.00,1,'PISO',4,90.00,3,FALSE,
-   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'OCASIONAL','23:00','INDIFERENTE',
+   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'INDIFERENTE',
    'No se puede fumar en el interior. Rotación de limpieza semanal.','958123456','CHAT',TRUE),
 
   ('55e6f7a8-b9c0-4d1e-2f3a-b4c5d6e7f8a9',
@@ -154,7 +226,7 @@ VALUES
    'Habitación en loft reformado - Malasaña',
    'Loft completamente reformado en el corazón de Malasaña. Techos altos, mucha luz natural y diseño industrial. Somos dos profesionales con trabajo estable. Habitación de 12m² con armario empotrado. Metro a 3 minutos.',
    'Madrid','Calle Fuencarral, 89',650.00,1,'ESTUDIO',3,110.00,4,TRUE,
-   TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'CASI_NUNCA','22:00','INDIFERENTE',
+   TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'INDIFERENTE',
    'Perfil profesional preferiblemente. Sin fiestas. Puntualidad con los pagos.','912345678','CHAT',TRUE),
 
   ('66f7a8b9-c0d1-4e2f-3a4b-c5d6e7f8a9b0',
@@ -162,7 +234,7 @@ VALUES
    'Habitación en piso Gràcia - Barcelona',
    'Piso moderno y luminoso en el barrio de Gràcia. Habitación de 10m², armario y ventana al patio. Terraza comunitaria con vistas. Metro Fontana a 5 min.',
    'Barcelona','Carrer Gran de Gràcia, 45',520.00,1,'PISO',3,80.00,2,FALSE,
-   TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,FALSE,TRUE,'A_VECES','23:00','INDIFERENTE',
+   TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,TRUE,FALSE,TRUE,'INDIFERENTE',
    'Ambiente tranquilo entre semana. Mascotas pequeñas previo acuerdo.',NULL,'CHAT',TRUE)
 ON CONFLICT (grupo_id) DO NOTHING;
 
@@ -223,7 +295,7 @@ INSERT INTO asignaciones_tarea (id, tarea_id, usuario_id, semana, estado) VALUES
   ('at100001-0000-4000-8000-000000000002', 'ta100001-0000-4000-8000-000000000002', (SELECT id FROM usuarios WHERE email='maria@housie.com'),  '2026-06-08', 'COMPLETADA'),
   ('at100001-0000-4000-8000-000000000003', 'ta100001-0000-4000-8000-000000000003', (SELECT id FROM usuarios WHERE email='carlos@housie.com'), '2026-06-08', 'PENDIENTE'),
   ('at100001-0000-4000-8000-000000000004', 'ta100001-0000-4000-8000-000000000004', (SELECT id FROM usuarios WHERE email='ana@housie.com'),    '2026-06-08', 'PENDIENTE')
-ON CONFLICT (tarea_id, usuario_id, semana) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;  -- clave primaria: estable aunque cambie la semana
 
 -- =================================================================
 -- FACTURAS GRANADA — 6 meses (alquiler 1200€ ÷ 3 = 400€/persona)
@@ -424,55 +496,55 @@ ON CONFLICT (email) DO NOTHING;
 -- Perfiles convivencia usuarios extra
 INSERT INTO perfiles_convivencia_usuario
   (id, usuario_id, pais, genero, fecha_nacimiento, ocupacion, horario, frecuencia_visitas,
-   ambiente, tolerancia_fiestas, frecuencia_salidas, fumador, acepta_fumadores,
+   ambiente, tolerancia_fiestas, fumador, acepta_fumadores,
    tiene_mascotas, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido, sobre_mi)
 VALUES
   ('pc000002-0000-4000-8000-000000000001', (SELECT id FROM usuarios WHERE email='lucia@housie.com'),
-   'España','Mujer','2001-05-14','ESTUDIO','INTERMEDIO','A_VECES','SOCIAL','FRECUENTE','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'DESPREOCUPADO','INDIFERENTE',
+   'España','Mujer','2001-05-14','ESTUDIO','INTERMEDIO','A_VECES','SOCIAL','FRECUENTE',
+   FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'DESPREOCUPADO','ALTO',
    'Estudiante de Comunicación. Me encantan los conciertos y los festivales de música. Busco piso animado.'),
   ('pc000002-0000-4000-8000-000000000002', (SELECT id FROM usuarios WHERE email='miguel@housie.com'),
-   'España','Hombre','1998-11-20','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
+   'España','Hombre','1998-11-20','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA',
    FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Ingeniero de software. Muy ordenado y tranquilo. Madrugo para el gimnasio y me gusta la tecnología.'),
   ('pc000002-0000-4000-8000-000000000003', (SELECT id FROM usuarios WHERE email='natalia@housie.com'),
-   'España','Mujer','2000-03-07','ESTUDIO','INTERMEDIO','CASI_NUNCA','EQUILIBRADO','NUNCA','OCASIONAL',
+   'España','Mujer','2000-03-07','ESTUDIO','INTERMEDIO','CASI_NUNCA','EQUILIBRADO','NUNCA',
    FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','MODERADO',
    'Estudiante de Psicología. Practico yoga y meditación. Busco un piso tranquilo y con buen rollo.'),
   ('pc000002-0000-4000-8000-000000000004', (SELECT id FROM usuarios WHERE email='sergio@housie.com'),
-   'España','Hombre','1999-08-15','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
+   'España','Hombre','1999-08-15','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA',
    FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Trabajo en marketing digital. Muy madrugador y ordenado. Salgo a correr cada mañana antes de trabajar.'),
   ('pc000002-0000-4000-8000-000000000005', (SELECT id FROM usuarios WHERE email='cristina@housie.com'),
-   'España','Mujer','2001-01-28','ESTUDIO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','OCASIONAL',
+   'España','Mujer','2001-01-28','ESTUDIO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL',
    FALSE,'NO',FALSE,'DEPENDE',TRUE,'FLEXIBLE','MODERADO',
    'Estudiante de Nutrición. Cocino mucho y cuido la alimentación. Prefiero un ambiente tranquilo.'),
   ('pc000002-0000-4000-8000-000000000006', (SELECT id FROM usuarios WHERE email='alvaro@housie.com'),
-   'España','Hombre','2000-09-03','ESTUDIO','NOCTURNO','A_VECES','EQUILIBRADO','OCASIONAL','FRECUENTE',
+   'España','Hombre','2000-09-03','ESTUDIO','NOCTURNO','A_VECES','EQUILIBRADO','OCASIONAL',
    FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'DESPREOCUPADO','MODERADO',
    'Estudiante de Ingeniería. Me gustan los videojuegos y el cine. Suelo acostarme tarde pero soy tranquilo.'),
   ('pc000002-0000-4000-8000-000000000007', (SELECT id FROM usuarios WHERE email='marta@housie.com'),
-   'España','Mujer','1999-04-22','TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL','OCASIONAL',
+   'España','Mujer','1999-04-22','TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','OCASIONAL',
    FALSE,'NO',FALSE,'DEPENDE',TRUE,'ORDENADO','MODERADO',
    'Fotógrafa profesional. Suelo volver tarde por eventos y reportajes. Muy limpia y organizada en casa.'),
   ('pc000002-0000-4000-8000-000000000008', (SELECT id FROM usuarios WHERE email='diego@housie.com'),
-   'España','Hombre','2002-07-11','ESTUDIO','INTERMEDIO','A_VECES','SOCIAL','OCASIONAL','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'FLEXIBLE','INDIFERENTE',
+   'España','Hombre','2002-07-11','ESTUDIO','INTERMEDIO','A_VECES','SOCIAL','OCASIONAL',
+   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'FLEXIBLE','ALTO',
    'Estudiante de Ciencias del Mar. Surfeo los fines de semana. Muy sociable y activo, me gusta el deporte.'),
   ('pc000002-0000-4000-8000-000000000009', (SELECT id FROM usuarios WHERE email='valeria@housie.com'),
-   'Argentina','Mujer','2001-10-18','ESTUDIO','INTERMEDIO','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
+   'Argentina','Mujer','2001-10-18','ESTUDIO','INTERMEDIO','CASI_NUNCA','TRANQUILO','NUNCA',
    FALSE,'NO',FALSE,'SI',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Intercambio desde Buenos Aires, estudio Biología. Vegana y muy respetuosa con el espacio compartido.'),
   ('pc000002-0000-4000-8000-000000000010', (SELECT id FROM usuarios WHERE email='hugo@housie.com'),
-   'España','Hombre','1997-12-05','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA','OCASIONAL',
+   'España','Hombre','1997-12-05','TRABAJO','MADRUGADOR','CASI_NUNCA','TRANQUILO','NUNCA',
    FALSE,'NO',FALSE,'NO',TRUE,'ORDENADO','SILENCIO_TOTAL',
    'Fisioterapeuta deportivo. Voy al gimnasio cada mañana y cuido mucho mi rutina. Busco compañeros activos.'),
   ('pc000002-0000-4000-8000-000000000011', (SELECT id FROM usuarios WHERE email='irene@housie.com'),
-   'España','Mujer','2001-06-30','ESTUDIO','NOCTURNO','A_VECES','SOCIAL','OCASIONAL','FRECUENTE',
-   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'FLEXIBLE','INDIFERENTE',
+   'España','Mujer','2001-06-30','ESTUDIO','NOCTURNO','A_VECES','SOCIAL','OCASIONAL',
+   FALSE,'INDIFERENTE',FALSE,'SI',TRUE,'FLEXIBLE','ALTO',
    'Estudiante de Arte Dramático. Tengo ensayos hasta tarde algunos días pero respeto los horarios del piso.'),
   ('pc000002-0000-4000-8000-000000000012', (SELECT id FROM usuarios WHERE email='ruben@housie.com'),
-   'España','Hombre','1998-02-14','ESTUDIO_Y_TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','FRECUENTE','FRECUENTE',
+   'España','Hombre','1998-02-14','ESTUDIO_Y_TRABAJO','INTERMEDIO','A_VECES','EQUILIBRADO','FRECUENTE',
    FALSE,'INDIFERENTE',FALSE,'DEPENDE',TRUE,'FLEXIBLE','MODERADO',
    'Músico y estudiante de composición. Toco en varios grupos. Respeto siempre el horario de silencio.')
 ON CONFLICT (usuario_id) DO NOTHING;
@@ -536,36 +608,36 @@ ON CONFLICT DO NOTHING;
 -- Perfiles convivencia grupos extra
 INSERT INTO perfiles_convivencia_grupo
   (id, grupo_id, ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas,
-   frecuencia_salidas, acepta_fumadores, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido)
+   acepta_fumadores, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido)
 VALUES
-  ('pg000002-0000-4000-8000-000000000001', 'aa000001-0000-4000-8000-000000000001', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'SOCIAL',      'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'DEPENDE', TRUE, 'DESPREOCUPADO', 'INDIFERENTE'),
-  ('pg000002-0000-4000-8000-000000000002', 'aa000001-0000-4000-8000-000000000002', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
-  ('pg000002-0000-4000-8000-000000000003', 'aa000001-0000-4000-8000-000000000003', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
-  ('pg000002-0000-4000-8000-000000000004', 'aa000001-0000-4000-8000-000000000004', 'TRABAJO',           'INTERMEDIO', 'FRECUENTE',  'SOCIAL',      'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'SI',      TRUE, 'DESPREOCUPADO', 'INDIFERENTE'),
-  ('pg000002-0000-4000-8000-000000000005', 'aa000001-0000-4000-8000-000000000005', 'ESTUDIO',          'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
-  ('pg000002-0000-4000-8000-000000000006', 'aa000001-0000-4000-8000-000000000006', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'NO',          'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
-  ('pg000002-0000-4000-8000-000000000007', 'aa000001-0000-4000-8000-000000000007', 'ESTUDIO',          'NOCTURNO',   'A_VECES',    'SOCIAL',      'OCASIONAL', 'FRECUENTE', 'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',       'INDIFERENTE'),
-  ('pg000002-0000-4000-8000-000000000008', 'aa000001-0000-4000-8000-000000000008', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
-  ('pg000002-0000-4000-8000-000000000009', 'aa000001-0000-4000-8000-000000000009', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
-  ('pg000002-0000-4000-8000-000000000010', 'aa000001-0000-4000-8000-000000000010', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',     'OCASIONAL', 'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
-  ('pg000002-0000-4000-8000-000000000011', 'aa000001-0000-4000-8000-000000000011', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL', 'OCASIONAL', 'NO',          'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
-  ('pg000002-0000-4000-8000-000000000012', 'aa000001-0000-4000-8000-000000000012', 'ESTUDIO',          'NOCTURNO',   'FRECUENTE',  'SOCIAL',      'FRECUENTE', 'FRECUENTE', 'INDIFERENTE', 'SI',      TRUE, 'DESPREOCUPADO', 'INDIFERENTE')
+  ('pg000002-0000-4000-8000-000000000001', 'aa000001-0000-4000-8000-000000000001', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'SOCIAL',      'OCASIONAL',  'INDIFERENTE', 'DEPENDE', TRUE, 'DESPREOCUPADO', 'ALTO'),
+  ('pg000002-0000-4000-8000-000000000002', 'aa000001-0000-4000-8000-000000000002', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',      'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
+  ('pg000002-0000-4000-8000-000000000003', 'aa000001-0000-4000-8000-000000000003', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL',  'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
+  ('pg000002-0000-4000-8000-000000000004', 'aa000001-0000-4000-8000-000000000004', 'TRABAJO',           'INTERMEDIO', 'FRECUENTE',  'SOCIAL',      'OCASIONAL',  'INDIFERENTE', 'SI',      TRUE, 'DESPREOCUPADO', 'ALTO'),
+  ('pg000002-0000-4000-8000-000000000005', 'aa000001-0000-4000-8000-000000000005', 'ESTUDIO',          'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',      'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
+  ('pg000002-0000-4000-8000-000000000006', 'aa000001-0000-4000-8000-000000000006', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL',  'NO',          'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
+  ('pg000002-0000-4000-8000-000000000007', 'aa000001-0000-4000-8000-000000000007', 'ESTUDIO',          'NOCTURNO',   'A_VECES',    'SOCIAL',      'OCASIONAL',  'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',       'ALTO'),
+  ('pg000002-0000-4000-8000-000000000008', 'aa000001-0000-4000-8000-000000000008', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',      'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
+  ('pg000002-0000-4000-8000-000000000009', 'aa000001-0000-4000-8000-000000000009', 'ESTUDIO_Y_TRABAJO', 'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL',  'INDIFERENTE', 'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
+  ('pg000002-0000-4000-8000-000000000010', 'aa000001-0000-4000-8000-000000000010', 'TRABAJO',           'MADRUGADOR', 'CASI_NUNCA', 'TRANQUILO',   'NUNCA',      'NO',          'NO',      TRUE, 'ORDENADO',       'SILENCIO_TOTAL'),
+  ('pg000002-0000-4000-8000-000000000011', 'aa000001-0000-4000-8000-000000000011', 'ESTUDIO',          'INTERMEDIO', 'A_VECES',    'EQUILIBRADO', 'OCASIONAL',  'NO',          'DEPENDE', TRUE, 'FLEXIBLE',       'MODERADO'),
+  ('pg000002-0000-4000-8000-000000000012', 'aa000001-0000-4000-8000-000000000012', 'ESTUDIO',          'NOCTURNO',   'FRECUENTE',  'SOCIAL',      'FRECUENTE',  'INDIFERENTE', 'SI',      TRUE, 'DESPREOCUPADO', 'ALTO')
 ON CONFLICT (grupo_id) DO NOTHING;
 
 -- Miembros admin de los grupos extra
-INSERT INTO miembros_grupo (id, usuario_id, grupo_id, rol, es_casero) VALUES
-  ('mx000001-0000-4000-8000-000000000001', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111101', 'aa000001-0000-4000-8000-000000000001', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000002', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111102', 'aa000001-0000-4000-8000-000000000002', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000003', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111103', 'aa000001-0000-4000-8000-000000000003', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000004', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111104', 'aa000001-0000-4000-8000-000000000004', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000005', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111105', 'aa000001-0000-4000-8000-000000000005', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000006', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111106', 'aa000001-0000-4000-8000-000000000006', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000007', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111107', 'aa000001-0000-4000-8000-000000000007', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000008', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111108', 'aa000001-0000-4000-8000-000000000008', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000009', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111109', 'aa000001-0000-4000-8000-000000000009', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000010', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111110', 'aa000001-0000-4000-8000-000000000010', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000011', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111111', 'aa000001-0000-4000-8000-000000000011', 'ADMIN', FALSE),
-  ('mx000001-0000-4000-8000-000000000012', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111112', 'aa000001-0000-4000-8000-000000000012', 'ADMIN', FALSE)
+INSERT INTO miembros_grupo (id, usuario_id, grupo_id, rol) VALUES
+  ('mx000001-0000-4000-8000-000000000001', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111101', 'aa000001-0000-4000-8000-000000000001', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000002', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111102', 'aa000001-0000-4000-8000-000000000002', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000003', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111103', 'aa000001-0000-4000-8000-000000000003', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000004', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111104', 'aa000001-0000-4000-8000-000000000004', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000005', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111105', 'aa000001-0000-4000-8000-000000000005', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000006', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111106', 'aa000001-0000-4000-8000-000000000006', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000007', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111107', 'aa000001-0000-4000-8000-000000000007', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000008', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111108', 'aa000001-0000-4000-8000-000000000008', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000009', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111109', 'aa000001-0000-4000-8000-000000000009', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000010', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111110', 'aa000001-0000-4000-8000-000000000010', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000011', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111111', 'aa000001-0000-4000-8000-000000000011', 'ADMIN'),
+  ('mx000001-0000-4000-8000-000000000012', 'f1a2b3c4-d5e6-4f7a-8b9c-111111111112', 'aa000001-0000-4000-8000-000000000012', 'ADMIN')
 ON CONFLICT (id) DO NOTHING;
 
 -- Publicaciones extra
@@ -573,7 +645,7 @@ INSERT INTO publicaciones
   (id, grupo_id, titulo, descripcion, ciudad, direccion, precio, habitaciones_libres,
    tipo_piso, habitaciones_totales, tamano_piso, planta, ascensor,
    wifi, lavadora, aire_acondicionado, calefaccion, amueblado, parking, terraza,
-   permite_fumar, permite_mascotas, visitas, horario_silencio, genero_preferido,
+   permite_fumar, permite_mascotas, genero_preferido,
    normas_adicionales, modo_contacto, visible)
 VALUES
   ('pp000001-0000-4000-8000-000000000001',
@@ -581,84 +653,84 @@ VALUES
    'Habitación en Triana — Sevilla',
    'Piso amplio con terraza en el barrio más animado de Sevilla. A 10 min andando del centro.',
    'Sevilla','Calle Betis, 22',380.00,1,'PISO',3,85.00,1,FALSE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000002',
    'aa000001-0000-4000-8000-000000000002',
    'Apartamento moderno — Valencia',
    'Apartamento recién reformado cerca de la Ciudad de las Artes y las Ciencias. Muy luminoso.',
    'Valencia','Avenida Francia, 15',490.00,1,'PISO',2,65.00,5,TRUE,
-   TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,'CASI_NUNCA','22:30','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000003',
    'aa000001-0000-4000-8000-000000000003',
    'Piso en el Casco Viejo — Bilbao',
    'Habitación en piso reformado en el corazón del Casco Viejo. Todos los servicios a pie de calle.',
    'Bilbao','Calle Somera, 8',420.00,1,'PISO',4,100.00,2,FALSE,
-   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000004',
    'aa000001-0000-4000-8000-000000000004',
    'Piso con terraza — Málaga Playa',
    'Piso a 5 min a pie de la playa. Terraza compartida con vistas al Mediterráneo.',
    'Málaga','Paseo Marítimo, 34',560.00,2,'PISO',4,110.00,3,TRUE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE,FALSE,TRUE,'A_VECES','24:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE,FALSE,TRUE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000005',
    'aa000001-0000-4000-8000-000000000005',
    'Piso céntrico — Zaragoza',
    'Piso de 90m² en el centro histórico. Zona tranquila, ideal para estudiantes o trabajadores.',
    'Zaragoza','Calle Alfonso I, 12',310.00,1,'PISO',3,90.00,4,TRUE,
-   TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,'CASI_NUNCA','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000006',
    'aa000001-0000-4000-8000-000000000006',
    'Piso universitario — Valladolid',
    'Ideal para estudiantes. Cerca de la UVa y del campus Miguel Delibes. Muy bien comunicado.',
    'Valladolid','Calle Real de Burgos, 5',280.00,1,'PISO',3,75.00,2,FALSE,
-   TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000007',
    'aa000001-0000-4000-8000-000000000007',
    'A 3 min de la Plaza Mayor — Salamanca',
    'Piso histórico completamente reformado. La ubicación más céntrica de Salamanca.',
    'Salamanca','Calle Compañía, 3',340.00,1,'PISO',3,80.00,1,FALSE,
-   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000008',
    'aa000001-0000-4000-8000-000000000008',
    'Vista al mar — Alicante',
    'Apartamento con vistas al Mediterráneo. Soleado los 365 días del año.',
    'Alicante','Avenida del Mar, 7',450.00,1,'PISO',2,60.00,6,TRUE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,FALSE,TRUE,'CASI_NUNCA','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,FALSE,TRUE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000009',
    'aa000001-0000-4000-8000-000000000009',
    'Piso tranquilo — Murcia',
    'Piso amplio y muy tranquilo en La Flota. A 15 min del centro en bici.',
    'Murcia','Calle Mayor, 18',295.00,2,'PISO',4,95.00,1,FALSE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000010',
    'aa000001-0000-4000-8000-000000000010',
    'Piso moderno — Palma de Mallorca',
    'Piso reformado en el centro de Palma. Arquitectura mallorquina con toque moderno.',
    'Palma','Carrer dels Oms, 9',580.00,1,'PISO',3,85.00,3,TRUE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,'CASI_NUNCA','22:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000011',
    'aa000001-0000-4000-8000-000000000011',
    'Junto a la Mezquita — Córdoba',
    'Piso en el casco histórico a 5 min de la Mezquita-Catedral. Arquitectura mudéjar original.',
    'Córdoba','Calle Judería, 6',320.00,1,'PISO',2,70.00,1,FALSE,
-   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE),
+   TRUE,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE),
 
   ('pp000001-0000-4000-8000-000000000012',
    'aa000001-0000-4000-8000-000000000012',
    'Vistas a la Alhambra — Albaicín',
    'Piso típico granadino con vistas privilegiadas a la Alhambra. Zona monumental UNESCO.',
    'Granada','Calle Calderería Nueva, 4',410.00,1,'PISO',3,75.00,2,FALSE,
-   TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,TRUE,FALSE,FALSE,'A_VECES','23:00','INDIFERENTE',NULL,'CHAT',TRUE)
+   TRUE,FALSE,FALSE,FALSE,TRUE,FALSE,TRUE,FALSE,FALSE,'INDIFERENTE',NULL,'CHAT',TRUE)
 ON CONFLICT (grupo_id) DO NOTHING;
 
 -- Fotos para los nuevos anuncios
@@ -821,3 +893,34 @@ ON CONFLICT (usuario_id, interes_id) DO NOTHING;
 --   pablo@housie.com   → chat activo con Granada, favoritos guardados
 --   isabel@housie.com  → solicitud pendiente en Barcelona
 -- =================================================================
+
+-- ===== 3. FECHAS AJUSTADAS AL DIA DE EJECUCION ===================
+DO $$
+DECLARE d INT;
+BEGIN
+  SELECT CURRENT_DATE - MAX(fecha_emision) INTO d FROM facturas;
+  UPDATE facturas SET fecha_emision = fecha_emision + d, fecha_vencimiento = fecha_vencimiento + d;
+  UPDATE pagos_factura SET fecha_pago = fecha_pago + (d || ' days')::interval WHERE fecha_pago IS NOT NULL;
+  UPDATE eventos SET fecha_inicio = fecha_inicio + (d || ' days')::interval,
+                     fecha_fin    = fecha_fin    + (d || ' days')::interval;
+END $$;
+UPDATE asignaciones_tarea SET semana = date_trunc('week', CURRENT_DATE)::date;
+UPDATE grupos SET rotacion_semana_actual = date_trunc('week', CURRENT_DATE)::date
+  WHERE rotacion_semana_actual IS NOT NULL;
+
+-- ===== 4. COORDENADAS PARA EL MAPA ===============================
+UPDATE publicaciones p SET
+  latitud  = c.lat + (random() - 0.5) * 0.012,
+  longitud = c.lng + (random() - 0.5) * 0.012
+FROM (VALUES
+  ('Granada',37.1773,-3.5986), ('Madrid',40.4168,-3.7038),
+  ('Barcelona',41.3874,2.1686), ('Valencia',39.4699,-0.3763),
+  ('Sevilla',37.3891,-5.9845),  ('Málaga',36.7213,-4.4214),
+  ('Zaragoza',41.6488,-0.8891), ('Bilbao',43.2630,-2.9350),
+  ('Alicante',38.3452,-0.4810), ('Murcia',37.9922,-1.1307),
+  ('Córdoba',37.8882,-4.7794),  ('Valladolid',41.6523,-4.7245),
+  ('Salamanca',40.9701,-5.6635),('Palma',39.5696,2.6502)
+) AS c(ciudad,lat,lng)
+WHERE p.ciudad = c.ciudad AND p.latitud IS NULL;
+
+COMMIT;

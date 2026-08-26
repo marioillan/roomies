@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Pencil, Share2, ChevronLeft, ChevronRight, Camera } from 'lucide-react'
-import { CARD_SHADOW, DONUTS_CONFIG_USUARIO, labelsUsuario, calcEdad } from '../lib/convivencia.js'
+import { CARD_SHADOW, TARJETAS_CONVIVENCIA_USUARIO, labelsUsuario, calcEdad } from '../lib/convivencia.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
 
@@ -18,22 +18,24 @@ function CarruselFotos({ fotos, nombre }) {
       {src
         ? <img src={src} alt={nombre} className='w-full h-full object-cover' />
         : <div className='w-full h-full flex flex-col items-center justify-center gap-2' style={{ background: STRIPE_BG }}>
-            <Camera size={24} className='text-slate-400' />
+            <Camera aria-hidden='true' size={24} className='text-slate-500' />
           </div>
       }
       {total > 1 && (
         <>
-          <button onClick={prev}
+          <button aria-label='Foto anterior' onClick={prev}
             className='cursor-pointer! absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full text-white flex items-center justify-center transition'>
-            <ChevronLeft size={18} />
+            <ChevronLeft aria-hidden='true' size={18} />
           </button>
-          <button onClick={next}
+          <button aria-label='Foto siguiente' onClick={next}
             className='cursor-pointer! absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full text-white flex items-center justify-center transition'>
-            <ChevronRight size={18} />
+            <ChevronRight aria-hidden='true' size={18} />
           </button>
           <div className='absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5'>
             {fotos.map((_, i) => (
               <button key={i} onClick={() => setIdx(i)}
+                aria-label={`Ver foto ${i + 1} de ${total}`}
+                aria-current={i === idx ? 'true' : undefined}
                 className={`cursor-pointer! w-2 h-2 rounded-full transition ${i === idx ? 'bg-white' : 'bg-white/50'}`}
               />
             ))}
@@ -53,7 +55,7 @@ function TraitCard({ cfg, valor }) {
       </span>
       {frase
         ? <p className='text-[0.9375rem] font-medium text-slate-800 leading-snug'>{frase}</p>
-        : <p className='text-[0.9375rem] text-slate-300 italic'>Sin rellenar</p>
+        : <p className='text-[0.9375rem] text-slate-500 italic'>Sin rellenar</p>
       }
     </div>
   )
@@ -81,7 +83,7 @@ export default function PerfilUsuario() {
 
   if (loading) return (
     <div className='flex justify-center py-16'>
-      <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+      <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
     </div>
   )
 
@@ -91,13 +93,13 @@ export default function PerfilUsuario() {
         onClick={() => navigator.share?.({ title: 'Mi perfil', url: window.location.href })}
         className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-white text-slate-900 border border-slate-200 hover:border-slate-300 text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
       >
-        <Share2 size={14} /> Compartir
+        <Share2 aria-hidden='true' size={14} /> Compartir
       </button>
       <button
         onClick={() => navigate('/perfil/usuario/editar')}
         className='cursor-pointer! w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[0.75rem] font-semibold px-[1.125rem] py-3 rounded-full transition'
       >
-        <Pencil size={14} /> Editar perfil
+        <Pencil aria-hidden='true' size={14} /> Editar perfil
       </button>
     </>
   )
@@ -145,7 +147,7 @@ export default function PerfilUsuario() {
             ? <p className='font-display text-[1.0625rem] font-normal text-slate-700 leading-[1.4] bg-slate-50 rounded-2xl px-4 py-4'>
                 {perfilConvivencia.sobre_mi}
               </p>
-            : <p className='font-display text-[1.0625rem] font-normal text-slate-400 italic leading-[1.4]'>Sin descripción todavía.</p>
+            : <p className='font-display text-[1.0625rem] font-normal text-slate-500 italic leading-[1.4]'>Sin descripción todavía.</p>
           }
         </div>
       </div>
@@ -163,7 +165,7 @@ export default function PerfilUsuario() {
               { label: 'Edad',   value: edad != null ? `${edad} años` : null, mono: false },
             ].map(({ label, value, mono }, i, arr) => (
               <div key={label} className={`flex justify-between items-center py-[0.875rem] ${i < arr.length - 1 ? 'border-b border-dashed border-slate-200' : ''}`}>
-                <span className='font-mono text-[0.6875rem] font-semibold text-slate-400 uppercase tracking-[0.10em]'>{label}</span>
+                <span className='font-mono text-[0.6875rem] font-semibold text-slate-500 uppercase tracking-[0.10em]'>{label}</span>
                 <span className={`text-right truncate max-w-[58%] text-slate-700 ${mono ? 'font-mono text-[0.75rem] font-normal' : 'text-[0.9375rem] font-medium'}`}>
                   {value ?? '—'}
                 </span>
@@ -177,7 +179,7 @@ export default function PerfilUsuario() {
           {/* Estilo de vida */}
           {perfilConvivencia && (perfilConvivencia.ocupacion || perfilConvivencia.fumador !== null || perfilConvivencia.tiene_mascotas !== null || perfilConvivencia.lgbtq_friendly === true) && (
             <div className='flex flex-col gap-2'>
-              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Estilo de vida</p>
+              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-300'>Estilo de vida</p>
               <div className='flex flex-wrap gap-2'>
                 {perfilConvivencia.ocupacion === 'ESTUDIO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Estudiante</span>}
                 {perfilConvivencia.ocupacion === 'TRABAJO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Trabajador/a</span>}
@@ -193,10 +195,10 @@ export default function PerfilUsuario() {
 
           {/* Intereses */}
           <div className='flex flex-col gap-2'>
-            <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Intereses</p>
+            <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-300'>Intereses</p>
             {intereses.length === 0 ? (
               <div className='flex flex-col gap-2'>
-                <p className='text-[0.8125rem] font-medium text-slate-500'>Sin intereses todavía.</p>
+                <p className='text-[0.8125rem] font-medium text-slate-300'>Sin intereses todavía.</p>
                 <button onClick={() => navigate('/perfil/usuario/editar')}
                   className='cursor-pointer! text-[0.8125rem] font-semibold text-emerald-400 hover:text-emerald-300 transition text-left'>
                   Añadir intereses →
@@ -231,7 +233,7 @@ export default function PerfilUsuario() {
           </div>
         ) : perfilConvivencia ? (
           <div className='grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4'>
-            {DONUTS_CONFIG_USUARIO.map(cfg => <TraitCard key={cfg.campo} cfg={cfg} valor={perfilConvivencia[cfg.campo]} />)}
+            {TARJETAS_CONVIVENCIA_USUARIO.map(cfg => <TraitCard key={cfg.campo} cfg={cfg} valor={perfilConvivencia[cfg.campo]} />)}
           </div>
         ) : null}
       </div>

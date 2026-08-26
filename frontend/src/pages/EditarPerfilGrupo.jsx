@@ -35,9 +35,8 @@ const schema = z.object({
   tolerancia_fiestas: enumReq(['NUNCA', 'OCASIONAL', 'FRECUENTE']),
   ocupacion:          enumReq(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']),
   limpieza_orden:     enumReq(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']),
-  nivel_ruido:        enumReq(['SILENCIO_TOTAL', 'MODERADO', 'INDIFERENTE']),
+  nivel_ruido:        enumReq(['SILENCIO_TOTAL', 'MODERADO', 'ALTO']),
   // campos opcionales
-  frecuencia_salidas: z.string().optional(),
   acepta_fumadores:   z.string().optional(),
   acepta_mascotas:    z.string().optional(),
   lgbtq_friendly:     z.boolean().nullish(),
@@ -53,7 +52,7 @@ const DIAS_SEMANA = [
   { value: 'DOMINGO',  label: 'Domingo'  },
 ]
 
-const CONV_FIELDS = ['horario','ambiente','frecuencia_visitas','tolerancia_fiestas','frecuencia_salidas','ocupacion','acepta_fumadores','acepta_mascotas','lgbtq_friendly','limpieza_orden','nivel_ruido']
+const CONV_FIELDS = ['horario','ambiente','frecuencia_visitas','tolerancia_fiestas','ocupacion','acepta_fumadores','acepta_mascotas','lgbtq_friendly','limpieza_orden','nivel_ruido']
 
 // ── Steps ─────────────────────────────────────────────────────────
 const STEPS = ['Datos del grupo', 'Convivencia']
@@ -79,7 +78,7 @@ const STEP_META = [
 ]
 
 // ── Paso 1: Datos del grupo ───────────────────────────────────────
-function Paso1({ register, control, errors, watch, fotoPreview, fotoLoading, fotoError, onFotoClick, todosIntereses, interesesSeleccionados, onToggleInteres }) {
+function Paso1({ register, control, errors, watch, fotoPreview, fotoLoading, fotoError, onFotoClick, todosIntereses, interesesSeleccionados, onToggleInteres, interesesReqError }) {
   const descLength = (watch('descripcion') ?? '').length
   return (
     <div className='flex flex-col gap-6'>
@@ -87,15 +86,16 @@ function Paso1({ register, control, errors, watch, fotoPreview, fotoLoading, fot
       {/* Foto */}
       <div className='flex flex-col items-center gap-2 py-2'>
         <button type='button' onClick={onFotoClick} disabled={fotoLoading}
+          aria-label='Cambiar foto del grupo'
           className='cursor-pointer! relative group'>
           {fotoPreview
-            ? <img src={fotoPreview} alt='Grupo' className='w-24 h-24 rounded-2xl object-cover ring-4 ring-white shadow-lg' />
+            ? <img src={fotoPreview} alt='' className='w-24 h-24 rounded-2xl object-cover ring-4 ring-white shadow-lg' />
             : <div className='w-24 h-24 rounded-2xl bg-emerald-100 flex items-center justify-center ring-4 ring-white shadow-lg'>
-                <Users size={32} className='text-emerald-600' />
+                <Users aria-hidden='true' size={32} className='text-emerald-600' />
               </div>
           }
-          <div className='absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition'>
-            <Camera size={22} className='text-white' />
+          <div className='absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition'>
+            <Camera aria-hidden='true' size={22} className='text-white' />
           </div>
           {fotoLoading && (
             <div className='absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center'>
@@ -103,30 +103,30 @@ function Paso1({ register, control, errors, watch, fotoPreview, fotoLoading, fot
             </div>
           )}
         </button>
-        <p className='text-xs text-slate-400'>Haz clic para cambiar la foto</p>
+        <p className='text-xs text-slate-500'>Haz clic para cambiar la foto</p>
         {fotoError && <p className='text-red-500 text-[11px]'>{fotoError}</p>}
       </div>
 
       <Section title='Información básica' accent='emerald'>
         <div>
-          <Label required>Nombre del grupo</Label>
-          <input {...register('nombre')} className={baseCls(errors.nombre)} placeholder='Casa Lavanda...' />
-          <FieldError message={errors.nombre?.message} />
+          <Label htmlFor='campo-nombre' required>Nombre del grupo</Label>
+          <input id='campo-nombre' aria-invalid={!!errors.nombre} aria-describedby={errors.nombre ? 'error-nombre' : undefined} {...register('nombre')} className={baseCls(errors.nombre)} placeholder='Casa Lavanda...' />
+          <FieldError id='error-nombre' message={errors.nombre?.message} />
         </div>
 
         <div>
-          <Label>Ciudad</Label>
-          <input {...register('ciudad')} className={baseCls(false)} placeholder='Madrid, Barcelona...' />
+          <Label htmlFor='campo-ciudad'>Ciudad</Label>
+          <input id='campo-ciudad' aria-invalid={!!errors.ciudad} aria-describedby={errors.ciudad ? 'error-ciudad' : undefined} {...register('ciudad')} className={baseCls(false)} placeholder='Madrid, Barcelona...' />
         </div>
 
         <div>
-          <Label required>Descripción</Label>
-          <textarea {...register('descripcion')} rows={4} maxLength={500}
+          <Label htmlFor='campo-descripcion' required>Descripción</Label>
+          <textarea id='campo-descripcion' aria-invalid={!!errors.descripcion} aria-describedby={errors.descripcion ? 'error-descripcion' : undefined} {...register('descripcion')} rows={4} maxLength={500}
             placeholder='Cuéntanos cómo es la vida en vuestro piso...'
             className={textareaCls(errors.descripcion)} />
           <div className='flex justify-between mt-1'>
-            <FieldError message={errors.descripcion?.message} />
-            <p className={`font-mono text-[11px] ml-auto ${descLength >= 500 ? 'text-red-400 font-semibold' : 'text-slate-400'}`}>
+            <FieldError id='error-descripcion' message={errors.descripcion?.message} />
+            <p className={`font-mono text-[11px] ml-auto ${descLength >= 500 ? 'text-red-400 font-semibold' : 'text-slate-500'}`}>
               {descLength}/500
             </p>
           </div>
@@ -149,18 +149,18 @@ function Paso1({ register, control, errors, watch, fotoPreview, fotoLoading, fot
         <div>
           <Label>¿Buscáis compañero de piso?</Label>
           <Controller name='buscar_companero' control={control} render={({ field }) => (
-            <BoolPillGroup value={field.value} onChange={field.onChange} />
+            <BoolPillGroup etiqueta='¿Buscáis compañero de piso?' value={field.value} onChange={field.onChange} />
           )} />
         </div>
       </Section>
 
       {Object.keys(todosIntereses).length > 0 && (
         <Section title='Intereses del grupo' accent='emerald'>
-          <p className='text-xs text-slate-400 -mt-1'>Selecciona los que mejor describan a vuestro grupo (máx. 20).</p>
+          <p className='text-xs text-slate-500 -mt-1'>Selecciona los que mejor describan a vuestro grupo (máx. 20).</p>
           <div className='flex flex-col gap-4'>
             {Object.entries(todosIntereses).map(([categoria, lista]) => (
               <div key={categoria}>
-                <p className='font-mono text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2'>{categoria}</p>
+                <p className='font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2'>{categoria}</p>
                 <div className='flex flex-wrap gap-2'>
                   {lista.map(({ id, nombre }) => {
                     const sel = interesesSeleccionados.has(id)
@@ -179,6 +179,12 @@ function Paso1({ register, control, errors, watch, fotoPreview, fotoLoading, fot
               </div>
             ))}
           </div>
+          {interesesReqError && (
+            <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+              <AlertCircle size={13} aria-hidden='true' className='text-red-600 shrink-0' />
+              <p className='text-xs text-red-700 font-medium'>{interesesReqError}</p>
+            </div>
+          )}
         </Section>
       )}
     </div>
@@ -197,7 +203,7 @@ function Paso2({ control, errors }) {
         <div>
           <Label>Horario general del piso</Label>
           <Controller name='horario' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+            <PillGroup etiqueta='Horario general del piso' value={field.value ?? ''} onChange={field.onChange} accent='blue'
               options={[
                 { value: 'MADRUGADOR', label: 'Madrugador' },
                 { value: 'INTERMEDIO', label: 'Intermedio' },
@@ -205,13 +211,13 @@ function Paso2({ control, errors }) {
               ]}
             />
           )} />
-          <FieldError message={errors?.horario?.message} />
+          <FieldError id='error-horario' message={errors?.horario?.message} />
         </div>
 
         <div>
           <Label>Ambiente en casa</Label>
           <Controller name='ambiente' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+            <PillGroup etiqueta='Ambiente en casa' value={field.value ?? ''} onChange={field.onChange} accent='blue'
               options={[
                 { value: 'TRANQUILO',   label: 'Tranquilo'   },
                 { value: 'EQUILIBRADO', label: 'Equilibrado' },
@@ -219,13 +225,13 @@ function Paso2({ control, errors }) {
               ]}
             />
           )} />
-          <FieldError message={errors?.ambiente?.message} />
+          <FieldError id='error-ambiente' message={errors?.ambiente?.message} />
         </div>
 
         <div>
           <Label>Ocupación predominante</Label>
           <Controller name='ocupacion' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+            <PillGroup etiqueta='Ocupación predominante' value={field.value ?? ''} onChange={field.onChange} accent='blue'
               options={[
                 { value: 'ESTUDIO',           label: 'Estudio'          },
                 { value: 'TRABAJO',           label: 'Trabajo'          },
@@ -233,13 +239,13 @@ function Paso2({ control, errors }) {
               ]}
             />
           )} />
-          <FieldError message={errors?.ocupacion?.message} />
+          <FieldError id='error-ocupacion' message={errors?.ocupacion?.message} />
         </div>
 
         <div>
           <Label>Limpieza y orden en el piso</Label>
           <Controller name='limpieza_orden' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+            <PillGroup etiqueta='Limpieza y orden en el piso' value={field.value ?? ''} onChange={field.onChange} accent='blue'
               options={[
                 { value: 'DESPREOCUPADO', label: 'Despreocupado' },
                 { value: 'FLEXIBLE',      label: 'Flexible' },
@@ -247,27 +253,27 @@ function Paso2({ control, errors }) {
               ]}
             />
           )} />
-          <FieldError message={errors?.limpieza_orden?.message} />
+          <FieldError id='error-limpieza_orden' message={errors?.limpieza_orden?.message} />
         </div>
 
         <div>
           <Label>Nivel de ruido habitual</Label>
           <Controller name='nivel_ruido' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+            <PillGroup etiqueta='Nivel de ruido habitual' value={field.value ?? ''} onChange={field.onChange} accent='blue'
               options={[
                 { value: 'SILENCIO_TOTAL', label: 'Silencio total' },
                 { value: 'MODERADO',       label: 'Moderado' },
-                { value: 'INDIFERENTE',    label: 'Indiferente' },
+                { value: 'ALTO',    label: 'Alto' },
               ]}
             />
           )} />
-          <FieldError message={errors?.nivel_ruido?.message} />
+          <FieldError id='error-nivel_ruido' message={errors?.nivel_ruido?.message} />
         </div>
 
         <div>
           <Label>¿Es LGBTQ+ friendly?</Label>
           <Controller name='lgbtq_friendly' control={control} render={({ field }) => (
-            <BoolPillGroup value={field.value} onChange={field.onChange} />
+            <BoolPillGroup etiqueta='¿Es LGBTQ+ friendly?' value={field.value} onChange={field.onChange} />
           )} />
         </div>
       </Section>
@@ -276,7 +282,7 @@ function Paso2({ control, errors }) {
         <div>
           <Label>Visitas en casa</Label>
           <Controller name='frecuencia_visitas' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+            <PillGroup etiqueta='Visitas en casa' value={field.value ?? ''} onChange={field.onChange} accent='blue'
               options={[
                 { value: 'CASI_NUNCA', label: 'Casi nunca' },
                 { value: 'A_VECES',   label: 'A veces'    },
@@ -284,13 +290,13 @@ function Paso2({ control, errors }) {
               ]}
             />
           )} />
-          <FieldError message={errors?.frecuencia_visitas?.message} />
+          <FieldError id='error-frecuencia_visitas' message={errors?.frecuencia_visitas?.message} />
         </div>
 
         <div>
           <Label>Fiestas en casa</Label>
           <Controller name='tolerancia_fiestas' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+            <PillGroup etiqueta='Fiestas en casa' value={field.value ?? ''} onChange={field.onChange} accent='blue'
               options={[
                 { value: 'NUNCA',     label: 'Nunca'     },
                 { value: 'OCASIONAL', label: 'Ocasional' },
@@ -298,20 +304,7 @@ function Paso2({ control, errors }) {
               ]}
             />
           )} />
-          <FieldError message={errors?.tolerancia_fiestas?.message} />
-        </div>
-
-        <div>
-          <Label>Salidas nocturnas</Label>
-          <Controller name='frecuencia_salidas' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
-              options={[
-                { value: 'NUNCA',     label: 'Nunca'     },
-                { value: 'OCASIONAL', label: 'Ocasional' },
-                { value: 'FRECUENTE', label: 'Frecuente' },
-              ]}
-            />
-          )} />
+          <FieldError id='error-tolerancia_fiestas' message={errors?.tolerancia_fiestas?.message} />
         </div>
       </Section>
 
@@ -319,7 +312,7 @@ function Paso2({ control, errors }) {
         <div>
           <Label>¿Se permite fumar en el piso?</Label>
           <Controller name='acepta_fumadores' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+            <PillGroup etiqueta='¿Se permite fumar en el piso?' value={field.value ?? ''} onChange={field.onChange} accent='blue'
               options={[
                 { value: 'SI',          label: 'Sí'          },
                 { value: 'NO',          label: 'No'          },
@@ -332,7 +325,7 @@ function Paso2({ control, errors }) {
         <div>
           <Label>¿Se aceptan mascotas?</Label>
           <Controller name='acepta_mascotas' control={control} render={({ field }) => (
-            <PillGroup value={field.value ?? ''} onChange={field.onChange} accent='blue'
+            <PillGroup etiqueta='¿Se aceptan mascotas?' value={field.value ?? ''} onChange={field.onChange} accent='blue'
               options={[
                 { value: 'SI',     label: 'Sí'     },
                 { value: 'NO',     label: 'No'     },
@@ -360,9 +353,11 @@ function EditarPerfilGrupo() {
   const [fotoError,   setFotoError]   = useState('')
   const [todosIntereses,         setTodosIntereses]         = useState({})
   const [interesesSeleccionados, setInteresesSeleccionados] = useState(new Set())
+  const [interesesReqError,      setInteresesReqError]      = useState('')
   const fotoInputRef = useRef(null)
 
   const toggleInteres = (id) => {
+    setInteresesReqError('')
     setInteresesSeleccionados(prev => {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
@@ -375,7 +370,7 @@ function EditarPerfilGrupo() {
     defaultValues: {
       nombre: '', descripcion: '', ciudad: '', dia_limpieza: '', buscar_companero: null,
       horario: '', ambiente: '', frecuencia_visitas: '', tolerancia_fiestas: '',
-      frecuencia_salidas: '', ocupacion: '', acepta_fumadores: '', acepta_mascotas: '',
+      ocupacion: '', acepta_fumadores: '', acepta_mascotas: '',
       lgbtq_friendly: null, limpieza_orden: '', nivel_ruido: '',
     },
   })
@@ -402,7 +397,6 @@ function EditarPerfilGrupo() {
             ambiente:           convRes.value.perfil.ambiente           ?? '',
             frecuencia_visitas: convRes.value.perfil.frecuencia_visitas ?? '',
             tolerancia_fiestas: convRes.value.perfil.tolerancia_fiestas ?? '',
-            frecuencia_salidas: convRes.value.perfil.frecuencia_salidas ?? '',
             ocupacion:          convRes.value.perfil.ocupacion          ?? '',
             acepta_fumadores:   convRes.value.perfil.acepta_fumadores   ?? '',
             acepta_mascotas:    convRes.value.perfil.acepta_mascotas    ?? '',
@@ -445,8 +439,20 @@ function EditarPerfilGrupo() {
   }
 
   const next = async () => {
+    // Se acumulan los fallos de las comprobaciones manuales en lugar de cortar
+    // en el primero, y `trigger` se lanza siempre, para que el usuario vea de
+    // una sola vez todo lo que le falta del paso.
+    let hayErrorManual = false
+    if (step === 0) {
+      if (interesesSeleccionados.size < 3) {
+        setInteresesReqError('Selecciona al menos 3 intereses.')
+        hayErrorManual = true
+      } else {
+        setInteresesReqError('')
+      }
+    }
     const ok = await trigger(STEP_FIELDS[step])
-    if (ok) { setStep(s => s + 1); setServerError(''); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+    if (ok && !hayErrorManual) { setStep(s => s + 1); setServerError(''); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   }
 
   const onSubmit = async (data) => {
@@ -486,7 +492,7 @@ function EditarPerfilGrupo() {
   if (loading) return (
     <div className='min-h-screen flex items-center justify-center'
       style={{ backgroundImage: 'radial-gradient(circle, #e2e8f0 1px, transparent 1px)', backgroundSize: '20px 20px', backgroundColor: '#f8fafc' }}>
-      <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+      <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
     </div>
   )
 
@@ -511,8 +517,8 @@ function EditarPerfilGrupo() {
       {/* Cabecera */}
       <div className='sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-100 px-6 py-3.5 flex items-center gap-4'>
         <button type='button' onClick={() => navigate('/grupo/perfil')}
-          className='cursor-pointer! flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-900 font-medium transition'>
-          <ArrowLeft size={15} /> Volver
+          className='cursor-pointer! flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 font-medium transition'>
+          <ArrowLeft aria-hidden='true' size={15} /> Volver
         </button>
         <div className='h-4 w-px bg-slate-200' />
         <p className='text-sm font-semibold text-slate-700'>Editar grupo</p>
@@ -535,7 +541,7 @@ function EditarPerfilGrupo() {
               <StepIcon size={20} className={meta.color} />
             </div>
             <div>
-              <h2 className='font-display text-base font-bold text-slate-900'>{STEPS[step]}</h2>
+              <h1 className='font-display text-base font-bold text-slate-900'>Editar el grupo: {STEPS[step]}</h1>
               <p className='text-xs text-slate-500 mt-0.5'>{meta.hint}</p>
             </div>
           </div>
@@ -551,27 +557,28 @@ function EditarPerfilGrupo() {
                 todosIntereses={todosIntereses}
                 interesesSeleccionados={interesesSeleccionados}
                 onToggleInteres={toggleInteres}
+                interesesReqError={interesesReqError}
               />
             )}
             {step === 1 && <Paso2 control={control} errors={errors} />}
 
             {serverError && (
-              <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
-                <AlertCircle size={13} className='text-red-500 shrink-0' />
+              <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+                <AlertCircle aria-hidden='true' size={13} className='text-red-500 shrink-0' />
                 <p className='text-xs text-red-700 font-medium'>{serverError}</p>
               </div>
             )}
 
-            {step === 0 && STEP_FIELDS[0].some(f => errors[f]) && (
-              <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
-                <AlertCircle size={13} className='text-red-500 shrink-0' />
-                <p className='text-xs text-red-700 font-medium'>Debes rellenar todos los campos obligatorios.</p>
+            {step === 0 && (STEP_FIELDS[0].some(f => errors[f]) || interesesReqError) && (
+              <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+                <AlertCircle aria-hidden='true' size={13} className='text-red-500 shrink-0' />
+                <p className='text-xs text-red-700 font-medium'>Revisa los avisos de cada apartado antes de continuar.</p>
               </div>
             )}
 
             {step === 1 && STEP_FIELDS[1].some(f => errors[f]) && (
-              <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
-                <AlertCircle size={13} className='text-red-500 shrink-0' />
+              <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+                <AlertCircle aria-hidden='true' size={13} className='text-red-500 shrink-0' />
                 <p className='text-xs text-red-700 font-medium'>Debes seleccionar una opción en todos los campos marcados como obligatorios.</p>
               </div>
             )}
@@ -580,13 +587,13 @@ function EditarPerfilGrupo() {
               {step > 0 && (
                 <button type='button' onClick={() => { setStep(s => s - 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
                   className='cursor-pointer! flex items-center gap-1.5 border-2 border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-5 py-2.5 rounded-xl transition text-sm'>
-                  <ChevronLeft size={15} /> Anterior
+                  <ChevronLeft aria-hidden='true' size={15} /> Anterior
                 </button>
               )}
               {step < STEPS.length - 1 ? (
                 <button type='button' onClick={next}
                   className='cursor-pointer! ml-auto flex items-center gap-1.5 bg-slate-900 hover:bg-slate-700 text-white font-semibold px-6 py-2.5 rounded-xl transition text-sm shadow-sm'>
-                  Siguiente <ChevronRight size={15} />
+                  Siguiente <ChevronRight aria-hidden='true' size={15} />
                 </button>
               ) : (
                 <button type='button' disabled={isSubmitting}

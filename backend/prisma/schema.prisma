@@ -11,7 +11,8 @@ datasource db {
 
 enum RolGrupo {
   ADMIN
-  MEMBER
+  MIEMBRO
+  CASERO
 
   @@map("rol_grupo")
 }
@@ -54,14 +55,6 @@ enum FrecuenciaFiestas {
   FRECUENTE
 
   @@map("frecuencia_fiestas_enum")
-}
-
-enum FrecuenciaSalidas {
-  NUNCA
-  OCASIONAL
-  FRECUENTE
-
-  @@map("frecuencia_salidas_enum")
 }
 
 enum AceptaFumadores {
@@ -142,7 +135,7 @@ enum LimpiezaOrden {
 enum NivelRuido {
   SILENCIO_TOTAL
   MODERADO
-  INDIFERENTE
+  ALTO
 
   @@map("nivel_ruido_enum")
 }
@@ -167,6 +160,7 @@ model Usuario {
   miembros_grupo       MiembroGrupo[]
   perfil_convivencia   PerfilConvivenciaUsuario?
   favoritos            Favorito[]
+  fotos                  FotoUsuario[]
   solicitudes_contacto SolicitudContacto[]
   solicitudes_union    SolicitudUnion[]
   mensajes             Mensaje[]
@@ -216,8 +210,7 @@ model MiembroGrupo {
   id          String    @id @db.VarChar(36)
   usuario_id  String    @db.VarChar(36)
   grupo_id    String    @db.VarChar(36)
-  rol         RolGrupo  @default(MEMBER)
-  es_casero   Boolean?  @default(false)
+  rol         RolGrupo  @default(MIEMBRO)
   activo      Boolean?  @default(true)
   fecha_union DateTime  @default(now()) @db.Timestamp(6)
 
@@ -253,7 +246,6 @@ model PerfilConvivenciaUsuario {
   frecuencia_visitas FrecuenciaVisitas?
   ambiente           Ambiente?
   tolerancia_fiestas FrecuenciaFiestas?
-  frecuencia_salidas FrecuenciaSalidas?
   fumador            Boolean?
   acepta_fumadores   AceptaFumadores?
   tiene_mascotas     Boolean?
@@ -283,8 +275,6 @@ model PreferenciasCompanero {
   ambiente_req             Boolean?           @default(false)
   tolerancia_fiestas       FrecuenciaFiestas?
   tolerancia_fiestas_req   Boolean?           @default(false)
-  frecuencia_salidas       FrecuenciaSalidas?
-  frecuencia_salidas_req   Boolean?           @default(false)
   acepta_fumadores         AceptaFumadores?
   acepta_fumadores_req     Boolean?           @default(false)
   acepta_mascotas          AceptaMascotas?
@@ -311,7 +301,6 @@ model PerfilConvivenciaGrupo {
   frecuencia_visitas FrecuenciaVisitas?
   ambiente           Ambiente?
   tolerancia_fiestas FrecuenciaFiestas?
-  frecuencia_salidas FrecuenciaSalidas?
   acepta_fumadores   AceptaFumadores?
   acepta_mascotas    AceptaMascotas?
   lgbtq_friendly     Boolean?
@@ -366,6 +355,18 @@ model Publicacion {
 
   @@map("publicaciones")
 }
+
+  model FotoUsuario {
+    id         String @id @db.VarChar(36)
+    usuario_id String @db.VarChar(36)
+    url        String
+    orden      Int    @default(0)
+
+    usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+    @@unique([usuario_id, orden])
+    @@map("fotos_usuario")
+  }
 
 model FotoPublicacion {
   id             String  @id @db.VarChar(36)
@@ -534,7 +535,7 @@ model Producto {
 
 model Interes {
   id        Int    @id @default(autoincrement())
-  nombre    String @db.VarChar(100)
+  nombre    String @db.VarChar(100)   @unique
   categoria String @db.VarChar(100)
 
   usuarios UsuarioInteres[]

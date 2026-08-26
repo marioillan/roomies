@@ -11,8 +11,7 @@ export const editarPerfilSchema = z.object({
   ambiente:            z.enum(['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']),
   tolerancia_fiestas:  z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']),
   limpieza_orden:      z.enum(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']),
-  nivel_ruido:         z.enum(['SILENCIO_TOTAL', 'MODERADO', 'INDIFERENTE']),
-  frecuencia_salidas:  z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
+  nivel_ruido:         z.enum(['SILENCIO_TOTAL', 'MODERADO', 'ALTO']),
   fumador:             z.boolean().nullable().optional(),
   acepta_fumadores:    z.enum(['SI', 'NO', 'INDIFERENTE']).nullable().optional(),
   tiene_mascotas:      z.boolean().nullable().optional(),
@@ -21,29 +20,8 @@ export const editarPerfilSchema = z.object({
   sobre_mi:            z.string().min(1, 'La descripción es obligatoria').max(500, 'Máximo 500 caracteres'),
 });
 
-export const convivenciaSchema = z.object({
-  ocupacion:           z.enum(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']).nullable().optional(),
-  horario:             z.enum(['MADRUGADOR', 'INTERMEDIO', 'NOCTURNO']).nullable().optional(),
-  frecuencia_visitas:  z.enum(['CASI_NUNCA', 'A_VECES', 'FRECUENTE']).nullable().optional(),
-  ambiente:            z.enum(['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']).nullable().optional(),
-  tolerancia_fiestas:  z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
-  frecuencia_salidas:  z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
-  fumador:             z.boolean().nullable().optional(),
-  acepta_fumadores:    z.enum(['SI', 'NO', 'INDIFERENTE']).nullable().optional(),
-  tiene_mascotas:      z.boolean().nullable().optional(),
-  acepta_mascotas:     z.enum(['SI', 'NO', 'DEPENDE']).nullable().optional(),
-  lgbtq_friendly:      z.boolean().nullable().optional(),
-  limpieza_orden:      z.enum(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']).nullable().optional(),
-  nivel_ruido:         z.enum(['SILENCIO_TOTAL', 'MODERADO', 'INDIFERENTE']).nullable().optional(),
-}).superRefine((data, ctx) => {
-  const rellenos = Object.values(data).filter(v => v !== null && v !== undefined).length;
-  if (rellenos < 3) {
-    ctx.addIssue({ code: 'custom', message: 'Debes rellenar al menos 3 campos del perfil de convivencia' });
-  }
-});
-
 export const interesesSchema = z.object({
-  intereses: z.array(z.number().int().positive()).max(20),
+  intereses: z.array(z.number().int().positive()).min(3, 'Selecciona al menos 3 intereses').max(20),
 });
 
 export const preferenciasSchema = z.object({
@@ -57,8 +35,6 @@ export const preferenciasSchema = z.object({
   ambiente_req:            z.boolean().nullable().optional(),
   tolerancia_fiestas:      z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
   tolerancia_fiestas_req:  z.boolean().nullable().optional(),
-  frecuencia_salidas:      z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
-  frecuencia_salidas_req:  z.boolean().nullable().optional(),
   acepta_fumadores:        z.enum(['SI', 'NO', 'INDIFERENTE']).nullable().optional(),
   acepta_fumadores_req:    z.boolean().nullable().optional(),
   acepta_mascotas:         z.enum(['SI', 'NO', 'DEPENDE']).nullable().optional(),
@@ -67,6 +43,6 @@ export const preferenciasSchema = z.object({
   lgbtq_friendly_req:      z.boolean().nullable().optional(),
   limpieza_orden:          z.enum(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']).nullable().optional(),
   limpieza_orden_req:      z.boolean().nullable().optional(),
-  nivel_ruido:             z.enum(['SILENCIO_TOTAL', 'MODERADO', 'INDIFERENTE']).nullable().optional(),
+  nivel_ruido:             z.enum(['SILENCIO_TOTAL', 'MODERADO', 'ALTO']).nullable().optional(),
   nivel_ruido_req:         z.boolean().nullable().optional(),
 });

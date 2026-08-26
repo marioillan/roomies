@@ -22,8 +22,7 @@ export const grupoConvivenciaSchema = z.object({
   tolerancia_fiestas: z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']),
   ocupacion:          z.enum(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']),
   limpieza_orden:     z.enum(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']),
-  nivel_ruido:        z.enum(['SILENCIO_TOTAL', 'MODERADO', 'INDIFERENTE']),
-  frecuencia_salidas: z.enum(['NUNCA', 'OCASIONAL', 'FRECUENTE']).nullable().optional(),
+  nivel_ruido:        z.enum(['SILENCIO_TOTAL', 'MODERADO', 'ALTO']),
   acepta_fumadores:   z.enum(['SI', 'NO', 'INDIFERENTE']).nullable().optional(),
   acepta_mascotas:    z.enum(['SI', 'NO', 'DEPENDE']).nullable().optional(),
   lgbtq_friendly:     z.boolean().nullable().optional(),
@@ -77,7 +76,7 @@ export const eventoSchema = z.object({
 });
 
 export const interesesSchema = z.object({
-  intereses: z.array(z.number().int().positive()).max(20),
+  intereses: z.array(z.number().int().positive()).min(3, 'Selecciona al menos 3 intereses').max(20),
 });
 
 export const transferirAdminSchema = z.object({

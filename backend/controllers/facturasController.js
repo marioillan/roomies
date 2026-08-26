@@ -50,7 +50,7 @@ export const getFacturas = async (req, res, next) => {
   try {
     let facturas;
 
-    if (req.miembro.es_casero) {
+    if (req.miembro.rol === 'CASERO') {
       const data = await prisma.factura.findMany({
         where: { grupo_id: req.grupoId },
         select: {
@@ -104,7 +104,7 @@ export const crearFactura = async (req, res, next) => {
     const urlDocumento = req.file ? await subirDocumento(req.file.buffer) : null;
 
     const inquilinos = await prisma.miembroGrupo.findMany({
-      where: { grupo_id: req.grupoId, activo: true, es_casero: false },
+      where: { grupo_id: req.grupoId, activo: true, rol: { not: 'CASERO' } },
       select: { usuario_id: true },
     });
     if (!inquilinos.length) {

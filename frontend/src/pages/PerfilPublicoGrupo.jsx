@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Heart, MessageCircle, House } from 'lucide-react'
-import { CARD_SHADOW, DONUTS_CONFIG_GRUPO, labelsGrupo, PASTEL } from '../lib/convivencia.js'
+import { CARD_SHADOW, TARJETAS_CONVIVENCIA_GRUPO, labelsGrupo, PASTEL } from '../lib/convivencia.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
+import PieDePagina from '../components/PieDePagina.jsx'
+import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 
 function TraitCard({ cfg, valor }) {
   const frase = labelsGrupo[cfg.campo]?.[valor]
@@ -15,7 +17,7 @@ function TraitCard({ cfg, valor }) {
       </span>
       {frase
         ? <p className='text-[0.9375rem] font-medium text-slate-800 leading-snug'>{frase}</p>
-        : <p className='text-[0.9375rem] text-slate-300 italic'>Sin rellenar</p>
+        : <p className='text-[0.9375rem] text-slate-500 italic'>Sin rellenar</p>
       }
     </div>
   )
@@ -40,7 +42,7 @@ export default function PerfilPublicoGrupo() {
   if (cargando) {
     return (
       <div className='min-h-screen bg-slate-50 flex items-center justify-center'>
-        <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+        <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
       </div>
     )
   }
@@ -59,7 +61,7 @@ export default function PerfilPublicoGrupo() {
 
   const { publicacion: pub, miembros, convivencia, intereses } = datos
 
-  const miembrosSinCasero = miembros.filter(m => !m.es_casero)
+  const miembrosSinCasero = miembros.filter(m => m.rol_en_grupo !== 'CASERO')
   const miembroMasAntiguo = miembrosSinCasero.length > 0
     ? miembrosSinCasero.reduce((a, b) => new Date(a.fecha_union) < new Date(b.fecha_union) ? a : b)
     : null
@@ -71,6 +73,7 @@ export default function PerfilPublicoGrupo() {
     <div className='min-h-screen bg-slate-50'>
 
       {/* Header */}
+      <SaltarAlContenido />
       <header className='sticky top-0 z-20 bg-white border-b border-slate-200'>
         <div className='max-w-[80rem] mx-auto flex items-center gap-3 sm:gap-6 px-4 sm:px-10 py-3.5'>
           <button onClick={() => navigate('/buscar')}
@@ -82,19 +85,19 @@ export default function PerfilPublicoGrupo() {
             {user ? (
               <>
                 {tieneGrupo ? (
-                  <button onClick={() => navigate('/grupo')} title='Mi grupo'
+                  <button onClick={() => navigate('/grupo')} aria-label='Mi grupo'
                     className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                    <House size={20} />
+                    <House aria-hidden='true' size={20} />
                   </button>
                 ) : (
                   <>
                     <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
                       className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <Heart size={20} />
+                      <Heart aria-hidden='true' size={20} />
                     </button>
                     <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
                       className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <MessageCircle size={20} />
+                      <MessageCircle aria-hidden='true' size={20} />
                     </button>
                   </>
                 )}
@@ -119,7 +122,7 @@ export default function PerfilPublicoGrupo() {
       </header>
 
       {/* Contenido */}
-      <div className='max-w-7xl mx-auto px-4 sm:px-10 py-8 flex flex-col gap-5'>
+      <main id='contenido-principal' tabIndex={-1} className='max-w-7xl mx-auto px-4 sm:px-10 py-8 flex flex-col gap-5'>
 
         {/* Volver */}
         <div className='flex items-center sm:justify-between'>
@@ -127,7 +130,7 @@ export default function PerfilPublicoGrupo() {
             onClick={() => navigate(`/anuncio/${id}`)}
             className='cursor-pointer! hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition bg-slate-100 hover:bg-white border border-slate-200 px-[1.125rem] py-3 rounded-full w-fit'
           >
-            <ArrowLeft size={15} /> Volver al anuncio
+            <ArrowLeft aria-hidden='true' size={15} /> Volver al anuncio
           </button>
           <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
             Perfil del grupo
@@ -167,7 +170,7 @@ export default function PerfilPublicoGrupo() {
               ? <p className='font-display text-[1.0625rem] font-normal text-slate-700 leading-[1.6] bg-slate-50 rounded-2xl px-4 py-4 break-words'>
                   {pub.descripcion_grupo}
                 </p>
-              : <p className='font-display text-[1.0625rem] font-normal text-slate-400 italic leading-[1.4]'>
+              : <p className='font-display text-[1.0625rem] font-normal text-slate-500 italic leading-[1.4]'>
                   Sin descripción todavía.
                 </p>
             }
@@ -177,7 +180,7 @@ export default function PerfilPublicoGrupo() {
           <div className='flex flex-col gap-4 pt-6 sm:pt-0 sm:pl-8 min-w-0'>
             <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500'>Miembros</p>
             <div className='flex flex-col divide-y divide-dashed divide-slate-200'>
-              {[...miembros].sort((a, b) => (a.es_casero === b.es_casero ? 0 : a.es_casero ? 1 : -1)).map((m, i) => {
+              {[...miembros].sort((a, b) => (a.rol_en_grupo === 'CASERO' ? 1 : 0) - (b.rol_en_grupo === 'CASERO' ? 1 : 0)).map((m, i) => {
                 const desde = m.fecha_union ? new Date(m.fecha_union).getFullYear() : null
                 const pastel = PASTEL[i % PASTEL.length]
                 return (
@@ -195,7 +198,7 @@ export default function PerfilPublicoGrupo() {
                         </div>
                     }
                     <div className='flex-1 min-w-0'>
-                      {m.es_casero ? (
+                      {m.rol_en_grupo === 'CASERO' ? (
                         <p className='font-display text-[1.0625rem] font-semibold text-slate-800 leading-tight truncate'>
                           {m.nombre}
                         </p>
@@ -208,11 +211,11 @@ export default function PerfilPublicoGrupo() {
                         </button>
                       )}
                       {desde && (
-                        <p className='font-mono text-[0.7rem] text-slate-400 mt-0.5'>desde {desde}</p>
+                        <p className='font-mono text-[0.7rem] text-slate-500 mt-0.5'>desde {desde}</p>
                       )}
                     </div>
                     <div className='shrink-0'>
-                      {m.es_casero
+                      {m.rol_en_grupo === 'CASERO'
                         ? <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-amber-500'>Casero</span>
                         : <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-teal-500'>Residente</span>
                       }
@@ -258,7 +261,7 @@ export default function PerfilPublicoGrupo() {
                   key={label}
                   className={`flex justify-between items-center py-[0.875rem] ${i < arr.length - 1 ? 'border-b border-dashed border-slate-200' : ''}`}
                 >
-                  <span className='font-mono text-[0.6875rem] font-semibold text-slate-400 uppercase tracking-[0.10em]'>{label}</span>
+                  <span className='font-mono text-[0.6875rem] font-semibold text-slate-500 uppercase tracking-[0.10em]'>{label}</span>
                   <span className={`text-right truncate max-w-[58%] text-[0.9375rem] font-medium ${valueColor ?? 'text-slate-700'}`}>{value}</span>
                 </div>
               ))}
@@ -271,7 +274,7 @@ export default function PerfilPublicoGrupo() {
             {/* Estilo de vida */}
             {convivencia && (convivencia.ocupacion || convivencia.acepta_fumadores || convivencia.acepta_mascotas || convivencia.lgbtq_friendly === true) && (
               <div className='flex flex-col gap-2'>
-                <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Estilo de vida</p>
+                <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-300'>Estilo de vida</p>
                 <div className='flex flex-wrap gap-2'>
                   {convivencia.ocupacion === 'ESTUDIO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Estudiantes</span>}
                   {convivencia.ocupacion === 'TRABAJO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Trabajadores</span>}
@@ -289,9 +292,9 @@ export default function PerfilPublicoGrupo() {
 
             {/* Intereses del grupo */}
             <div className='flex flex-col gap-2'>
-              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Intereses del grupo</p>
+              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-300'>Intereses del grupo</p>
               {intereses.length === 0 ? (
-                <p className='text-[0.8125rem] font-medium text-slate-500'>Sin intereses todavía.</p>
+                <p className='text-[0.8125rem] font-medium text-slate-300'>Sin intereses todavía.</p>
               ) : (
                 <div className='flex flex-wrap gap-2'>
                   {intereses.map(({ id: interesId, nombre }) => (
@@ -323,7 +326,7 @@ export default function PerfilPublicoGrupo() {
             </div>
           ) : (
             <div className='grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4'>
-              {DONUTS_CONFIG_GRUPO.map(cfg => (
+              {TARJETAS_CONVIVENCIA_GRUPO.map(cfg => (
                 <TraitCard key={cfg.campo} cfg={cfg} valor={convivencia[cfg.campo]} />
               ))}
             </div>
@@ -334,11 +337,13 @@ export default function PerfilPublicoGrupo() {
         <div className='sm:hidden bg-white border border-slate-100 rounded-3xl p-4' style={CARD_SHADOW}>
           <button onClick={() => navigate(`/anuncio/${id}`)}
             className='cursor-pointer! w-full inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition bg-slate-100 hover:bg-white border border-slate-200 px-[1.125rem] py-3 rounded-full'>
-            <ArrowLeft size={15} /> Volver al anuncio
+            <ArrowLeft aria-hidden='true' size={15} /> Volver al anuncio
           </button>
         </div>
 
-      </div>
+      </main>
+
+      <PieDePagina />
     </div>
   )
 }

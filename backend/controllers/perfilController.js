@@ -4,7 +4,6 @@ import { prisma } from '../src/config/db.js';
 import cloudinary from '../src/config/cloudinary.js';
 import {
   editarPerfilSchema,
-  convivenciaSchema,
   preferenciasSchema,
   interesesSchema,
 } from '../validators/perfilValidator.js';
@@ -28,7 +27,7 @@ export const editarPerfil = async (req, res, next) => {
 
   const {
     nombre, genero, fecha_nacimiento, pais, ocupacion, horario, frecuencia_visitas,
-    ambiente, tolerancia_fiestas, frecuencia_salidas, fumador, acepta_fumadores,
+    ambiente, tolerancia_fiestas, fumador, acepta_fumadores,
     tiene_mascotas, acepta_mascotas, lgbtq_friendly, limpieza_orden, nivel_ruido, sobre_mi,
   } = parsed.data;
 
@@ -39,7 +38,6 @@ export const editarPerfil = async (req, res, next) => {
   if (frecuencia_visitas != null) camposOpcionales.frecuencia_visitas = frecuencia_visitas;
   if (ambiente != null)           camposOpcionales.ambiente = ambiente;
   if (tolerancia_fiestas != null) camposOpcionales.tolerancia_fiestas = tolerancia_fiestas;
-  if (frecuencia_salidas != null) camposOpcionales.frecuencia_salidas = frecuencia_salidas;
   if (fumador != null)            camposOpcionales.fumador = fumador;
   if (acepta_fumadores != null)   camposOpcionales.acepta_fumadores = acepta_fumadores;
   if (tiene_mascotas != null)     camposOpcionales.tiene_mascotas = tiene_mascotas;
@@ -69,7 +67,6 @@ export const editarPerfil = async (req, res, next) => {
           frecuencia_visitas: frecuencia_visitas ?? null,
           ambiente: ambiente ?? null,
           tolerancia_fiestas: tolerancia_fiestas ?? null,
-          frecuencia_salidas: frecuencia_salidas ?? null,
           fumador: fumador ?? null,
           acepta_fumadores: acepta_fumadores ?? null,
           tiene_mascotas: tiene_mascotas ?? null,
@@ -181,47 +178,6 @@ export const getConvivencia = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/perfil/convivencia ────────────────────────────────
-export const editarConvivencia = async (req, res, next) => {
-  const userId = req.userId;
-  const parsed = convivenciaSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ message: parsed.error.errors[0].message });
-  }
-  const {
-    ocupacion, horario, frecuencia_visitas, ambiente, tolerancia_fiestas,
-    frecuencia_salidas, fumador, acepta_fumadores, tiene_mascotas, acepta_mascotas,
-    lgbtq_friendly, limpieza_orden, nivel_ruido,
-  } = parsed.data;
-
-  const camposConvivencia = {
-    ocupacion: ocupacion ?? null,
-    horario: horario ?? null,
-    frecuencia_visitas: frecuencia_visitas ?? null,
-    ambiente: ambiente ?? null,
-    tolerancia_fiestas: tolerancia_fiestas ?? null,
-    frecuencia_salidas: frecuencia_salidas ?? null,
-    fumador: fumador ?? null,
-    acepta_fumadores: acepta_fumadores ?? null,
-    tiene_mascotas: tiene_mascotas ?? null,
-    acepta_mascotas: acepta_mascotas ?? null,
-    lgbtq_friendly: lgbtq_friendly ?? null,
-    limpieza_orden: limpieza_orden ?? null,
-    nivel_ruido: nivel_ruido ?? null,
-  };
-
-  try {
-    const perfil = await prisma.perfilConvivenciaUsuario.upsert({
-      where: { usuario_id: userId },
-      create: { id: randomUUID(), usuario_id: userId, sobre_mi: '', ...camposConvivencia },
-      update: { ...camposConvivencia, updated_at: new Date() },
-    });
-    res.json({ perfil });
-  } catch (err) {
-    next(err);
-  }
-};
-
 // ── GET /api/perfil/publico/:userId ───────────────────────────
 export const getPerfilPublico = async (req, res, next) => {
   const { userId } = req.params;
@@ -248,7 +204,6 @@ export const getPerfilPublico = async (req, res, next) => {
               frecuencia_visitas: true,
               ambiente: true,
               tolerancia_fiestas: true,
-              frecuencia_salidas: true,
               fumador: true,
               acepta_fumadores: true,
               tiene_mascotas: true,
@@ -288,7 +243,6 @@ export const getPerfilPublico = async (req, res, next) => {
       frecuencia_visitas: pcu.frecuencia_visitas,
       ambiente: pcu.ambiente,
       tolerancia_fiestas: pcu.tolerancia_fiestas,
-      frecuencia_salidas: pcu.frecuencia_salidas,
       fumador: pcu.fumador,
       acepta_fumadores: pcu.acepta_fumadores,
       tiene_mascotas: pcu.tiene_mascotas,
@@ -333,8 +287,6 @@ export const editarPreferencias = async (req, res, next) => {
     ambiente_req:            d.ambiente_req            ?? false,
     tolerancia_fiestas:      d.tolerancia_fiestas      ?? null,
     tolerancia_fiestas_req:  d.tolerancia_fiestas_req  ?? false,
-    frecuencia_salidas:      d.frecuencia_salidas      ?? null,
-    frecuencia_salidas_req:  d.frecuencia_salidas_req  ?? false,
     acepta_fumadores:        d.acepta_fumadores        ?? null,
     acepta_fumadores_req:    d.acepta_fumadores_req    ?? false,
     acepta_mascotas:         d.acepta_mascotas         ?? null,

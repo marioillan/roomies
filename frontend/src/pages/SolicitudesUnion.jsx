@@ -1,79 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { apiFetch } from '../lib/apiFetch'
-import {
-  UserPlus, UserCheck, UserX, AlertCircle,
-  CheckCircle, MinusCircle, XCircle,
-} from 'lucide-react'
-
-// ── Compatibilidad (mismo patrón que AnuncioPublico.jsx) ───────────────
-
-function MiniDonut({ score }) {
-  const r    = 28
-  const circ = 2 * Math.PI * r
-  const dash = circ * (score / 100)
-  return (
-    <div className='relative w-20 h-20 shrink-0'>
-      <svg className='w-full h-full -rotate-90' viewBox='0 0 72 72'>
-        <circle cx='36' cy='36' r={r} fill='none' stroke='#d1fae5' strokeWidth='6' />
-        <circle cx='36' cy='36' r={r} fill='none' stroke='#059669' strokeWidth='6'
-          strokeDasharray={`${dash} ${circ}`} strokeLinecap='round' />
-      </svg>
-      <div className='absolute inset-0 flex items-center justify-center'>
-        <span className='font-display text-[1.125rem] font-bold text-emerald-700'>{score}%</span>
-      </div>
-    </div>
-  )
-}
-
-const TAGLINE = (s) =>
-  s >= 85 ? 'Muy buena afinidad con el grupo' :
-  s >= 70 ? 'Buena afinidad con el grupo'     :
-  s >= 50 ? 'Afinidad moderada con el grupo'  :
-            'Baja afinidad con el grupo'
-
-const DIMENSIONES = [
-  { key: 'horario',            label: 'Horario'   },
-  { key: 'ambiente',           label: 'Ambiente'  },
-  { key: 'frecuencia_visitas', label: 'Visitas'   },
-  { key: 'tolerancia_fiestas', label: 'Fiestas'   },
-  { key: 'ocupacion',          label: 'Ocupación' },
-  { key: 'limpieza_orden',     label: 'Limpieza'  },
-  { key: 'nivel_ruido',        label: 'Ruido'     },
-]
-
-function SeccionCompatibilidad({ icono: Icono, titulo, color, items }) {
-  if (!items.length) return null
-  return (
-    <div className='flex flex-col gap-1.5'>
-      <div className='flex items-center gap-1.5'>
-        <Icono size={13} style={{ color }} />
-        <span className='font-mono text-[0.6rem] font-bold uppercase tracking-widest' style={{ color }}>{titulo}</span>
-      </div>
-      <div className='flex flex-wrap gap-1.5'>
-        {items.map(d => (
-          <span key={d.key} className='text-[0.75rem] font-medium px-2.5 py-1 rounded-full border' style={{ color, borderColor: color + '40', background: color + '10' }}>
-            {d.label}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function DesgloseCompatibilidad({ desglose }) {
-  const coinciden = DIMENSIONES.filter(d => desglose[d.key] === 1.0)
-  const parecido  = DIMENSIONES.filter(d => desglose[d.key] === 0.5)
-  const diferente = DIMENSIONES.filter(d => desglose[d.key] === 0.0)
-
-  return (
-    <div className='flex flex-col gap-3'>
-      <SeccionCompatibilidad icono={CheckCircle} titulo='Coincidís en' color='#059669' items={coinciden} />
-      <SeccionCompatibilidad icono={MinusCircle} titulo='Parecido en'  color='#ea580c' items={parecido}  />
-      <SeccionCompatibilidad icono={XCircle}     titulo='Diferente en' color='#dc2626' items={diferente} />
-    </div>
-  )
-}
+import { UserPlus, UserCheck, UserX, AlertCircle } from 'lucide-react'
 
 // ── Avatar ───────────────────────────────────────────────────────────
 
@@ -88,8 +16,13 @@ function AvatarUsuario({ foto, nombre }) {
 
 // ── Card solicitud ───────────────────────────────────────────────────
 
+// Aquí no se muestra la compatibilidad a propósito: para cuando llega una
+// solicitud de unión, el administrador ya evaluó la afinidad en la solicitud de
+// contacto (Chat.jsx), ya ha hablado con la persona y le ha dado él mismo el
+// código de acceso. Esta pantalla es la confirmación final, no el punto de
+// decisión, así que repetir el porcentaje solo añadiría ruido.
 function CardSolicitud({ solicitud, procesando, onAceptar, onRechazar }) {
-  const { usuario, compatibilidad, desglose } = solicitud
+  const { usuario } = solicitud
   const enCurso = procesando != null
 
   return (
@@ -98,30 +31,9 @@ function CardSolicitud({ solicitud, procesando, onAceptar, onRechazar }) {
         <AvatarUsuario foto={usuario.foto_perfil} nombre={usuario.nombre} />
         <div className='min-w-0'>
           <p className='font-display text-lg font-semibold text-slate-900 truncate'>{usuario.nombre}</p>
-          <p className='text-xs text-slate-400'>Quiere unirse al grupo</p>
+          <p className='text-xs text-slate-500'>Quiere unirse al grupo</p>
         </div>
       </div>
-
-      {compatibilidad != null ? (
-        <div className='flex flex-col gap-3'>
-          <div className='flex items-center gap-4 bg-emerald-50 border border-emerald-100 rounded-[0.875rem] p-4'>
-            <MiniDonut score={compatibilidad} />
-            <div className='min-w-0'>
-              <p className='font-display text-[1.0625rem] font-semibold text-slate-900 leading-tight'>
-                {compatibilidad}% de compatibilidad
-              </p>
-              <p className='text-xs text-emerald-700 mt-0.5'>{TAGLINE(compatibilidad)}</p>
-            </div>
-          </div>
-          {desglose && <DesgloseCompatibilidad desglose={desglose} />}
-        </div>
-      ) : (
-        <div className='bg-slate-50 border border-slate-100 rounded-[0.875rem] p-4'>
-          <p className='text-xs text-slate-500 leading-relaxed'>
-            No se puede calcular la compatibilidad: falta el perfil de convivencia del usuario o del grupo.
-          </p>
-        </div>
-      )}
 
       <div className='flex items-center gap-2 pt-1 border-t border-slate-100 mt-1'>
         <button
@@ -131,7 +43,7 @@ function CardSolicitud({ solicitud, procesando, onAceptar, onRechazar }) {
         >
           {procesando === 'aceptar'
             ? <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-            : <UserCheck size={15} />}
+            : <UserCheck aria-hidden='true' size={15} />}
           Aceptar
         </button>
         <button
@@ -141,7 +53,7 @@ function CardSolicitud({ solicitud, procesando, onAceptar, onRechazar }) {
         >
           {procesando === 'rechazar'
             ? <div className='w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin' />
-            : <UserX size={15} />}
+            : <UserX aria-hidden='true' size={15} />}
           Rechazar
         </button>
       </div>
@@ -198,21 +110,21 @@ function SolicitudesUnion() {
       </div>
 
       {error && (
-        <div className='flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
-          <AlertCircle size={15} className='shrink-0' /> {error}
+        <div role='alert' className='flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+          <AlertCircle aria-hidden='true' size={15} className='shrink-0' /> {error}
         </div>
       )}
 
       {!esAdmin ? (
-        <p className='text-sm text-slate-400'>Solo el administrador del grupo puede ver las solicitudes de acceso.</p>
+        <p className='text-sm text-slate-500'>Solo el administrador del grupo puede ver las solicitudes de acceso.</p>
       ) : solicitudes === null ? (
         <div className='flex items-center justify-center min-h-[40vh]'>
-          <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+          <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
         </div>
       ) : solicitudes.length === 0 ? (
         <div className='flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center'>
           <div className='w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center'>
-            <UserPlus size={28} className='text-amber-500' />
+            <UserPlus aria-hidden='true' size={28} className='text-amber-500' />
           </div>
           <div>
             <h2 className='font-display text-2xl font-bold text-slate-900'>No hay solicitudes pendientes</h2>

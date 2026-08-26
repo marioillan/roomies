@@ -82,6 +82,7 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
         </div>
         <div className='flex items-center gap-2 sm:contents'>
           <select
+            aria-label='Categoría del producto'
             value={categoria}
             onChange={e => setCategoria(e.target.value)}
             className='flex-1 sm:flex-none sm:w-24 min-w-0 text-sm text-slate-800 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition bg-white'
@@ -92,17 +93,17 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
             type='submit'
             disabled={guardando || !nombre.trim()}
             className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white transition shrink-0'
-            title='Guardar'
+            aria-label='Guardar cambios del producto'
           >
-            {guardando ? <Loader2 size={13} className='animate-spin' /> : <Check size={13} strokeWidth={3} />}
+            {guardando ? <Loader2 aria-hidden='true' size={13} className='animate-spin' /> : <Check aria-hidden='true' size={13} strokeWidth={3} />}
           </button>
           <button
             type='button'
             onClick={cancelarEdicion}
-            className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'
-            title='Cancelar'
+            className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'
+            aria-label='Cancelar edición'
           >
-            <X size={13} />
+            <X aria-hidden='true' size={13} />
           </button>
         </div>
       </form>
@@ -119,6 +120,8 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
       <button
         onClick={handleToggle}
         disabled={cargando}
+        aria-pressed={producto.comprado}
+        aria-label={`${producto.comprado ? 'Marcar como pendiente' : 'Marcar como comprado'}: ${producto.nombre}`}
         className={`cursor-pointer! shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
           producto.comprado
             ? 'bg-emerald-500 border-emerald-500 text-white'
@@ -126,8 +129,8 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
         } ${cargando ? 'opacity-50' : ''}`}
       >
         {cargando
-          ? <Loader2 size={11} className='animate-spin' />
-          : producto.comprado ? <Check size={11} strokeWidth={3} /> : null}
+          ? <Loader2 aria-hidden='true' size={11} className='animate-spin' />
+          : producto.comprado ? <Check aria-hidden='true' size={11} strokeWidth={3} /> : null}
       </button>
 
       {/* Nombre + metadatos */}
@@ -138,13 +141,13 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
             style={{ backgroundColor: colorCategoria(producto.categoria) }}
           />
           <span className={`text-sm font-medium leading-tight truncate ${
-            producto.comprado ? 'line-through text-slate-400' : 'text-slate-800'
+            producto.comprado ? 'line-through text-slate-500' : 'text-slate-800'
           }`}>
             {producto.nombre}
           </span>
         </div>
         <div className='mt-0.5 pl-3.5 min-w-0'>
-          <span className='text-[11px] text-slate-400 truncate block'>
+          <span className='text-[11px] text-slate-500 truncate block'>
             {labelCategoria(producto.categoria)} · {producto.comprado
               ? `Comprado por ${producto.comprado_por ?? 'alguien'}`
               : `Añadido por ${producto.anadido_por}`}
@@ -153,23 +156,23 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
       </div>
 
       {/* Acciones */}
-      <div className='flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition'>
+      <div className='flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition'>
         <button
           onClick={abrirEdicion}
-          className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition'
-          title='Editar'
+          className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition'
+          aria-label={`Editar ${producto.nombre}`}
         >
-          <Pencil size={13} />
+          <Pencil aria-hidden='true' size={13} />
         </button>
         <button
           onClick={handleEliminar}
           disabled={eliminando}
-          className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition'
-          title='Eliminar'
+          className='cursor-pointer! w-9 h-9 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition'
+          aria-label={`Eliminar ${producto.nombre}`}
         >
           {eliminando
-            ? <Loader2 size={13} className='animate-spin text-slate-400' />
-            : <Trash2 size={13} />}
+            ? <Loader2 aria-hidden='true' size={13} className='animate-spin text-slate-500' />
+            : <Trash2 aria-hidden='true' size={13} />}
         </button>
       </div>
     </div>
@@ -213,11 +216,13 @@ function FormularioAnadir({ onAnadir }) {
             value={nombre}
             onChange={e => setNombre(e.target.value)}
             placeholder='Añadir producto...'
-            className='flex-1 min-w-0 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent'
+            aria-label='Nombre del producto a añadir'
+            className='flex-1 min-w-0 text-sm text-slate-800 placeholder:text-slate-500 focus:outline-none bg-transparent'
           />
         </div>
         <div className='flex items-center gap-2 sm:contents'>
           <select
+            aria-label='Categoría del producto'
             value={categoria}
             onChange={e => setCategoria(e.target.value)}
             className='flex-1 sm:flex-none sm:w-28 min-w-0 text-sm text-slate-800 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition bg-white'
@@ -227,16 +232,17 @@ function FormularioAnadir({ onAnadir }) {
           <button
             type='submit'
             disabled={enviando || !nombre.trim()}
+            aria-label='Añadir producto a la lista'
             className='cursor-pointer! shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white transition'
           >
-            {enviando ? <Loader2 size={14} className='animate-spin' /> : <Plus size={14} />}
+            {enviando ? <Loader2 aria-hidden='true' size={14} className='animate-spin' /> : <Plus aria-hidden='true' size={14} />}
           </button>
         </div>
       </div>
 
       {error && (
         <p className='px-4 pb-3 text-xs text-red-500 flex items-center gap-1.5'>
-          <AlertCircle size={12} /> {error}
+          <AlertCircle aria-hidden='true' size={12} /> {error}
         </p>
       )}
     </form>
@@ -319,8 +325,8 @@ function ListaCompra() {
       </div>
 
       {error && (
-        <div className='flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-2xl'>
-          <AlertCircle size={15} className='shrink-0' /> {error}
+        <div role='alert' className='flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-2xl'>
+          <AlertCircle aria-hidden='true' size={15} className='shrink-0' /> {error}
         </div>
       )}
 
@@ -332,7 +338,7 @@ function ListaCompra() {
           <h3 className='font-display text-base font-bold text-slate-900'>Productos</h3>
           <div className='flex gap-1'>
             {[['pendientes','Pendientes'],['comprados','Comprados'],['todos','Todos']].map(([val, lbl]) => (
-              <button key={val} onClick={() => setFiltro(val)}
+              <button key={val} onClick={() => setFiltro(val)} aria-pressed={filtro === val}
                 className={`cursor-pointer! text-xs font-semibold px-3.5 py-1.5 rounded-full transition
                   ${filtro === val ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
                 {lbl}
@@ -349,14 +355,14 @@ function ListaCompra() {
         {/* Lista */}
         {productos === null ? (
           <div className='flex justify-center py-12'>
-            <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+            <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
           </div>
         ) : productosFiltrados.length === 0 ? (
           <div className='px-6 py-12 flex flex-col items-center gap-3 text-center'>
             <div className='w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center'>
               {filtro === 'comprados'
-                ? <Check size={18} className='text-emerald-400' />
-                : <Package size={18} className='text-slate-400' />}
+                ? <Check aria-hidden='true' size={18} className='text-emerald-400' />
+                : <Package aria-hidden='true' size={18} className='text-slate-500' />}
             </div>
             <p className='text-sm font-semibold text-slate-600'>
               {filtro === 'pendientes' ? 'Sin productos pendientes'

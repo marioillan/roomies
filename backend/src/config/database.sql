@@ -29,7 +29,6 @@ DROP TYPE IF EXISTS horario_enum CASCADE;
 DROP TYPE IF EXISTS frecuencia_visitas_enum CASCADE;
 DROP TYPE IF EXISTS ambiente_enum CASCADE;
 DROP TYPE IF EXISTS frecuencia_fiestas_enum CASCADE;
-DROP TYPE IF EXISTS frecuencia_salidas_enum CASCADE;
 DROP TYPE IF EXISTS acepta_fumadores_enum CASCADE;
 DROP TYPE IF EXISTS acepta_mascotas_enum CASCADE;
 DROP TYPE IF EXISTS dia_semana_enum CASCADE;
@@ -48,7 +47,6 @@ CREATE TYPE horario_enum AS ENUM ('MADRUGADOR', 'INTERMEDIO', 'NOCTURNO');
 CREATE TYPE frecuencia_visitas_enum AS ENUM ('CASI_NUNCA', 'A_VECES', 'FRECUENTE');
 CREATE TYPE ambiente_enum AS ENUM ('TRANQUILO', 'EQUILIBRADO', 'SOCIAL');
 CREATE TYPE frecuencia_fiestas_enum AS ENUM ('NUNCA', 'OCASIONAL', 'FRECUENTE');
-CREATE TYPE frecuencia_salidas_enum AS ENUM ('NUNCA', 'OCASIONAL', 'FRECUENTE');
 CREATE TYPE acepta_fumadores_enum AS ENUM ('SI', 'NO', 'INDIFERENTE');
 CREATE TYPE acepta_mascotas_enum AS ENUM ('SI', 'NO', 'DEPENDE');
 CREATE TYPE dia_semana_enum AS ENUM ('LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO');
@@ -122,7 +120,6 @@ CREATE TABLE perfiles_convivencia_usuario (
   frecuencia_visitas  frecuencia_visitas_enum,
   ambiente            ambiente_enum,
   tolerancia_fiestas  frecuencia_fiestas_enum,
-  frecuencia_salidas  frecuencia_salidas_enum,
   fumador             BOOLEAN,
   acepta_fumadores    acepta_fumadores_enum,
   tiene_mascotas      BOOLEAN,
@@ -149,8 +146,6 @@ CREATE TABLE preferencias_companero (
   ambiente_req             BOOLEAN DEFAULT FALSE,
   tolerancia_fiestas       frecuencia_fiestas_enum,
   tolerancia_fiestas_req   BOOLEAN DEFAULT FALSE,
-  frecuencia_salidas       frecuencia_salidas_enum,
-  frecuencia_salidas_req   BOOLEAN DEFAULT FALSE,
   acepta_fumadores         acepta_fumadores_enum,
   acepta_fumadores_req     BOOLEAN DEFAULT FALSE,
   acepta_mascotas          acepta_mascotas_enum,
@@ -172,7 +167,6 @@ CREATE TABLE perfiles_convivencia_grupo (
   frecuencia_visitas  frecuencia_visitas_enum,
   ambiente            ambiente_enum,
   tolerancia_fiestas  frecuencia_fiestas_enum,
-  frecuencia_salidas  frecuencia_salidas_enum,
   acepta_fumadores    acepta_fumadores_enum,
   acepta_mascotas     acepta_mascotas_enum,
   lgbtq_friendly      BOOLEAN,

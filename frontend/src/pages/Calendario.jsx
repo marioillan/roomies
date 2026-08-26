@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Plus, X, AlertCircle, Pencil, Trash2, LayoutGrid, List } from 'lucide-react'
 import ModalEvento from '../components/ModalEvento.jsx'
 import { apiFetch } from '../lib/apiFetch'
+import { useModalAccesible } from '../lib/useModalAccesible.js'
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -47,19 +48,20 @@ function formatFechaLarga(iso) {
 // ── Modal confirmar eliminación ───────────────────────────────────────
 
 function ModalConfirmarEliminar({ evento, eliminando, onConfirmar, onCancelar }) {
+  const refDialogo = useModalAccesible(onCancelar)
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm' onClick={onCancelar}>
-      <div className='bg-white rounded-2xl shadow-xl w-full max-w-sm' onClick={e => e.stopPropagation()}>
+      <div ref={refDialogo} role='dialog' aria-modal='true' tabIndex={-1} aria-label='Eliminar evento' className='bg-white rounded-2xl shadow-xl w-full max-w-sm' onClick={e => e.stopPropagation()}>
         <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
           <h3 className='font-display text-base font-bold text-slate-900'>Eliminar evento</h3>
-          <button onClick={onCancelar} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'>
-            <X size={16} />
+          <button aria-label='Cerrar' onClick={onCancelar} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition'>
+            <X aria-hidden='true' size={16} />
           </button>
         </div>
         <div className='px-6 py-5 flex flex-col gap-4'>
           <div className='bg-slate-50 border border-slate-100 rounded-xl px-4 py-3'>
             <p className='text-sm font-semibold text-slate-900'>{evento.titulo}</p>
-            <p className='text-xs text-slate-400 mt-0.5'>{formatFechaLarga(evento.fecha_inicio)} · {formatHora(evento.fecha_inicio)}</p>
+            <p className='text-xs text-slate-500 mt-0.5'>{formatFechaLarga(evento.fecha_inicio)} · {formatHora(evento.fecha_inicio)}</p>
           </div>
           <p className='text-sm text-slate-500 leading-relaxed'>
             ¿Seguro que quieres eliminar este evento? Esta acción no se puede deshacer.
@@ -76,7 +78,7 @@ function ModalConfirmarEliminar({ evento, eliminando, onConfirmar, onCancelar })
             >
               {eliminando
                 ? <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                : <Trash2 size={14} />}
+                : <Trash2 aria-hidden='true' size={14} />}
               Eliminar
             </button>
           </div>
@@ -191,14 +193,14 @@ function Calendario() {
           </h1>
         </div>
         <div className='flex items-center gap-2 flex-wrap'>
-          <button onClick={() => navMes(-1)} className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200 shrink-0'>
-            <ChevronLeft size={16} />
+          <button onClick={() => navMes(-1)} aria-label='Mes anterior' className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200 shrink-0'>
+            <ChevronLeft aria-hidden='true' size={16} />
           </button>
           <button onClick={irHoy} className='cursor-pointer! font-semibold text-sm px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition border border-slate-200 shrink-0'>
             Hoy
           </button>
-          <button onClick={() => navMes(1)} className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200 shrink-0'>
-            <ChevronRight size={16} />
+          <button onClick={() => navMes(1)} aria-label='Mes siguiente' className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition border border-slate-200 shrink-0'>
+            <ChevronRight aria-hidden='true' size={16} />
           </button>
 
           {/* Toggle mes/lista — solo móvil */}
@@ -206,16 +208,16 @@ function Calendario() {
             <button
               onClick={() => setVista('mes')}
               aria-label='Vista mensual'
-              className={`cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg transition ${vista === 'mes' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+              className={`cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg transition ${vista === 'mes' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
             >
-              <LayoutGrid size={15} />
+              <LayoutGrid aria-hidden='true' size={15} />
             </button>
             <button
               onClick={() => setVista('lista')}
               aria-label='Vista de lista'
-              className={`cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg transition ${vista === 'lista' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+              className={`cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg transition ${vista === 'lista' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
             >
-              <List size={15} />
+              <List aria-hidden='true' size={15} />
             </button>
           </div>
 
@@ -223,16 +225,16 @@ function Calendario() {
             onClick={() => { setDiaInicial(''); setModalNuevo(true) }}
             className='cursor-pointer! sm:ml-2 inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition shrink-0'
           >
-            <Plus size={14} /> Nuevo evento
+            <Plus aria-hidden='true' size={14} /> Nuevo evento
           </button>
         </div>
       </div>
 
       {error && (
-        <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-2xl px-4 py-3'>
-          <AlertCircle size={13} className='text-red-500 shrink-0' />
+        <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-2xl px-4 py-3'>
+          <AlertCircle aria-hidden='true' size={13} className='text-red-500 shrink-0' />
           <p className='text-sm text-red-700'>{error}</p>
-          <button onClick={() => setError(null)} className='cursor-pointer! ml-auto text-red-400 hover:text-red-600'><X size={13} /></button>
+          <button onClick={() => setError(null)} className='cursor-pointer! ml-auto text-red-400 hover:text-red-600'><X aria-hidden='true' size={13} /></button>
         </div>
       )}
 
@@ -245,7 +247,7 @@ function Calendario() {
           {/* Días de la semana */}
           <div className='grid grid-cols-7 gap-1 sm:gap-1.5 mb-1.5'>
             {DIAS_SEMANA.map(d => (
-              <div key={d} className='text-center font-mono text-[0.5625rem] sm:text-[0.625rem] font-semibold uppercase tracking-widest text-slate-400 py-1'>
+              <div key={d} className='text-center font-mono text-[0.5625rem] sm:text-[0.625rem] font-semibold uppercase tracking-widest text-slate-500 py-1'>
                 {d}
               </div>
             ))}
@@ -285,10 +287,10 @@ function Calendario() {
                     </span>
                   ))}
                   {extra > 0 && (
-                    <span className='font-mono text-[0.5rem] text-slate-400 hidden sm:block'>+{extra}</span>
+                    <span className='font-mono text-[0.5rem] text-slate-500 hidden sm:block'>+{extra}</span>
                   )}
                   {evsDia.length > 1 && (
-                    <span className='font-mono text-[0.5rem] text-slate-400 sm:hidden'>+{evsDia.length - 1}</span>
+                    <span className='font-mono text-[0.5rem] text-slate-500 sm:hidden'>+{evsDia.length - 1}</span>
                   )}
                   {esLimpieza && !esHoy && (
                     <span className='mt-auto font-mono text-[0.45rem] font-bold uppercase tracking-wide text-amber-500 leading-none hidden sm:block'>
@@ -326,13 +328,13 @@ function Calendario() {
         {vista === 'lista' && (
           <div className='lg:hidden bg-white border border-slate-100 rounded-3xl p-4' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
             {Object.keys(eventosPorDia).length === 0 ? (
-              <p className='text-sm text-slate-400 italic px-1 py-3'>Sin eventos este mes</p>
+              <p className='text-sm text-slate-500 italic px-1 py-3'>Sin eventos este mes</p>
             ) : (
               <div className='flex flex-col'>
                 {Object.keys(eventosPorDia).map(Number).sort((a, b) => a - b).map(dia => (
                   <div key={dia} className='flex items-start gap-3 py-2.5 border-b last:border-0 border-slate-50'>
                     <div className='w-11 shrink-0 text-center bg-slate-50 border border-slate-100 rounded-xl py-1.5'>
-                      <p className='font-mono text-[0.5625rem] font-semibold uppercase text-slate-400 leading-none'>{MESES_CORTO[mes]}</p>
+                      <p className='font-mono text-[0.5625rem] font-semibold uppercase text-slate-500 leading-none'>{MESES_CORTO[mes]}</p>
                       <p className='font-display text-base font-bold text-slate-900 leading-tight'>{dia}</p>
                     </div>
                     <div className='flex-1 min-w-0 flex flex-col gap-1.5 pt-0.5'>
@@ -340,7 +342,7 @@ function Calendario() {
                         <div key={ev.id} className='flex items-center gap-2 min-w-0'>
                           <div className='w-1.5 h-1.5 rounded-full shrink-0' style={{ backgroundColor: colorEvento(ev._colorIdx) }} />
                           <p className='text-sm font-medium text-slate-800 truncate'>{ev.titulo}</p>
-                          <span className='font-mono text-[0.625rem] text-slate-400 shrink-0 ml-auto'>{formatHora(ev.fecha_inicio)}</span>
+                          <span className='font-mono text-[0.625rem] text-slate-500 shrink-0 ml-auto'>{formatHora(ev.fecha_inicio)}</span>
                         </div>
                       ))}
                     </div>
@@ -356,12 +358,12 @@ function Calendario() {
 
           {/* Card hoy */}
           <div className='bg-white border border-slate-100 rounded-3xl p-5' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
-            <p className='font-mono text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-slate-400 mb-1'>Hoy</p>
+            <p className='font-mono text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-slate-500 mb-1'>Hoy</p>
             <h3 className='font-display text-lg font-bold text-slate-900 mb-3 capitalize'>
               {hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
             </h3>
             {!esHoyLimpieza && eventosHoy.length === 0 ? (
-              <p className='text-sm text-slate-400 italic'>Sin eventos hoy</p>
+              <p className='text-sm text-slate-500 italic'>Sin eventos hoy</p>
             ) : (
               <div className='flex flex-col gap-2'>
                 {esHoyLimpieza && (
@@ -378,7 +380,7 @@ function Calendario() {
                     <div className='w-0.5 self-stretch rounded-full shrink-0 mt-0.5' style={{ backgroundColor: colorEvento(i) }} />
                     <div className='flex-1 min-w-0'>
                       <p className='text-sm font-semibold text-slate-900 truncate'>{ev.titulo}</p>
-                      <p className='font-mono text-[0.6875rem] text-slate-400 mt-0.5'>
+                      <p className='font-mono text-[0.6875rem] text-slate-500 mt-0.5'>
                         {formatHora(ev.fecha_inicio)}{ev.creador_nombre ? ` · ${ev.creador_nombre}` : ''}
                       </p>
                     </div>
@@ -391,9 +393,9 @@ function Calendario() {
           {/* Card próximos */}
           <div className='bg-white border border-slate-100 rounded-3xl p-5' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
             <div className='flex items-center justify-between mb-3'>
-              <p className='font-mono text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-slate-400'>Próximos</p>
+              <p className='font-mono text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-slate-500'>Próximos</p>
               {proximos.length > 0 && (
-                <span className='font-mono text-[0.7rem] text-slate-400'>{proximos.length}</span>
+                <span className='font-mono text-[0.7rem] text-slate-500'>{proximos.length}</span>
               )}
             </div>
             {eventos === null ? (
@@ -401,7 +403,7 @@ function Calendario() {
                 <div className='w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin' />
               </div>
             ) : proximos.length === 0 ? (
-              <p className='text-sm text-slate-400 italic'>Sin eventos próximos</p>
+              <p className='text-sm text-slate-500 italic'>Sin eventos próximos</p>
             ) : (
               <div className='flex flex-col gap-2.5'>
                 {proximos.map((ev, i) => {
@@ -410,7 +412,7 @@ function Calendario() {
                   return (
                     <div key={ev.id} className='flex items-start gap-2.5 group'>
                       <div className='w-10 shrink-0 text-center bg-slate-50 border border-slate-100 rounded-xl py-1.5'>
-                        <p className='font-mono text-[0.5625rem] font-semibold uppercase text-slate-400 leading-none'>
+                        <p className='font-mono text-[0.5625rem] font-semibold uppercase text-slate-500 leading-none'>
                           {MESES_CORTO[fecha.getMonth()]}
                         </p>
                         <p className='font-display text-base font-bold text-slate-900 leading-tight'>{fecha.getDate()}</p>
@@ -418,7 +420,7 @@ function Calendario() {
                       <div className='w-0.5 self-stretch rounded-full shrink-0' style={{ backgroundColor: colorEvento(i) }} />
                       <div className='flex-1 min-w-0'>
                         <p className='text-sm font-semibold text-slate-900 truncate'>{ev.titulo}</p>
-                        <p className='font-mono text-[0.6875rem] text-slate-400 mt-0.5'>
+                        <p className='font-mono text-[0.6875rem] text-slate-500 mt-0.5'>
                           {formatHora(ev.fecha_inicio)}{ev.creado_por_nombre ? ` · ${ev.creado_por_nombre}` : ''}
                         </p>
                       </div>
@@ -426,16 +428,18 @@ function Calendario() {
                         <div className='flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition shrink-0'>
                           <button
                             onClick={() => setEventoEditando(ev)}
-                            className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'
+                            aria-label={`Editar el evento ${ev.titulo}`}
+                            className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition'
                           >
-                            <Pencil size={12} />
+                            <Pencil aria-hidden='true' size={12} />
                           </button>
                           <button
                             onClick={() => setEventoAEliminar(ev)}
+                            aria-label={`Eliminar el evento ${ev.titulo}`}
                             disabled={eliminando === ev.id}
-                            className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition'
+                            className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 transition'
                           >
-                            <Trash2 size={12} />
+                            <Trash2 aria-hidden='true' size={12} />
                           </button>
                         </div>
                       )}

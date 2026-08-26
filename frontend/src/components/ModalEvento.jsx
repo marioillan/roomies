@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useId } from 'react'
 import { X, AlertCircle } from 'lucide-react'
 import { apiFetch } from '../lib/apiFetch'
+import { useModalAccesible } from '../lib/useModalAccesible.js'
 
 function toLocal(iso) {
   if (!iso) return ''
@@ -18,6 +19,11 @@ function ModalEvento({ evento, diaInicial, onClose, onGuardado }) {
   })
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState(null)
+
+  const refDialogo = useModalAccesible(onClose)
+  const idBase   = useId()
+  const idTitulo = `${idBase}-titulo`
+  const campo    = (n) => `${idBase}-${n}`
 
   const cambiar = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
 
@@ -47,42 +53,48 @@ function ModalEvento({ evento, diaInicial, onClose, onGuardado }) {
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm' onClick={onClose}>
-      <div className='bg-white rounded-2xl shadow-xl w-full max-w-md' onClick={e => e.stopPropagation()}>
+      <div ref={refDialogo} role='dialog' aria-modal='true' aria-labelledby={idTitulo} tabIndex={-1}
+        className='bg-white rounded-2xl shadow-xl w-full max-w-md' onClick={e => e.stopPropagation()}>
         <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
-          <h3 className='font-display text-base font-bold text-slate-900'>
+          <h3 id={idTitulo} className='font-display text-base font-bold text-slate-900'>
             {evento ? 'Editar evento' : 'Nuevo evento'}
           </h3>
-          <button onClick={onClose} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'>
-            <X size={16} />
+          <button type='button' onClick={onClose} aria-label='Cerrar'
+            className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition'>
+            <X size={16} aria-hidden='true' />
           </button>
         </div>
         <form onSubmit={enviar} className='p-6 flex flex-col gap-4'>
           <div className='flex flex-col gap-1.5'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Título *</label>
-            <input name='titulo' value={form.titulo} onChange={cambiar} placeholder='Ej: Reunión de piso'
-              autoFocus
-              className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+            <label htmlFor={campo('titulo')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+              Título <span aria-hidden='true'>*</span><span className='sr-only'>(obligatorio)</span>
+            </label>
+            <input id={campo('titulo')} name='titulo' value={form.titulo} onChange={cambiar} placeholder='Ej: Reunión de piso'
+              required aria-required='true'
+              className='w-full border border-slate-500 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
           </div>
           <div className='flex flex-col gap-1.5'>
-            <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
-            <textarea name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Descripción opcional…'
-              className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
+            <label htmlFor={campo('descripcion')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
+            <textarea id={campo('descripcion')} name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Descripción opcional…'
+              className='w-full border border-slate-500 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
           </div>
           <div className='grid grid-cols-2 gap-3'>
             <div className='flex flex-col gap-1.5'>
-              <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Inicio *</label>
-              <input type='datetime-local' name='fecha_inicio' value={form.fecha_inicio} onChange={cambiar}
-                className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+              <label htmlFor={campo('fecha_inicio')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                Inicio <span aria-hidden='true'>*</span><span className='sr-only'>(obligatorio)</span>
+              </label>
+              <input id={campo('fecha_inicio')} required aria-required='true' type='datetime-local' name='fecha_inicio' value={form.fecha_inicio} onChange={cambiar}
+                className='w-full border border-slate-500 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
             </div>
             <div className='flex flex-col gap-1.5'>
-              <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Fin</label>
-              <input type='datetime-local' name='fecha_fin' value={form.fecha_fin} onChange={cambiar}
-                className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+              <label htmlFor={campo('fecha_fin')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Fin</label>
+              <input id={campo('fecha_fin')} type='datetime-local' name='fecha_fin' value={form.fecha_fin} onChange={cambiar}
+                className='w-full border border-slate-500 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
             </div>
           </div>
           {error && (
-            <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5'>
-              <AlertCircle size={13} className='text-red-500 shrink-0' />
+            <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5'>
+              <AlertCircle size={13} aria-hidden='true' className='text-red-600 shrink-0' />
               <p className='text-sm text-red-700'>{error}</p>
             </div>
           )}

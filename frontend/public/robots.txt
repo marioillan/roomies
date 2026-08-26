@@ -1,0 +1,13 @@
+# robots.txt — Housie
+# Se permite el rastreo de todas las páginas públicas.
+
+User-agent: *
+Allow: /
+
+# Zonas privadas: requieren sesión y no aportan nada al índice.
+Disallow: /perfil/
+Disallow: /grupo/
+Disallow: /casero/
+Disallow: /creacion-grupo
+
+Sitemap: https://www.housie.es/sitemap.xml

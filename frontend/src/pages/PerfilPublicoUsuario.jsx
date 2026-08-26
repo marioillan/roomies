@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Heart, MessageCircle, House, ChevronLeft, ChevronRight, Camera } from 'lucide-react'
-import { CARD_SHADOW, DONUTS_CONFIG_USUARIO, labelsUsuario, calcEdad } from '../lib/convivencia.js'
+import { CARD_SHADOW, TARJETAS_CONVIVENCIA_USUARIO, labelsUsuario, calcEdad } from '../lib/convivencia.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
+import PieDePagina from '../components/PieDePagina.jsx'
+import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 
 const STRIPE_BG = 'repeating-linear-gradient(45deg,#f1f5f9,#f1f5f9 6px,#e2e8f0 6px,#e2e8f0 12px)'
 
@@ -18,22 +20,24 @@ function CarruselFotos({ fotos, nombre }) {
       {src
         ? <img src={src} alt={nombre} className='w-full h-full object-cover object-top' />
         : <div className='w-full h-full flex flex-col items-center justify-center gap-2' style={{ background: STRIPE_BG }}>
-            <Camera size={24} className='text-slate-400' />
+            <Camera aria-hidden='true' size={24} className='text-slate-500' />
           </div>
       }
       {total > 1 && (
         <>
-          <button onClick={prev}
+          <button aria-label='Foto anterior' onClick={prev}
             className='cursor-pointer! absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition backdrop-blur-sm'>
-            <ChevronLeft size={18} />
+            <ChevronLeft aria-hidden='true' size={18} />
           </button>
-          <button onClick={next}
+          <button aria-label='Foto siguiente' onClick={next}
             className='cursor-pointer! absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition backdrop-blur-sm'>
-            <ChevronRight size={18} />
+            <ChevronRight aria-hidden='true' size={18} />
           </button>
           <div className='absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5'>
             {fotos.map((_, i) => (
               <button key={i} onClick={() => setIdx(i)}
+                aria-label={`Ver foto ${i + 1} de ${total}`}
+                aria-current={i === idx ? 'true' : undefined}
                 className={`cursor-pointer! w-2 h-2 rounded-full transition ${i === idx ? 'bg-white' : 'bg-white/50'}`}
               />
             ))}
@@ -53,7 +57,7 @@ function TraitCard({ cfg, valor }) {
       </span>
       {frase
         ? <p className='text-[0.9375rem] font-medium text-slate-800 leading-snug'>{frase}</p>
-        : <p className='text-[0.9375rem] text-slate-300 italic'>Sin rellenar</p>
+        : <p className='text-[0.9375rem] text-slate-500 italic'>Sin rellenar</p>
       }
     </div>
   )
@@ -77,7 +81,7 @@ export default function PerfilPublicoUsuario() {
 
   if (cargando) return (
     <div className='min-h-screen bg-slate-50 flex items-center justify-center'>
-      <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+      <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
     </div>
   )
 
@@ -96,6 +100,7 @@ export default function PerfilPublicoUsuario() {
     <div className='min-h-screen bg-slate-50'>
 
       {/* Header */}
+      <SaltarAlContenido />
       <header className='sticky top-0 z-20 bg-white border-b border-slate-200'>
         <div className='max-w-[80rem] mx-auto flex items-center gap-6 px-4 sm:px-10 py-3.5'>
           <button onClick={() => navigate('/buscar')}
@@ -107,19 +112,19 @@ export default function PerfilPublicoUsuario() {
             {user ? (
               <>
                 {tieneGrupo ? (
-                  <button onClick={() => navigate('/grupo')} title='Mi grupo'
+                  <button onClick={() => navigate('/grupo')} aria-label='Mi grupo'
                     className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                    <House size={20} />
+                    <House aria-hidden='true' size={20} />
                   </button>
                 ) : (
                   <>
                     <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
                       className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <Heart size={20} />
+                      <Heart aria-hidden='true' size={20} />
                     </button>
                     <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
                       className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <MessageCircle size={20} />
+                      <MessageCircle aria-hidden='true' size={20} />
                     </button>
                   </>
                 )}
@@ -140,13 +145,13 @@ export default function PerfilPublicoUsuario() {
         </div>
       </header>
 
-      <div className='max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 py-8 flex flex-col gap-5'>
+      <main id='contenido-principal' tabIndex={-1} className='max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 py-8 flex flex-col gap-5'>
 
         {/* Volver */}
         <div className='flex items-center sm:justify-between'>
           <button onClick={() => navigate(-1)}
             className='cursor-pointer! hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition bg-slate-100 hover:bg-white border border-slate-200 px-[1.125rem] py-3 rounded-full w-fit'>
-            <ArrowLeft size={15} /> Volver
+            <ArrowLeft aria-hidden='true' size={15} /> Volver
           </button>
           <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>
             Perfil de usuario
@@ -182,7 +187,7 @@ export default function PerfilPublicoUsuario() {
               ? <p className='font-display text-[1.0625rem] font-normal text-slate-700 leading-[1.4] bg-slate-50 rounded-2xl px-4 py-4'>
                   {usuario.sobre_mi ?? convivencia?.sobre_mi}
                 </p>
-              : <p className='font-display text-[1.0625rem] font-normal text-slate-400 italic leading-[1.4]'>Sin descripción todavía.</p>
+              : <p className='font-display text-[1.0625rem] font-normal text-slate-500 italic leading-[1.4]'>Sin descripción todavía.</p>
             }
           </div>
         </div>
@@ -199,7 +204,7 @@ export default function PerfilPublicoUsuario() {
                 { label: 'Edad',   value: edad != null ? `${edad} años` : null  },
               ].map(({ label, value }, i, arr) => (
                 <div key={label} className={`flex justify-between items-center py-[0.875rem] ${i < arr.length - 1 ? 'border-b border-dashed border-slate-200' : ''}`}>
-                  <span className='font-mono text-[0.6875rem] font-semibold text-slate-400 uppercase tracking-[0.10em]'>{label}</span>
+                  <span className='font-mono text-[0.6875rem] font-semibold text-slate-500 uppercase tracking-[0.10em]'>{label}</span>
                   <span className='text-right truncate max-w-[58%] text-[0.9375rem] font-medium text-slate-700'>{value ?? '—'}</span>
                 </div>
               ))}
@@ -211,7 +216,7 @@ export default function PerfilPublicoUsuario() {
             {/* Estilo de vida */}
             {convivencia && (convivencia.ocupacion || convivencia.fumador !== null || convivencia.tiene_mascotas !== null || convivencia.lgbtq_friendly === true) && (
               <div className='flex flex-col gap-2'>
-                <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Estilo de vida</p>
+                <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-300'>Estilo de vida</p>
                 <div className='flex flex-wrap gap-2'>
                   {convivencia.ocupacion === 'ESTUDIO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Estudiante</span>}
                   {convivencia.ocupacion === 'TRABAJO'           && <span className='border border-slate-600 text-slate-200 rounded-full text-[0.8125rem] font-medium px-3 py-1.5'>Trabajador/a</span>}
@@ -227,9 +232,9 @@ export default function PerfilPublicoUsuario() {
 
             {/* Intereses */}
             <div className='flex flex-col gap-2'>
-              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-400'>Intereses</p>
+              <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-300'>Intereses</p>
               {!intereses?.length ? (
-                <p className='text-[0.8125rem] font-medium text-slate-500'>Sin intereses todavía.</p>
+                <p className='text-[0.8125rem] font-medium text-slate-300'>Sin intereses todavía.</p>
               ) : (
                 <div className='flex flex-wrap gap-2'>
                   {intereses.map(({ id: interesId, nombre }) => (
@@ -255,7 +260,7 @@ export default function PerfilPublicoUsuario() {
             </div>
           ) : (
             <div className='grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4'>
-              {DONUTS_CONFIG_USUARIO.map(cfg => <TraitCard key={cfg.campo} cfg={cfg} valor={convivencia[cfg.campo]} />)}
+              {TARJETAS_CONVIVENCIA_USUARIO.map(cfg => <TraitCard key={cfg.campo} cfg={cfg} valor={convivencia[cfg.campo]} />)}
             </div>
           )}
         </div>
@@ -264,11 +269,13 @@ export default function PerfilPublicoUsuario() {
         <div className='sm:hidden bg-white border border-slate-100 rounded-3xl p-4' style={CARD_SHADOW}>
           <button onClick={() => navigate(-1)}
             className='cursor-pointer! w-full inline-flex items-center justify-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition bg-slate-100 hover:bg-white border border-slate-200 px-[1.125rem] py-3 rounded-full'>
-            <ArrowLeft size={15} /> Volver
+            <ArrowLeft aria-hidden='true' size={15} /> Volver
           </button>
         </div>
 
-      </div>
+      </main>
+
+      <PieDePagina />
     </div>
   )
 }

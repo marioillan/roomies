@@ -7,7 +7,6 @@
     subirFotoExtra,
     eliminarFotoExtra,
     getConvivencia,
-    editarConvivencia,
     getPerfilPublico,
     getPreferencias,
     editarPreferencias,
@@ -23,7 +22,6 @@
   router.put('/fotos/:index',      requireAuth, upload.single('foto'), subirFotoExtra);
   router.delete('/fotos/:index',   requireAuth,                         eliminarFotoExtra);
   router.get('/convivencia',       requireAuth,                     getConvivencia);
-  router.put('/convivencia',       requireAuth,                     editarConvivencia);
   router.get('/publico/:userId',                                    getPerfilPublico);
   router.get('/preferencias',      requireAuth,                     getPreferencias);
   router.put('/preferencias',      requireAuth,                     editarPreferencias);

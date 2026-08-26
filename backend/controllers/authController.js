@@ -305,8 +305,8 @@ export const me = async (req, res, next) => {
     // BOOL_OR requiere SQL raw porque Prisma no soporta agregaciones booleanas directas
     const rows = await prisma.$queryRaw`
       SELECT u.id, u.nombre, u.email, u.foto_perfil, u.foto_1, u.foto_2, u.fecha_registro, u.google_calendar_token,
-             BOOL_OR(mg.es_casero) AS es_casero,
-             (BOOL_OR(mg.es_casero) OR BOOL_OR(
+             BOOL_OR(mg.rol = 'CASERO') AS es_casero,
+             (BOOL_OR(mg.rol = 'CASERO') OR BOOL_OR(
                p.sobre_mi IS NOT NULL AND p.genero IS NOT NULL AND p.pais IS NOT NULL AND p.fecha_nacimiento IS NOT NULL
                AND p.ocupacion IS NOT NULL AND p.horario IS NOT NULL AND p.frecuencia_visitas IS NOT NULL
                AND p.ambiente IS NOT NULL AND p.tolerancia_fiestas IS NOT NULL AND p.limpieza_orden IS NOT NULL

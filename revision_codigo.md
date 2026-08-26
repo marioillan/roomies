@@ -91,7 +91,7 @@
   - `['MADRUGADOR', 'INTERMEDIO', 'NOCTURNO']` — horario
   - `['TRANQUILO', 'EQUILIBRADO', 'SOCIAL']` — ambiente
   - `['CASI_NUNCA', 'A_VECES', 'FRECUENTE']` — frecuencia_visitas
-  - `['NUNCA', 'OCASIONAL', 'FRECUENTE']` — tolerancia_fiestas / frecuencia_salidas
+  - `['NUNCA', 'OCASIONAL', 'FRECUENTE']` — tolerancia_fiestas
   - `['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']` — ocupacion
   - `['SI', 'NO', 'INDIFERENTE']` — acepta_fumadores
   - `['SI', 'NO', 'DEPENDE']` — acepta_mascotas
@@ -345,7 +345,7 @@ El fichero implementa un patrón de cola para refresh de access token con un par
 
 ### `convivencia.js` — bien estructurado, con un problema potencial
 
-**3. `DONUTS_CONFIG_USUARIO` y `DONUTS_CONFIG_GRUPO` son casi idénticos**
+**3. `TARJETAS_CONVIVENCIA_USUARIO` y `TARJETAS_CONVIVENCIA_GRUPO` son casi idénticos**
 - Los dos arrays tienen exactamente los mismos 6 campos y los mismos colores. Solo difiere `sublabel` de `horario`: `'Horario'` vs `'Ritmo'`.
 - No es un bug, pero si se añade un campo a uno hay que recordar añadirlo al otro.
 - Solución opcional: definir uno como base y el otro como `[...BASE_DONUTS].map(d => d.campo === 'horario' ? {...d, sublabel: 'Ritmo'} : d)`.

@@ -27,8 +27,15 @@ function DonutChart({ sublabel, color, labels, valor }) {
 
   return (
     <div className='flex flex-col items-center gap-3 max-w-[200px] mx-auto w-full'>
-      <div className='relative w-full cursor-pointer transition-transform duration-150 hover:scale-[1.03]' style={{ aspectRatio: '1' }}>
-        <svg className='w-full h-full -rotate-90' viewBox='0 0 100 100'>
+      {/* 1.1.1 El gráfico es una imagen: se expone como role="img" con el dato
+          en texto, y el SVG interno queda oculto para el lector de pantalla. */}
+      <div
+        role='img'
+        aria-label={`${sublabel}: ${label ?? 'sin rellenar'}`}
+        className='relative w-full transition-transform duration-150 hover:scale-[1.03]'
+        style={{ aspectRatio: '1' }}
+      >
+        <svg aria-hidden='true' focusable='false' className='w-full h-full -rotate-90' viewBox='0 0 100 100'>
           <circle cx='50' cy='50' r={r} fill='none' stroke='#f1f5f9' strokeWidth='10' />
           {estaRelleno && fill > 0 && (
             <circle
@@ -41,7 +48,7 @@ function DonutChart({ sublabel, color, labels, valor }) {
             />
           )}
         </svg>
-        <div className='absolute inset-0 flex items-center justify-center px-[6px]'>
+        <div aria-hidden='true' className='absolute inset-0 flex items-center justify-center px-[6px]'>
           <span
             className='text-[0.8125rem] font-semibold text-center leading-[1.15]'
             style={{ color: estaRelleno && fill > 0 ? '#0f172a' : '#94a3b8' }}
@@ -50,7 +57,7 @@ function DonutChart({ sublabel, color, labels, valor }) {
           </span>
         </div>
       </div>
-      <span className='text-[0.8125rem] font-medium text-slate-400 text-center leading-tight'>{sublabel}</span>
+      <span aria-hidden='true' className='text-[0.8125rem] font-medium text-slate-500 text-center leading-tight'>{sublabel}</span>
     </div>
   )
 }

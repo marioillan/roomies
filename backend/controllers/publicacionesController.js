@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from '../src/config/db.js';
-import { calcularCompatibilidad, calcularScore } from '../src/utils/compatibilidad.js';
+import { calcularCompatibilidad, calcularScore, fusionarPerfil } from '../src/utils/compatibilidad.js';
 import { TIPOS_VALIDOS, GENEROS_VALIDOS, ORDENES_VALIDOS } from '../validators/publicacionesValidator.js';
 
-// ── GET /api/publicaciones ────────────────────────────────────
+// GET /api/publicaciones
 export const buscarPublicaciones = async (req, res, next) => {
   const {
     ciudad, page = 1, precio_min, precio_max, habitaciones_min,
@@ -19,7 +19,7 @@ export const buscarPublicaciones = async (req, res, next) => {
   const limit  = 12;
   const offset = (Math.max(1, parseInt(page)) - 1) * limit;
 
-  // ── Auth opcional ─────────────────────────────────────────
+  // Auth opcional
   let perfilUsuario       = null;
   let preferenciasUsuario = null;
   let interesesUsuarioIds = [];
@@ -32,13 +32,13 @@ export const buscarPublicaciones = async (req, res, next) => {
         prisma.preferenciasCompanero.findFirst({ where: { usuario_id: decoded.id } }),
         prisma.usuarioInteres.findMany({ where: { usuario_id: decoded.id }, select: { interes_id: true } }),
       ]);
-      perfilUsuario       = preferencias ?? perfil;
+      perfilUsuario = fusionarPerfil(perfil, preferencias);
       preferenciasUsuario = preferencias;
       interesesUsuarioIds = interesData.map(i => i.interes_id);
     }
   } catch { /* sin sesión o token inválido — continuamos sin matching */ }
 
-  // ── Filtros de búsqueda ───────────────────────────────────
+  // Filtros de búsqueda
   const params     = [];
   const conditions = ['p.visible = TRUE'];
 
@@ -76,9 +76,10 @@ export const buscarPublicaciones = async (req, res, next) => {
     conditions.push(`(p.genero_preferido = $${params.length} OR p.genero_preferido = 'INDIFERENTE' OR p.genero_preferido IS NULL)`);
   }
 
-  // ── Filtros duros de compatibilidad ──────────────────────
+  // Filtros duros de compatibilidad
   const tieneMatching = !!perfilUsuario;
   if (tieneMatching) {
+    // Filtros por preferencias marcadas como obligatorias
     if (preferenciasUsuario) {
       const pref = preferenciasUsuario;
       const camposOrdinales = [
@@ -86,7 +87,6 @@ export const buscarPublicaciones = async (req, res, next) => {
         ['ambiente',           'ambiente'],
         ['frecuencia_visitas', 'frecuencia_visitas'],
         ['tolerancia_fiestas', 'tolerancia_fiestas'],
-        ['frecuencia_salidas', 'frecuencia_salidas'],
         ['ocupacion',          'ocupacion'],
         ['limpieza_orden',     'limpieza_orden'],
         ['nivel_ruido',        'nivel_ruido'],
@@ -117,14 +117,14 @@ export const buscarPublicaciones = async (req, res, next) => {
       if (pref.lgbtq_friendly !== null && pref.lgbtq_friendly !== undefined && pref.lgbtq_friendly_req === true) {
         if (pref.lgbtq_friendly === true) conditions.push(`(pcg.lgbtq_friendly IS NULL OR pcg.lgbtq_friendly = TRUE)`);
       }
-    } else {
-      const p = perfilUsuario;
-      if (p.fumador        === true) conditions.push(`(pcg.acepta_fumadores IS NULL OR pcg.acepta_fumadores != 'NO')`);
-      if (p.tiene_mascotas === true) conditions.push(`(pcg.acepta_mascotas  IS NULL OR pcg.acepta_mascotas  != 'NO')`);
-      if (p.lgbtq_friendly === true) conditions.push(`(pcg.lgbtq_friendly   IS NULL OR pcg.lgbtq_friendly   = TRUE)`);
-      if (p.acepta_fumadores === 'NO') conditions.push(`(pcg.acepta_fumadores IS NULL OR pcg.acepta_fumadores != 'SI')`);
-      if (p.acepta_mascotas  === 'NO') conditions.push(`(pcg.acepta_mascotas  IS NULL OR pcg.acepta_mascotas  != 'SI')`);
     }
+
+    // Filtros duros fijos: se aplican siempre, existan o no preferencias.
+    // Excluyen grupos incompatibles con las características del propio usuario.
+    const perfil = perfilUsuario;
+    if (perfil.fumador        === true) conditions.push(`(pcg.acepta_fumadores IS NULL OR pcg.acepta_fumadores != 'NO')`);
+    if (perfil.tiene_mascotas === true) conditions.push(`(pcg.acepta_mascotas  IS NULL OR pcg.acepta_mascotas  != 'NO')`);
+    if (perfil.lgbtq_friendly === true) conditions.push(`(pcg.lgbtq_friendly   IS NULL OR pcg.lgbtq_friendly   = TRUE)`);
   }
 
   // Filtro por intereses seleccionados (OR: grupos que tengan al menos uno)
@@ -238,7 +238,7 @@ export const buscarPublicaciones = async (req, res, next) => {
   }
 };
 
-// ── GET /api/publicaciones/:id ────────────────────────────────
+// GET /api/publicaciones/:id
 export const getPublicacion = async (req, res, next) => {
   try {
     const pubs = await prisma.$queryRaw`
@@ -265,7 +265,7 @@ export const getPublicacion = async (req, res, next) => {
           prisma.perfilConvivenciaUsuario.findFirst({ where: { usuario_id: decoded.id } }),
           prisma.preferenciasCompanero.findFirst({ where: { usuario_id: decoded.id } }),
         ]);
-        perfilUsuario = preferencias ?? perfil;
+        perfilUsuario = fusionarPerfil(perfil, preferencias);
       }
     } catch { /* sin sesión — continuamos sin matching */ }
 
@@ -278,10 +278,10 @@ export const getPublicacion = async (req, res, next) => {
       prisma.miembroGrupo.findMany({
         where: { grupo_id: pub.grupo_id, activo: true },
         select: {
-          rol: true, fecha_union: true, es_casero: true,
+          rol: true, fecha_union: true,
           usuario: { select: { id: true, nombre: true, foto_perfil: true } },
         },
-        orderBy: [{ es_casero: 'asc' }, { fecha_union: 'asc' }],
+        orderBy: [{ rol: 'asc' }, { fecha_union: 'asc' }],
       }),
       prisma.favorito.count({ where: { publicacion_id: req.params.id } }),
       prisma.solicitudContacto.count({ where: { grupo_id: pub.grupo_id } }),
@@ -295,7 +295,7 @@ export const getPublicacion = async (req, res, next) => {
 
     const miembros = miembrosData.map(mg => ({
       id: mg.usuario.id, nombre: mg.usuario.nombre, foto_perfil: mg.usuario.foto_perfil,
-      rol_en_grupo: mg.rol, fecha_union: mg.fecha_union, es_casero: mg.es_casero,
+      rol_en_grupo: mg.rol, fecha_union: mg.fecha_union,
     }));
 
     const compatibilidad = (perfilUsuario && pcg)

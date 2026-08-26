@@ -26,7 +26,7 @@ function IconInput({ icon: Icon, error, children }) {
   return (
     <div className='relative'>
       <div className='pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5'>
-        <Icon size={15} className={error ? 'text-red-400' : 'text-slate-400'} />
+        <Icon aria-hidden='true' size={15} className={error ? 'text-red-400' : 'text-slate-500'} />
       </div>
       {children}
     </div>
@@ -35,7 +35,7 @@ function IconInput({ icon: Icon, error, children }) {
 
 const baseCls = (error) =>
   `w-full pl-10 pr-4 py-3 rounded-xl text-sm text-slate-800 bg-slate-50 border outline-none transition-all
-   placeholder:text-slate-400
+   placeholder:text-slate-500
    focus:bg-white focus:shadow-sm
    ${error
      ? 'border-red-300 focus:ring-2 focus:ring-red-200'
@@ -54,7 +54,7 @@ function FieldError({ message }) {
   if (!message) return null
   return (
     <p className='flex items-center gap-1 text-red-500 text-[11px] mt-1.5'>
-      <AlertCircle size={10} /> {message}
+      <AlertCircle aria-hidden='true' size={10} /> {message}
     </p>
   )
 }
@@ -63,7 +63,7 @@ function Section({ title, children }) {
   return (
     <div className='flex flex-col gap-4'>
       {title && (
-        <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-1 border-b border-slate-100'>
+        <p className='text-[10px] font-bold text-slate-500 uppercase tracking-widest pb-1 border-b border-slate-100'>
           {title}
         </p>
       )}
@@ -74,7 +74,7 @@ function Section({ title, children }) {
 
 // ── Componente principal ──────────────────────────────────────────
 function CreacionGrupo() {
-  const { user, setUser } = useAuth()
+  const { setTieneGrupo } = useAuth()
   const navigate = useNavigate()
   const [serverError, setServerError] = useState('')
   const [grupoCreado, setGrupoCreado] = useState(null)
@@ -103,7 +103,7 @@ function CreacionGrupo() {
       })
       const json = await res.json()
       if (!res.ok) return setServerError(json.message)
-      if (setUser) setUser(prev => prev ? { ...prev } : prev)
+      setTieneGrupo(true)
       setGrupoCreado(json.grupo)
     } catch {
       setServerError('Error de conexión con el servidor')
@@ -129,7 +129,7 @@ function CreacionGrupo() {
           <div className='bg-white rounded-2xl border border-slate-100 shadow-md overflow-hidden'>
             <div className='bg-emerald-50 px-6 py-5 border-b border-slate-100 flex items-center gap-4'>
               <div className='w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0'>
-                <House size={20} className='text-emerald-600' />
+                <House aria-hidden='true' size={20} className='text-emerald-600' />
               </div>
               <div>
                 <h2 className='text-base font-bold text-slate-900'>¡Grupo creado!</h2>
@@ -139,11 +139,11 @@ function CreacionGrupo() {
 
             <div className='p-6 flex flex-col gap-6 text-center'>
               <div className='bg-slate-50 border border-slate-200 rounded-xl px-6 py-5'>
-                <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3'>Código de acceso</p>
+                <p className='text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3'>Código de acceso</p>
                 <p className='text-4xl font-bold tracking-[0.3em] text-slate-900 mb-4'>{grupoCreado.codigo_acceso}</p>
                 <button onClick={copiarCodigo}
                   className='cursor-pointer! inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-emerald-600 transition'>
-                  {copiado ? <Check size={15} className='text-emerald-500' /> : <Copy size={15} />}
+                  {copiado ? <Check aria-hidden='true' size={15} className='text-emerald-500' /> : <Copy aria-hidden='true' size={15} />}
                   {copiado ? 'Copiado' : 'Copiar código'}
                 </button>
               </div>
@@ -151,10 +151,10 @@ function CreacionGrupo() {
               <div className='flex flex-col gap-2'>
                 <button onClick={() => navigate('/grupo')}
                   className='cursor-pointer! w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-6 py-3 rounded-xl transition shadow-sm shadow-emerald-200'>
-                  <Users size={16} /> Ir al dashboard del grupo
+                  <Users aria-hidden='true' size={16} /> Ir al dashboard del grupo
                 </button>
                 <button onClick={() => navigate('/')}
-                  className='cursor-pointer! w-full text-slate-400 hover:text-slate-700 font-medium px-6 py-2.5 rounded-xl transition text-sm'>
+                  className='cursor-pointer! w-full text-slate-500 hover:text-slate-700 font-medium px-6 py-2.5 rounded-xl transition text-sm'>
                   Volver al inicio
                 </button>
               </div>
@@ -167,7 +167,7 @@ function CreacionGrupo() {
 
   if (checking) return (
     <div className='min-h-screen bg-slate-50 flex items-center justify-center'>
-      <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+      <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
     </div>
   )
 
@@ -177,8 +177,8 @@ function CreacionGrupo() {
       {/* Cabecera */}
       <div className='sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-100 px-6 py-3.5 flex items-center gap-4'>
         <button type='button' onClick={() => navigate('/')}
-          className='cursor-pointer! flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-900 font-medium transition'>
-          <ArrowLeft size={15} /> Volver
+          className='cursor-pointer! flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 font-medium transition'>
+          <ArrowLeft aria-hidden='true' size={15} /> Volver
         </button>
         <div className='h-4 w-px bg-slate-200' />
         <p className='text-sm font-semibold text-slate-700'>Crear grupo</p>
@@ -190,10 +190,10 @@ function CreacionGrupo() {
           {/* Banner del formulario */}
           <div className='bg-emerald-50 px-6 py-5 border-b border-slate-100 flex items-center gap-4'>
             <div className='w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0'>
-              <House size={20} className='text-emerald-600' />
+              <House aria-hidden='true' size={20} className='text-emerald-600' />
             </div>
             <div>
-              <h2 className='text-base font-bold text-slate-900'>Configura tu grupo</h2>
+              <h1 className='text-base font-bold text-slate-900'>Configura tu grupo</h1>
               <p className='text-xs text-slate-500 mt-0.5'>Nombre del piso compartido y preferencias iniciales.</p>
             </div>
           </div>
@@ -201,12 +201,12 @@ function CreacionGrupo() {
           <form onSubmit={handleSubmit(onSubmit)} className='p-6 flex flex-col gap-6'>
             <Section title='Información del grupo'>
               <div>
-                <Label required>Nombre del grupo</Label>
+                <Label htmlFor='campo-nombre' required>Nombre del grupo</Label>
                 <IconInput icon={PenLine} error={errors.nombre}>
-                  <input {...register('nombre')} className={baseCls(errors.nombre)}
+                  <input id='campo-nombre' aria-invalid={!!errors.nombre} aria-describedby={errors.nombre ? 'error-nombre' : undefined} {...register('nombre')} className={baseCls(errors.nombre)}
                     placeholder='Piso de la Calle Mayor' />
                 </IconInput>
-                <FieldError message={errors.nombre?.message} />
+                <FieldError id='error-nombre' message={errors.nombre?.message} />
               </div>
             </Section>
 
@@ -228,13 +228,13 @@ function CreacionGrupo() {
                     ))}
                   </div>
                 )} />
-                <p className='text-[11px] text-slate-400 mt-1.5'>Opcional — lo puedes cambiar después.</p>
+                <p className='text-[11px] text-slate-500 mt-1.5'>Opcional — lo puedes cambiar después.</p>
               </div>
             </Section>
 
             {serverError && (
-              <div className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
-                <AlertCircle size={13} className='text-red-500 shrink-0' />
+              <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
+                <AlertCircle aria-hidden='true' size={13} className='text-red-500 shrink-0' />
                 <p className='text-xs text-red-700'>{serverError}</p>
               </div>
             )}

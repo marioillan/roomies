@@ -7,6 +7,8 @@ import {
   MessageCircle, Send, CheckCircle2, XCircle,
   Clock, Trash2, X, ArrowLeft,
 } from 'lucide-react'
+import { useModalAccesible } from '../lib/useModalAccesible.js'
+import { TarjetaCompatibilidad, InteresesComunes } from '../components/Compatibilidad.jsx'
 
 const API = `${import.meta.env.VITE_API_URL}`
 
@@ -38,13 +40,14 @@ function Avatar({ foto, nombre, size = 'md' }) {
 // ── Modal confirmar cierre de chat ────────────────────────────────
 
 function ModalCerrarChat({ nombreOtro, cerrando, onConfirmar, onCancelar }) {
+  const refDialogo = useModalAccesible(onCancelar)
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm' onClick={onCancelar}>
-      <div className='bg-white rounded-2xl shadow-xl w-full max-w-sm' onClick={e => e.stopPropagation()}>
+      <div ref={refDialogo} role='dialog' aria-modal='true' tabIndex={-1} aria-label='Cerrar conversación' className='bg-white rounded-2xl shadow-xl w-full max-w-sm' onClick={e => e.stopPropagation()}>
         <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100'>
           <h3 className='font-display text-base font-bold text-slate-900'>Cerrar conversación</h3>
-          <button onClick={onCancelar} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'>
-            <X size={16} />
+          <button aria-label='Cerrar' onClick={onCancelar} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition'>
+            <X aria-hidden='true' size={16} />
           </button>
         </div>
         <div className='px-6 py-5 flex flex-col gap-4'>
@@ -67,7 +70,7 @@ function ModalCerrarChat({ nombreOtro, cerrando, onConfirmar, onCancelar }) {
             >
               {cerrando
                 ? <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                : <Trash2 size={14} />}
+                : <Trash2 aria-hidden='true' size={14} />}
               Cerrar chat
             </button>
           </div>
@@ -137,7 +140,7 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
       <div className='flex items-center gap-3 px-5 py-3.5 border-b border-slate-100 shrink-0'>
         {onVolver && (
           <button type='button' onClick={onVolver} className='cursor-pointer! sm:hidden flex items-center gap-1 h-8 pl-1 pr-2 -ml-1 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition shrink-0'>
-            <ArrowLeft size={18} />
+            <ArrowLeft aria-hidden='true' size={18} />
             <span className='text-xs font-semibold'>Volver</span>
           </button>
         )}
@@ -165,15 +168,21 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
             onClick={() => setModalCierre(true)}
             className='cursor-pointer! w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-400 transition'
           >
-            <Trash2 size={15} />
+            <Trash2 aria-hidden='true' size={15} />
           </button>
         </div>
       </div>
 
       {/* Mensajes */}
-      <div className='flex-1 min-h-0 overflow-y-auto px-5 py-5 flex flex-col gap-3 bg-slate-50'>
+      <div
+        role='log'
+        aria-live='polite'
+        aria-relevant='additions'
+        aria-label='Mensajes de la conversación'
+        className='flex-1 min-h-0 overflow-y-auto px-5 py-5 flex flex-col gap-3 bg-slate-50'
+      >
         {mensajes.length === 0 && (
-          <p className='text-center text-xs text-slate-400 py-8'>Sé el primero en escribir</p>
+          <p className='text-center text-xs text-slate-500 py-8'>Sé el primero en escribir</p>
         )}
         {mensajes.map((m, i) => {
           const esMio    = m.remitente_id === user?.id
@@ -182,7 +191,7 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
             <div key={m.id}>
               {esNuevoDia && (
                 <div className='flex justify-center mb-2'>
-                  <span className='font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-slate-400 bg-white border border-slate-100 px-3 py-1 rounded-full'>
+                  <span className='font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-slate-500 bg-white border border-slate-100 px-3 py-1 rounded-full'>
                     {new Date(m.enviado_en).toDateString() === new Date().toDateString()
                       ? 'Hoy'
                       : new Date(m.enviado_en).toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'short' })
@@ -198,7 +207,7 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
                     : 'self-start bg-white border border-slate-100 text-slate-900 rounded-2xl rounded-bl-sm'
                 }`}>
                   {m.contenido}
-                  <p className={`font-mono text-[0.625rem] mt-1 ${esMio ? 'text-white/60' : 'text-slate-400'}`}>
+                  <p className={`font-mono text-[0.625rem] mt-1 ${esMio ? 'text-white/60' : 'text-slate-500'}`}>
                     {hora(m.enviado_en)}
                   </p>
                 </div>
@@ -216,6 +225,7 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
           onChange={e => setTexto(e.target.value)}
           onFocus={() => setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 300)}
           placeholder='Escribe un mensaje...'
+          aria-label='Escribe un mensaje'
           className='flex-1 text-base sm:text-sm bg-slate-50 border border-slate-200 rounded-full px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition'
         />
         <button
@@ -224,7 +234,7 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
           aria-label='Enviar'
           className='cursor-pointer! w-11 h-11 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 flex items-center justify-center transition shrink-0'
         >
-          <Send size={16} className='text-white' />
+          <Send aria-hidden='true' size={16} className='text-white' />
         </button>
       </form>
 
@@ -257,68 +267,118 @@ function DetalleSolicitud({ solicitud, onAccion }) {
   }
 
   return (
-    <div className='flex flex-col items-center justify-center h-full gap-6 px-8 bg-slate-50'>
-      <div className='flex flex-col items-center gap-3 text-center'>
-        <Avatar foto={solicitud.foto_perfil} nombre={solicitud.nombre} size='lg' />
-        <div>
-          <p className='font-semibold text-slate-900 text-lg'>{solicitud.nombre}</p>
-          <p className='text-sm text-slate-400 font-mono'>{solicitud.email}</p>
-        </div>
-        <p className='text-xs text-slate-400'>Solicita contacto · {hora(solicitud.fecha_envio)}</p>
-      </div>
+    // El contenedor scrollea y el interior usa `min-h-full` + `justify-center`:
+    // así queda centrado cuando cabe y crece sin recortarse por arriba cuando
+    // la compatibilidad y los intereses lo hacen más alto que el panel.
+    <div className='h-full overflow-y-auto bg-slate-50'>
+      <div className='min-h-full flex flex-col items-center justify-center gap-5 px-6 py-8'>
 
-      {solicitud.estado === 'PENDIENTE' && (
-        <div className='flex gap-3'>
-          <button type='button' onClick={() => accion('RECHAZADA')} disabled={!!cargando}
-            className='cursor-pointer! flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:border-red-200 hover:text-red-500 text-sm font-semibold transition disabled:opacity-50'>
-            {cargando === 'RECHAZADA'
-              ? <span className='w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin' />
-              : <XCircle size={16} />
-            }
-            Rechazar
-          </button>
-          <button type='button' onClick={() => accion('ACEPTADA')} disabled={!!cargando}
-            className='cursor-pointer! flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition disabled:opacity-50'>
-            {cargando === 'ACEPTADA'
-              ? <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-              : <CheckCircle2 size={16} />
-            }
-            Aceptar
-          </button>
+        <div className='flex flex-col items-center gap-3 text-center'>
+          <Avatar foto={solicitud.foto_perfil} nombre={solicitud.nombre} size='lg' />
+          <div>
+            <p className='font-semibold text-slate-900 text-lg'>{solicitud.nombre}</p>
+            <p className='text-sm text-slate-500 font-mono break-all'>{solicitud.email}</p>
+          </div>
+          <p className='text-xs text-slate-500'>Solicita contacto · {hora(solicitud.fecha_envio)}</p>
         </div>
-      )}
+
+        {/* Compatibilidad e intereses: le dan al administrador el mismo criterio
+            que ya tiene en las solicitudes de unión al grupo. */}
+        <div className='w-full max-w-sm flex flex-col gap-3'>
+          {solicitud.compatibilidad != null ? (
+            <TarjetaCompatibilidad score={solicitud.compatibilidad} />
+          ) : (
+            <div className='bg-white border border-slate-200 rounded-[0.875rem] p-4'>
+              <p className='text-xs text-slate-500 leading-relaxed'>
+                No se puede calcular la compatibilidad: falta el perfil de
+                convivencia de esta persona o el del grupo.
+              </p>
+            </div>
+          )}
+
+          {solicitud.intereses_comunes?.length > 0 && (
+            <InteresesComunes intereses={solicitud.intereses_comunes} />
+          )}
+        </div>
+
+        {solicitud.estado === 'PENDIENTE' && (
+          <div className='flex gap-3'>
+            <button type='button' onClick={() => accion('RECHAZADA')} disabled={!!cargando}
+              className='cursor-pointer! flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:border-red-200 hover:text-red-600 text-sm font-semibold transition disabled:opacity-50'>
+              {cargando === 'RECHAZADA'
+                ? <span className='w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin' />
+                : <XCircle aria-hidden='true' size={16} />
+              }
+              Rechazar
+            </button>
+            <button type='button' onClick={() => accion('ACEPTADA')} disabled={!!cargando}
+              className='cursor-pointer! flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition disabled:opacity-50'>
+              {cargando === 'ACEPTADA'
+                ? <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                : <CheckCircle2 aria-hidden='true' size={16} />
+              }
+              Aceptar
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
 // ── Fila de conversación (lista izquierda) ────────────────────────
 
-function ConvRow({ foto, nombre, subtitulo, ultimoMensaje, ultimoEn, activa, onClick, isPendiente }) {
-  return (
-    <button
-      type='button'
-      onClick={onClick}
-      className={`cursor-pointer! w-full flex items-center gap-3 px-5 py-3.5 text-left transition ${
-        activa
-          ? 'bg-emerald-50 shadow-[inset_3px_0_0_#059669]'
-          : 'hover:bg-slate-50'
-      }`}
-    >
+function ConvRow({ foto, nombre, subtitulo, ultimoMensaje, ultimoEn, activa, onClick, isPendiente, compatibilidad }) {
+  const contenido = (
+    <>
       <Avatar foto={foto} nombre={nombre} size='md' />
       <div className='flex-1 min-w-0'>
         <div className='flex items-center justify-between gap-2'>
           <p className='text-[0.875rem] font-semibold text-slate-800 truncate'>{nombre}</p>
           {ultimoEn && (
-            <span className='font-mono text-[0.625rem] text-slate-400 shrink-0'>{hora(ultimoEn)}</span>
+            <span className='font-mono text-[0.625rem] text-slate-500 shrink-0'>{hora(ultimoEn)}</span>
           )}
         </div>
-        <p className='text-xs text-slate-500 truncate mt-0.5'>
+        <div className='text-xs text-slate-500 truncate mt-0.5'>
           {isPendiente
-            ? <span className='flex items-center gap-1 text-amber-500 font-medium'><Clock size={10} />Pendiente</span>
+            ? (
+              <span className='flex items-center gap-1.5'>
+                <span className='flex items-center gap-1 text-amber-700 font-medium'>
+                  <Clock aria-hidden='true' size={10} />Pendiente
+                </span>
+                {/* El % permite priorizar solicitudes sin abrirlas una a una */}
+                {compatibilidad != null && (
+                  <span className='shrink-0 bg-emerald-100 text-emerald-800 font-semibold px-1.5 py-0.5 rounded-full text-[0.625rem]'>
+                    {compatibilidad}%
+                  </span>
+                )}
+              </span>
+            )
             : (ultimoMensaje ?? subtitulo ?? '')
           }
-        </p>
+        </div>
       </div>
+    </>
+  )
+
+  const base = `w-full flex items-center gap-3 px-5 py-3.5 text-left transition ${
+    activa ? 'bg-emerald-50 shadow-[inset_3px_0_0_#059669]' : ''
+  }`
+
+  // Las solicitudes que el propio usuario ha enviado son informativas: no hay
+  // nada que abrir hasta que el administrador responda. Se renderizan como
+  // <div> en vez de <button> para no ofrecer un control que no hace nada.
+  if (!onClick) {
+    return <div className={base}>{contenido}</div>
+  }
+
+  return (
+    <button
+      type='button'
+      onClick={onClick}
+      className={`cursor-pointer! ${base} ${activa ? '' : 'hover:bg-slate-50'}`}
+    >
+      {contenido}
     </button>
   )
 }
@@ -382,12 +442,14 @@ export default function Chat({ modo }) {
 
   if (loading) return (
     <div className='flex justify-center py-24'>
-      <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+      <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
     </div>
   )
 
   return (
-    <div className='flex flex-col gap-6'>
+    // El margen negativo recupera parte del `pb-24` (6rem) que los layouts
+    // reservan para la barra inferior, que solo mide ~3,25rem.
+    <div className='flex flex-col gap-6 -mb-5 md:mb-0'>
 
       {/* Header */}
       <div>
@@ -396,24 +458,37 @@ export default function Chat({ modo }) {
         </h1>
       </div>
 
-      {/* Shell */}
+      {/* Shell.
+          Altura = viewport menos el "cromo" que la rodea:
+          · móvil → 1rem (padding del layout) + 2,125rem (h1) + 1,5rem (gap
+                    sobre la tarjeta) + 3,25rem (bottom nav) + 1,5rem de hueco
+                    inferior = 9,375rem. El hueco de abajo vale lo mismo que el
+                    `gap-6` de arriba, para que la tarjeta quede centrada entre
+                    el título y la barra.
+          · md+   → padding + h1 + gap + padding inferior ≈ 10,25rem,
+                    con 0,5rem de holgura */}
       <div
-        className='bg-white border border-slate-100 rounded-[1.25rem] overflow-hidden flex flex-col sm:grid'
+        className='bg-white border border-slate-100 rounded-[1.25rem] overflow-hidden flex flex-col sm:grid
+                   h-[calc(100dvh-9.375rem)] md:h-[calc(100dvh-10.75rem)]
+                   min-h-[22rem] md:min-h-[30rem]'
         style={{
           gridTemplateColumns: '20rem 1fr',
-          height: 'calc(100dvh - 13rem)',
-          minHeight: '480px',
           boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)',
         }}
       >
 
-        {/* Panel izquierdo — lista */}
-        <div className={`border-r border-slate-100 flex flex-col overflow-hidden min-h-0 ${mostrandoConversacion ? 'hidden sm:flex' : 'flex'}`}>
+        {/* Panel izquierdo — lista.
+            `flex-1` es imprescindible en móvil: ahí el shell es `flex flex-col`
+            y sin él el panel se queda del alto de su contenido, de modo que el
+            `h-full` de los estados vacíos y del detalle de solicitud no tiene
+            contra qué resolverse y no se centran. En `sm:` el shell es un grid
+            y los items ya se estiran solos (flex-grow se ignora). */}
+        <div className={`border-r border-slate-100 flex-1 flex flex-col overflow-hidden min-h-0 ${mostrandoConversacion ? 'hidden sm:flex' : 'flex'}`}>
           <div className='flex-1 min-h-0 overflow-y-auto'>
             {!hayContenido && (
               <div className='flex flex-col items-center justify-center h-full gap-3 px-6 text-center'>
-                <MessageCircle size={28} className='text-slate-200' />
-                <p className='text-xs text-slate-400'>
+                <MessageCircle aria-hidden='true' size={28} className='text-slate-400' />
+                <p className='text-xs text-slate-500'>
                   {esAdmin
                     ? 'Aún no has recibido solicitudes'
                     : 'Contacta con un anuncio para iniciar una conversación'
@@ -425,7 +500,7 @@ export default function Chat({ modo }) {
             {/* Solicitudes pendientes (admin) */}
             {esAdmin && pendientes.length > 0 && (
               <div>
-                <p className='px-5 pt-4 pb-1 font-mono text-[0.625rem] font-bold uppercase tracking-widest text-slate-400'>
+                <p className='px-5 pt-4 pb-1 font-mono text-[0.625rem] font-bold uppercase tracking-widest text-slate-500'>
                   Pendientes
                 </p>
                 {pendientes.map(s => (
@@ -437,6 +512,7 @@ export default function Chat({ modo }) {
                     ultimoEn={s.fecha_envio}
                     activa={seleccion?.id === s.id}
                     isPendiente
+                    compatibilidad={s.compatibilidad}
                     onClick={() => seleccionar({ tipo: 'solicitud', id: s.id })}
                   />
                 ))}
@@ -447,7 +523,7 @@ export default function Chat({ modo }) {
             {chats.length > 0 && (
               <div>
                 {esAdmin && pendientes.length > 0 && (
-                  <p className='px-5 pt-4 pb-1 font-mono text-[0.625rem] font-bold uppercase tracking-widest text-slate-400'>
+                  <p className='px-5 pt-4 pb-1 font-mono text-[0.625rem] font-bold uppercase tracking-widest text-slate-500'>
                     Mensajes
                   </p>
                 )}
@@ -472,7 +548,7 @@ export default function Chat({ modo }) {
             {/* Solicitudes pendientes del solicitante */}
             {!esAdmin && pendientes.length > 0 && (
               <div>
-                <p className='px-5 pt-4 pb-1 font-mono text-[0.625rem] font-bold uppercase tracking-widest text-slate-400'>
+                <p className='px-5 pt-4 pb-1 font-mono text-[0.625rem] font-bold uppercase tracking-widest text-slate-500'>
                   Solicitudes
                 </p>
                 {pendientes.map(s => (
@@ -483,7 +559,6 @@ export default function Chat({ modo }) {
                     ultimoEn={s.fecha_envio}
                     activa={false}
                     isPendiente
-                    onClick={() => {}}
                   />
                 ))}
               </div>
@@ -491,15 +566,15 @@ export default function Chat({ modo }) {
           </div>
         </div>
 
-        {/* Panel derecho */}
-        <div className={`flex flex-col overflow-hidden min-h-0 ${mostrandoConversacion ? 'flex' : 'hidden sm:flex'}`}>
+        {/* Panel derecho — ver nota sobre `flex-1` en el panel izquierdo */}
+        <div className={`flex-1 flex flex-col overflow-hidden min-h-0 ${mostrandoConversacion ? 'flex' : 'hidden sm:flex'}`}>
           {!seleccion && (
             <div className='flex flex-col items-center justify-center h-full gap-3 text-center px-8 bg-slate-50'>
               <div className='w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm'>
-                <MessageCircle size={22} className='text-slate-300' />
+                <MessageCircle aria-hidden='true' size={22} className='text-slate-500' />
               </div>
               <p className='text-sm font-semibold text-slate-600'>Selecciona una conversación</p>
-              <p className='text-xs text-slate-400'>Elige un chat de la lista para ver los mensajes</p>
+              <p className='text-xs text-slate-500'>Elige un chat de la lista para ver los mensajes</p>
             </div>
           )}
 
@@ -507,7 +582,7 @@ export default function Chat({ modo }) {
             <div className='flex flex-col h-full min-h-0 overflow-hidden'>
               <div className='sm:hidden flex items-center gap-2 px-5 py-3 border-b border-slate-100 shrink-0'>
                 <button type='button' onClick={() => setMostrandoConversacion(false)} className='cursor-pointer! flex items-center gap-1 h-8 pl-1 pr-2 -ml-1 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition'>
-                  <ArrowLeft size={18} />
+                  <ArrowLeft aria-hidden='true' size={18} />
                   <span className='text-xs font-semibold'>Volver</span>
                 </button>
                 <span className='text-sm font-semibold text-slate-700'>Solicitud</span>

@@ -45,8 +45,8 @@ function ModalConfirmarVisible({ publicar, onConfirmar, onCancelar }) {
             publicar ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-200'
           }`}>
             {publicar
-              ? <Globe size={20} className='text-emerald-600' />
-              : <EyeOff size={20} className='text-slate-500' />
+              ? <Globe aria-hidden='true' size={20} className='text-emerald-600' />
+              : <EyeOff aria-hidden='true' size={20} className='text-slate-500' />
             }
           </div>
           <div>
@@ -95,8 +95,8 @@ function ModalEliminar({ eliminando, onConfirmar, onCancelar }) {
         onClick={e => e.stopPropagation()}
       >
         <div className='flex items-start gap-4'>
-          <div className='w-11 h-11 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0'>
-            <Trash2 size={20} className='text-red-500' />
+          <div role='alert' className='w-11 h-11 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0'>
+            <Trash2 aria-hidden='true' size={20} className='text-red-500' />
           </div>
           <div>
             <h3 className='font-display text-lg font-bold text-slate-900'>¿Eliminar el anuncio?</h3>
@@ -134,8 +134,8 @@ function Carrusel({ fotos, visible }) {
     return (
       <div className={`${CARD} p-5`}>
         <div className='w-full aspect-video bg-slate-50 rounded-[0.875rem] flex flex-col items-center justify-center gap-2 border border-slate-100'>
-          <ImageOff size={28} className='text-slate-300' />
-          <p className='font-mono text-xs text-slate-400'>Sin fotos</p>
+          <ImageOff aria-hidden='true' size={28} className='text-slate-500' />
+          <p className='font-mono text-xs text-slate-500'>Sin fotos</p>
         </div>
       </div>
     )
@@ -164,7 +164,7 @@ function Carrusel({ fotos, visible }) {
             ? 'text-emerald-700 bg-emerald-50/90 border-emerald-100'
             : 'text-slate-600 bg-slate-100/90 border-slate-200'
         }`}>
-          {visible ? <Eye size={10} /> : <EyeOff size={10} />}
+          {visible ? <Eye aria-hidden='true' size={10} /> : <EyeOff aria-hidden='true' size={10} />}
           {visible ? 'Público' : 'No visible'}
         </span>
 
@@ -172,20 +172,20 @@ function Carrusel({ fotos, visible }) {
         {fotos.length > 1 && (
           <>
             <button
-              onClick={prev}
+              aria-label='Foto anterior' onClick={prev}
               className={`cursor-pointer! absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-sm text-slate-700 transition backdrop-blur-sm ${
                 idx === 0 ? 'opacity-40' : 'opacity-100'
               }`}
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft aria-hidden='true' size={18} />
             </button>
             <button
-              onClick={next}
+              aria-label='Foto siguiente' onClick={next}
               className={`cursor-pointer! absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-sm text-slate-700 transition backdrop-blur-sm ${
                 idx === fotos.length - 1 ? 'opacity-40' : 'opacity-100'
               }`}
             >
-              <ChevronRight size={18} />
+              <ChevronRight aria-hidden='true' size={18} />
             </button>
 
             {/* Contador */}
@@ -231,7 +231,7 @@ function Carrusel({ fotos, visible }) {
 function FilaInfo({ label, children, last }) {
   return (
     <div className={`flex items-center justify-between gap-4 py-3 ${!last ? 'border-b border-dashed border-slate-100' : ''}`}>
-      <span className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-400 shrink-0'>
+      <span className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-500 shrink-0'>
         {label}
       </span>
       <span className='text-sm text-slate-800 text-right'>{children}</span>
@@ -249,7 +249,7 @@ function FilaAccion({ icon: Icon, iconBg, iconColor, title, subtitle, onClick, b
         className='cursor-pointer! w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 text-left transition'
       >
         <div className='w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center shrink-0'>
-          <Icon size={16} className='text-red-600' />
+          <Icon aria-hidden='true' size={16} className='text-red-600' />
         </div>
         <div className='flex-1 min-w-0'>
           <p className='text-sm font-semibold text-red-600'>{title}</p>
@@ -265,11 +265,11 @@ function FilaAccion({ icon: Icon, iconBg, iconColor, title, subtitle, onClick, b
       className='cursor-pointer! w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-slate-200 text-left transition'
     >
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
-        <Icon size={16} className={iconColor} />
+        <Icon aria-hidden='true' size={16} className={iconColor} />
       </div>
       <div className='flex-1 min-w-0'>
         <p className='text-sm font-semibold text-slate-800'>{title}</p>
-        {subtitle && <p className='text-xs text-slate-400 mt-0.5'>{subtitle}</p>}
+        {subtitle && <p className='text-xs text-slate-500 mt-0.5'>{subtitle}</p>}
       </div>
       {badge != null && (
         <span className='shrink-0 min-w-[1.25rem] h-5 px-1.5 rounded-full bg-blue-500 text-white font-mono text-[10px] font-bold flex items-center justify-center'>
@@ -364,7 +364,7 @@ function Publicacion() {
   if (publicacion === undefined) {
     return (
       <div className='flex justify-center py-16'>
-        <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+        <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
       </div>
     )
   }
@@ -376,7 +376,7 @@ function Publicacion() {
       <div className='flex items-center justify-center min-h-[70vh]'>
         <div className={`${CARD} p-12 flex flex-col items-center text-center gap-5 w-full max-w-[28rem]`}>
           <div className='w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center'>
-            <Megaphone size={28} className='text-emerald-500' />
+            <Megaphone aria-hidden='true' size={28} className='text-emerald-500' />
           </div>
 
           <div className='flex flex-col gap-2'>
@@ -393,10 +393,10 @@ function Publicacion() {
             disabled={!esAdmin}
             className='cursor-pointer! flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-3 rounded-xl transition w-full max-w-[20rem]'
           >
-            <Plus size={15} /> Crear anuncio
+            <Plus aria-hidden='true' size={15} /> Crear anuncio
           </button>
 
-          <p className='text-xs text-slate-400'>
+          <p className='text-xs text-slate-500'>
             Solo el administrador puede crear y editar el anuncio
           </p>
         </div>
@@ -420,7 +420,7 @@ function Publicacion() {
               ? 'text-emerald-700 bg-emerald-50 border-emerald-100'
               : 'text-slate-500 bg-slate-100 border-slate-200'
           }`}>
-            {publicacion.visible ? <Eye size={11} /> : <EyeOff size={11} />}
+            {publicacion.visible ? <Eye aria-hidden='true' size={11} /> : <EyeOff aria-hidden='true' size={11} />}
             {publicacion.visible ? 'Visible en búsquedas' : 'No visible'}
           </span>
         )}
@@ -437,14 +437,14 @@ function Publicacion() {
 
           {/* Información */}
           <div className={`${CARD} p-5`}>
-            <p className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-400 mb-0.5'>
+            <p className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-500 mb-0.5'>
               Información
             </p>
             <FilaInfo label='Título'>{publicacion.titulo}</FilaInfo>
             {publicacion.ciudad && (
               <FilaInfo label='Ciudad'>
                 <span className='flex items-center justify-end gap-1.5'>
-                  <MapPin size={12} className='text-slate-400' />
+                  <MapPin aria-hidden='true' size={12} className='text-slate-500' />
                   {publicacion.ciudad}
                 </span>
               </FilaInfo>
@@ -471,7 +471,7 @@ function Publicacion() {
           {esAdmin && (
             <div className={`${CARD} overflow-hidden`}>
               <div className='px-5 pt-5 pb-3'>
-                <p className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-400'>
+                <p className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-500'>
                   Visibilidad
                 </p>
               </div>
@@ -495,7 +495,7 @@ function Publicacion() {
 
           {/* Acciones */}
           <div className={`${CARD} p-5 flex flex-col gap-2`}>
-            <p className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-400 mb-1'>
+            <p className='font-mono text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-slate-500 mb-1'>
               Acciones
             </p>
 

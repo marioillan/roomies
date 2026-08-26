@@ -1,5 +1,5 @@
 import express from 'express';
-import { requireAuth, requireMiembro } from '../src/middleware/auth.js';
+import { requireAuth, requireInquilino } from '../src/middleware/auth.js';
 import {
   getProductos,
   añadirProducto,
@@ -10,10 +10,10 @@ import {
 
 const router = express.Router();
 
-router.get('/',               requireAuth, requireMiembro, getProductos);
-router.post('/',              requireAuth, requireMiembro, añadirProducto);
-router.patch('/:id/comprado', requireAuth, requireMiembro, toggleComprado);
-router.put('/:id',            requireAuth, requireMiembro, editarProducto);
-router.delete('/:id',         requireAuth, requireMiembro, eliminarProducto);
+router.get('/',               requireAuth, requireInquilino, getProductos);
+router.post('/',              requireAuth, requireInquilino, añadirProducto);
+router.patch('/:id/comprado', requireAuth, requireInquilino, toggleComprado);
+router.put('/:id',            requireAuth, requireInquilino, editarProducto);
+router.delete('/:id',         requireAuth, requireInquilino, eliminarProducto);
 
 export default router;

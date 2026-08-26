@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useId } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
@@ -7,6 +7,8 @@ import {
   LogOut, Home, Zap, Droplet, Wifi, Receipt, MoreHorizontal,
   ArrowLeft, Users, Pencil,
 } from 'lucide-react'
+import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
+import { useModalAccesible } from '../lib/useModalAccesible.js'
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -81,7 +83,7 @@ function SelectorDivision({ tipoDivision, onChange }) {
             <button key={value} type='button' onClick={() => onChange(value)}
               className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold px-3 py-1.5 rounded-full border transition
                 ${sel ? 'bg-emerald-50 text-emerald-700 border-transparent' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
-              {sel && <Check size={11} />}{label}
+              {sel && <Check aria-hidden='true' size={11} />}{label}
             </button>
           )
         })}
@@ -104,6 +106,7 @@ function DivisionPersonalizada({ personas, importes, onCambiarImporte, importeTo
             type='number' step='0.01' min='0' value={importes[p.id] ?? ''}
             onChange={e => onCambiarImporte(p.id, e.target.value)}
             placeholder='0.00'
+            aria-label={`Importe asignado a ${p.nombre}`}
             className='w-24 border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-right text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition'
           />
         </div>
@@ -123,6 +126,9 @@ function DivisionPersonalizada({ personas, importes, onCambiarImporte, importeTo
 // ── Modal nueva factura ───────────────────────────────────────────────
 
 function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
+  const idBase = useId()
+  const campo  = (n) => `${idBase}-${n}`
+  const refDialogo = useModalAccesible(onClose)
   const [form, setForm] = useState({
     tipo: '',
     importe_total: '',
@@ -137,7 +143,7 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
   const [importes, setImportes] = useState({})
   const fileRef = useRef()
 
-  const inquilinos = miembros.filter(m => !m.es_casero)
+  const inquilinos = miembros.filter(m => m.rol_en_grupo !== 'CASERO')
     .map(m => ({ id: m.id, nombre: m.username, foto: m.foto_perfil }))
   const diferencia = calcularDiferenciaDivision(inquilinos, importes, form.importe_total)
 
@@ -186,12 +192,12 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm' onClick={onClose}>
-      <div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] flex flex-col transition-[max-width] duration-300 ${tipoDivision === 'PERSONALIZADA' ? 'max-w-3xl' : 'max-w-md'}`} onClick={e => e.stopPropagation()}>
+      <div ref={refDialogo} role='dialog' aria-modal='true' tabIndex={-1} aria-label='Nueva factura' className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] flex flex-col transition-[max-width] duration-300 ${tipoDivision === 'PERSONALIZADA' ? 'max-w-3xl' : 'max-w-md'}`} onClick={e => e.stopPropagation()}>
 
         <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0'>
           <h3 className='font-display text-base font-bold text-slate-900'>Nueva factura</h3>
-          <button onClick={onClose} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'>
-            <X size={16} />
+          <button aria-label='Cerrar' onClick={onClose} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition'>
+            <X aria-hidden='true' size={16} />
           </button>
         </div>
 
@@ -213,7 +219,7 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
                         className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold px-3 py-1.5 rounded-full border transition
                           ${sel ? `${cfg.chipBg} ${cfg.chipText} border-transparent` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
                       >
-                        {sel && <Check size={11} />}
+                        {sel && <Check aria-hidden='true' size={11} />}
                         {cfg.label}
                       </button>
                     )
@@ -223,9 +229,11 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
 
               {/* Importe */}
               <div className='flex flex-col gap-1.5'>
-                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Importe total (€) *</label>
-                <input name='importe_total' type='number' step='0.01' min='0.01' value={form.importe_total} onChange={cambiar} placeholder='0.00'
-                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+                <label htmlFor={campo('importe_total')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                  Importe total (€) <span aria-hidden='true'>*</span><span className='sr-only'>(obligatorio)</span>
+                </label>
+                <input id={campo('importe_total')} required name='importe_total' type='number' step='0.01' min='0.01' value={form.importe_total} onChange={cambiar} placeholder='0.00'
+                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
               </div>
 
               {/* División */}
@@ -234,22 +242,26 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
               {/* Fechas */}
               <div className='grid grid-cols-2 gap-3'>
                 <div className='flex flex-col gap-1.5'>
-                  <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Emisión *</label>
-                  <input type='date' name='fecha_emision' value={form.fecha_emision} onChange={cambiar}
+                  <label htmlFor={campo('fecha_emision')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                    Emisión <span aria-hidden='true'>*</span><span className='sr-only'>(obligatorio)</span>
+                  </label>
+                  <input id={campo('fecha_emision')} required type='date' name='fecha_emision' value={form.fecha_emision} onChange={cambiar}
                     className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
                 </div>
                 <div className='flex flex-col gap-1.5'>
-                  <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Vencimiento *</label>
-                  <input type='date' name='fecha_vencimiento' value={form.fecha_vencimiento} onChange={cambiar}
+                  <label htmlFor={campo('fecha_vencimiento')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                    Vencimiento <span aria-hidden='true'>*</span><span className='sr-only'>(obligatorio)</span>
+                  </label>
+                  <input id={campo('fecha_vencimiento')} required type='date' name='fecha_vencimiento' value={form.fecha_vencimiento} onChange={cambiar}
                     className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
                 </div>
               </div>
 
               {/* Descripción */}
               <div className='flex flex-col gap-1.5'>
-                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
-                <textarea name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Ej: Factura de abril, incluye IVA…'
-                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
+                <label htmlFor={campo('descripcion')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
+                <textarea id={campo('descripcion')} name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Ej: Factura de abril, incluye IVA…'
+                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
               </div>
 
               {/* Adjunto */}
@@ -258,7 +270,7 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
                 <input ref={fileRef} type='file' accept='.pdf,image/*' className='hidden' onChange={e => setArchivo(e.target.files[0] ?? null)} />
                 <button type='button' onClick={() => fileRef.current?.click()}
                   className='cursor-pointer! flex items-center gap-2 border border-dashed border-slate-300 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-sm text-slate-500 hover:text-emerald-600 transition'>
-                  <Paperclip size={14} />
+                  <Paperclip aria-hidden='true' size={14} />
                   {archivo
                     ? <span className='truncate text-slate-800 font-medium'>{archivo.name}</span>
                     : <span>Seleccionar archivo…</span>
@@ -272,15 +284,15 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
                 <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Importe por inquilino</label>
                 {inquilinos.length
                   ? <DivisionPersonalizada personas={inquilinos} importes={importes} onCambiarImporte={cambiarImporte} importeTotal={form.importe_total} />
-                  : <p className='text-sm text-slate-400'>No hay inquilinos en el grupo</p>
+                  : <p className='text-sm text-slate-500'>No hay inquilinos en el grupo</p>
                 }
               </div>
             )}
           </div>
 
           {error && (
-            <div className='flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5'>
-              <AlertCircle size={14} className='text-red-500 mt-0.5 shrink-0' />
+            <div role='alert' className='flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5'>
+              <AlertCircle aria-hidden='true' size={14} className='text-red-500 mt-0.5 shrink-0' />
               <p className='text-sm text-red-700'>{error}</p>
             </div>
           )}
@@ -303,6 +315,9 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
 // ── ModalEditarFactura ────────────────────────────────────────────────
 
 function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
+  const idBase = useId()
+  const campo  = (n) => `${idBase}-${n}`
+  const refDialogo = useModalAccesible(onClose)
   const [form, setForm] = useState({
     tipo:              factura.tipo ?? '',
     importe_total:     factura.importe_total ?? '',
@@ -369,12 +384,12 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm' onClick={onClose}>
-      <div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] flex flex-col transition-[max-width] duration-300 ${tipoDivision === 'PERSONALIZADA' ? 'max-w-3xl' : 'max-w-md'}`} onClick={e => e.stopPropagation()}>
+      <div ref={refDialogo} role='dialog' aria-modal='true' tabIndex={-1} aria-label='Editar factura' className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] flex flex-col transition-[max-width] duration-300 ${tipoDivision === 'PERSONALIZADA' ? 'max-w-3xl' : 'max-w-md'}`} onClick={e => e.stopPropagation()}>
 
         <div className='flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0'>
           <h3 className='font-display text-base font-bold text-slate-900'>Editar factura</h3>
-          <button onClick={onClose} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition'>
-            <X size={16} />
+          <button aria-label='Cerrar' onClick={onClose} className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition'>
+            <X aria-hidden='true' size={16} />
           </button>
         </div>
 
@@ -394,7 +409,7 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
                         className={`cursor-pointer! inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold px-3 py-1.5 rounded-full border transition
                           ${sel ? `${cfg.chipBg} ${cfg.chipText} border-transparent` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
                       >
-                        {sel && <Check size={11} />}{cfg.label}
+                        {sel && <Check aria-hidden='true' size={11} />}{cfg.label}
                       </button>
                     )
                   })}
@@ -403,9 +418,11 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
 
               {/* Importe */}
               <div className='flex flex-col gap-1.5'>
-                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Importe total (€) *</label>
-                <input name='importe_total' type='number' step='0.01' min='0.01' value={form.importe_total} onChange={cambiar} placeholder='0.00'
-                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
+                <label htmlFor={campo('importe_total')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                  Importe total (€) <span aria-hidden='true'>*</span><span className='sr-only'>(obligatorio)</span>
+                </label>
+                <input id={campo('importe_total')} required name='importe_total' type='number' step='0.01' min='0.01' value={form.importe_total} onChange={cambiar} placeholder='0.00'
+                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
               </div>
 
               {/* División */}
@@ -414,22 +431,26 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
               {/* Fechas */}
               <div className='grid grid-cols-2 gap-3'>
                 <div className='flex flex-col gap-1.5'>
-                  <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Emisión *</label>
-                  <input type='date' name='fecha_emision' value={form.fecha_emision} onChange={cambiar}
+                  <label htmlFor={campo('fecha_emision')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                    Emisión <span aria-hidden='true'>*</span><span className='sr-only'>(obligatorio)</span>
+                  </label>
+                  <input id={campo('fecha_emision')} required type='date' name='fecha_emision' value={form.fecha_emision} onChange={cambiar}
                     className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
                 </div>
                 <div className='flex flex-col gap-1.5'>
-                  <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Vencimiento *</label>
-                  <input type='date' name='fecha_vencimiento' value={form.fecha_vencimiento} onChange={cambiar}
+                  <label htmlFor={campo('fecha_vencimiento')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+                    Vencimiento <span aria-hidden='true'>*</span><span className='sr-only'>(obligatorio)</span>
+                  </label>
+                  <input id={campo('fecha_vencimiento')} required type='date' name='fecha_vencimiento' value={form.fecha_vencimiento} onChange={cambiar}
                     className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition' />
                 </div>
               </div>
 
               {/* Descripción */}
               <div className='flex flex-col gap-1.5'>
-                <label className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
-                <textarea name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Ej: Factura de abril…'
-                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
+                <label htmlFor={campo('descripcion')} className='font-mono text-xs font-semibold text-slate-500 uppercase tracking-wide'>Descripción</label>
+                <textarea id={campo('descripcion')} name='descripcion' value={form.descripcion} onChange={cambiar} rows={2} placeholder='Ej: Factura de abril…'
+                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition resize-none' />
               </div>
 
               {/* Adjunto */}
@@ -440,7 +461,7 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
                 <input ref={fileRef} type='file' accept='.pdf,image/*' className='hidden' onChange={e => setArchivo(e.target.files[0] ?? null)} />
                 <button type='button' onClick={() => fileRef.current?.click()}
                   className='cursor-pointer! flex items-center gap-2 border border-dashed border-slate-300 hover:border-emerald-400 rounded-xl px-3 py-2.5 text-sm text-slate-500 hover:text-emerald-600 transition'>
-                  <Paperclip size={14} />
+                  <Paperclip aria-hidden='true' size={14} />
                   {archivo
                     ? <span className='truncate text-slate-800 font-medium'>{archivo.name}</span>
                     : <span>{factura.url_documento ? 'Seleccionar nuevo archivo…' : 'Seleccionar archivo…'}</span>
@@ -458,8 +479,8 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
           </div>
 
           {error && (
-            <div className='flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5'>
-              <AlertCircle size={14} className='text-red-500 mt-0.5 shrink-0' />
+            <div role='alert' className='flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5'>
+              <AlertCircle aria-hidden='true' size={14} className='text-red-500 mt-0.5 shrink-0' />
               <p className='text-sm text-red-700'>{error}</p>
             </div>
           )}
@@ -529,14 +550,14 @@ function MenuFactura({ factura, expandido, onToggleExpandido, onEditar, onMarcar
         onClick={() => { onToggleExpandido(); onCerrar() }}
         className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
       >
-        <Users size={14} className='text-slate-400' />
+        <Users aria-hidden='true' size={14} className='text-slate-500' />
         {expandido ? 'Ocultar pagos' : 'Ver pagos'}
       </button>
       <button
         onClick={() => { onEditar(factura); onCerrar() }}
         className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
       >
-        <Pencil size={14} className='text-slate-400' /> Editar
+        <Pencil aria-hidden='true' size={14} className='text-slate-500' /> Editar
       </button>
       {factura.url_documento && (
         <a
@@ -544,7 +565,7 @@ function MenuFactura({ factura, expandido, onToggleExpandido, onEditar, onMarcar
           onClick={onCerrar}
           className='w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
         >
-          <FileText size={14} className='text-slate-400' /> Ver documento
+          <FileText aria-hidden='true' size={14} className='text-slate-500' /> Ver documento
         </a>
       )}
       <div className='border-t border-slate-100 my-1' />
@@ -552,7 +573,7 @@ function MenuFactura({ factura, expandido, onToggleExpandido, onEditar, onMarcar
         onClick={() => { onMarcarPagada(factura.id); onCerrar() }}
         className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
       >
-        <Check size={14} className='text-slate-400' />
+        <Check aria-hidden='true' size={14} className='text-slate-500' />
         {factura.pagos.every(p => p.pagado) ? 'Desmarcar todos' : 'Marcar como pagada'}
       </button>
       {!factura.pagos.some(p => p.pagado) && (
@@ -562,7 +583,7 @@ function MenuFactura({ factura, expandido, onToggleExpandido, onEditar, onMarcar
             onClick={() => { onEliminar(factura.id); onCerrar() }}
             className='cursor-pointer! w-full flex items-center gap-2 px-3.5 py-2 text-sm text-red-600 hover:bg-red-50 transition'
           >
-            <Trash2 size={14} /> Eliminar
+            <Trash2 aria-hidden='true' size={14} /> Eliminar
           </button>
         </>
       )}
@@ -584,7 +605,7 @@ function PagosPorInquilino({ factura, onTogglePago }) {
 
   return (
     <div>
-      <p className='font-mono text-[0.65rem] font-bold uppercase tracking-[0.12em] text-slate-400 mb-3'>
+      <p className='font-mono text-[0.65rem] font-bold uppercase tracking-[0.12em] text-slate-500 mb-3'>
         Pagos por inquilino {factura.tipo_division === 'PERSONALIZADA' ? '(división personalizada)' : `— ${formatEuros(factura.importe_total / (factura.pagos.length || 1))} cada uno`}
       </p>
       <div className='flex flex-col gap-2.5 max-w-sm'>
@@ -600,7 +621,7 @@ function PagosPorInquilino({ factura, onTogglePago }) {
                 ${pago.pagado ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}
                 ${toggling === pago.usuario_id ? 'opacity-50' : ''}`}
             >
-              {pago.pagado ? <><Check size={11} /> Pagado</> : 'Pendiente'}
+              {pago.pagado ? <><Check aria-hidden='true' size={11} /> Pagado</> : 'Pendiente'}
             </button>
           </div>
         ))}
@@ -632,7 +653,7 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
         {/* Tipo icon */}
         <td className='py-4 pl-6 pr-3 w-12'>
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${cfg.iconBg}`}>
-            <Icon size={15} className={cfg.iconText} />
+            <Icon aria-hidden='true' size={15} className={cfg.iconText} />
           </div>
         </td>
 
@@ -641,16 +662,16 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
           <p className='text-[0.9375rem] font-semibold text-slate-800'>
             {cfg.label}{factura.descripcion ? ` · ${factura.descripcion}` : ''}
           </p>
-          {subtitulo && <p className='text-xs text-slate-400 mt-0.5'>{subtitulo}</p>}
+          {subtitulo && <p className='text-xs text-slate-500 mt-0.5'>{subtitulo}</p>}
         </td>
 
         {/* Subida */}
-        <td className='py-4 pr-4 font-mono text-[0.8125rem] text-slate-400 whitespace-nowrap'>
+        <td className='py-4 pr-4 font-mono text-[0.8125rem] text-slate-500 whitespace-nowrap'>
           {formatFechaCorta(factura.fecha_emision)}
         </td>
 
         {/* Vence */}
-        <td className='py-4 pr-4 font-mono text-[0.8125rem] text-slate-400 whitespace-nowrap'>
+        <td className='py-4 pr-4 font-mono text-[0.8125rem] text-slate-500 whitespace-nowrap'>
           {formatFechaCorta(factura.fecha_vencimiento)}
         </td>
 
@@ -671,9 +692,12 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
           <div ref={menuRef} className='relative flex justify-end'>
             <button
               onClick={() => setMenuAbierto(v => !v)}
-              className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition opacity-0 group-hover:opacity-100'
+              aria-label='Acciones de la factura'
+              aria-haspopup='menu'
+              aria-expanded={menuAbierto}
+              className='cursor-pointer! w-7 h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-600 hover:bg-slate-100 transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
             >
-              <MoreHorizontal size={15} />
+              <MoreHorizontal aria-hidden='true' size={15} />
             </button>
 
             {menuAbierto && (
@@ -695,7 +719,7 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
                     onClick={() => setMenuAbierto(false)}
                     className='w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
                   >
-                    <FileText size={14} className='text-slate-400' /> Ver documento
+                    <FileText aria-hidden='true' size={14} className='text-slate-500' /> Ver documento
                   </a>
                 )}
               </div>
@@ -737,14 +761,14 @@ function FacturaCardMobile({ factura, esCasero, userId, onTogglePago, onEliminar
     <div className='px-4 py-4 border-b border-slate-50 last:border-0'>
       <div className='flex items-start gap-3'>
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg.iconBg}`}>
-          <Icon size={16} className={cfg.iconText} />
+          <Icon aria-hidden='true' size={16} className={cfg.iconText} />
         </div>
 
         <div className='flex-1 min-w-0'>
           <p className='text-[0.9375rem] font-semibold text-slate-800 truncate'>
             {cfg.label}{factura.descripcion ? ` · ${factura.descripcion}` : ''}
           </p>
-          <p className='font-mono text-[0.6875rem] text-slate-400 mt-0.5 truncate'>
+          <p className='font-mono text-[0.6875rem] text-slate-500 mt-0.5 truncate'>
             {subtitulo ?? `${formatFechaCorta(factura.fecha_emision)} · vence ${formatFechaCorta(factura.fecha_vencimiento)}`}
           </p>
           <div className='flex items-center justify-between gap-2 mt-2'>
@@ -759,9 +783,9 @@ function FacturaCardMobile({ factura, esCasero, userId, onTogglePago, onEliminar
           <button
             onClick={() => setMenuAbierto(v => !v)}
             aria-label='Acciones de la factura'
-            className='cursor-pointer! w-11 h-11 -mt-1.5 -mr-2 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition'
+            className='cursor-pointer! w-11 h-11 -mt-1.5 -mr-2 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-600 hover:bg-slate-100 transition'
           >
-            <MoreHorizontal size={17} />
+            <MoreHorizontal aria-hidden='true' size={17} />
           </button>
 
           {menuAbierto && (
@@ -783,7 +807,7 @@ function FacturaCardMobile({ factura, esCasero, userId, onTogglePago, onEliminar
                   onClick={() => setMenuAbierto(false)}
                   className='w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
                 >
-                  <FileText size={14} className='text-slate-400' /> Ver documento
+                  <FileText aria-hidden='true' size={14} className='text-slate-500' /> Ver documento
                 </a>
               )}
             </div>
@@ -808,8 +832,8 @@ function Header({ user, esCasero, onLogout, onVolver }) {
     <header className='bg-white border-b border-slate-100'>
       <div className='max-w-5xl mx-auto px-4 sm:px-8 py-3.5 sm:py-4 flex items-center gap-3'>
         {onVolver && (
-          <button onClick={onVolver} className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'>
-            <ArrowLeft size={17} />
+          <button onClick={onVolver} aria-label='Volver' className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'>
+            <ArrowLeft size={17} aria-hidden='true' />
           </button>
         )}
 
@@ -827,7 +851,7 @@ function Header({ user, esCasero, onLogout, onVolver }) {
 
         <div className='hidden sm:flex flex-col items-end'>
           <span className='text-sm font-semibold text-slate-900 leading-tight'>{user?.nombre}</span>
-          <span className={`font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] ${esCasero ? 'text-emerald-600' : 'text-slate-400'}`}>
+          <span className={`font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] ${esCasero ? 'text-emerald-600' : 'text-slate-500'}`}>
             {esCasero ? 'Casero' : 'Inquilino'}
           </span>
         </div>
@@ -837,9 +861,9 @@ function Header({ user, esCasero, onLogout, onVolver }) {
         </div>
 
         {onLogout && (
-          <button onClick={onLogout} title='Cerrar sesión'
-            className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'>
-            <LogOut size={16} />
+          <button onClick={onLogout} aria-label='Cerrar sesión'
+            className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition shrink-0'>
+            <LogOut size={16} aria-hidden='true' />
           </button>
         )}
       </div>
@@ -926,10 +950,10 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
 
       {/* Error */}
       {error && (
-        <div className='flex items-start gap-2 bg-red-50 border border-red-100 rounded-2xl px-4 py-3'>
-          <AlertCircle size={14} className='text-red-500 mt-0.5 shrink-0' />
+        <div role='alert' className='flex items-start gap-2 bg-red-50 border border-red-100 rounded-2xl px-4 py-3'>
+          <AlertCircle aria-hidden='true' size={14} className='text-red-500 mt-0.5 shrink-0' />
           <p className='text-sm text-red-700'>{error}</p>
-          <button onClick={() => setError(null)} className='cursor-pointer! ml-auto text-red-400 hover:text-red-600'><X size={13} /></button>
+          <button onClick={() => setError(null)} className='cursor-pointer! ml-auto text-red-400 hover:text-red-600'><X aria-hidden='true' size={13} /></button>
         </div>
       )}
 
@@ -937,9 +961,9 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
       <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
         {/* Por cobrar */}
         <div className='bg-slate-900 rounded-3xl px-5 sm:px-7 py-5 sm:py-6 flex flex-col gap-2'>
-          <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-slate-400'>Por cobrar este mes</p>
+          <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-slate-300'>Por cobrar este mes</p>
           <p className='font-display text-4xl sm:text-[2.5rem] font-bold text-white leading-none'>{formatEuros(porCobrar)}</p>
-          <p className='text-sm text-slate-400'>
+          <p className='text-sm text-slate-300'>
             {pendienteCount === 0 ? 'Todo cobrado' : `${pendienteCount} ${pendienteCount === 1 ? 'factura pendiente' : 'facturas pendientes'}`}
           </p>
         </div>
@@ -955,13 +979,13 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
 
         {/* Subir factura */}
         <div className='bg-white border border-slate-100 rounded-3xl px-5 sm:px-7 py-5 sm:py-6 flex flex-col gap-3' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)' }}>
-          <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-slate-400'>Subir nueva factura</p>
-          <p className='text-sm text-slate-400 leading-relaxed'>Tipo, monto, fecha límite y adjuntar PDF</p>
+          <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-slate-500'>Subir nueva factura</p>
+          <p className='text-sm text-slate-500 leading-relaxed'>Tipo, monto, fecha límite y adjuntar PDF</p>
           <button
             onClick={() => setModalAbierto(true)}
             className='cursor-pointer! mt-auto inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition w-fit'
           >
-            <Plus size={14} /> Subir factura
+            <Plus aria-hidden='true' size={14} /> Subir factura
           </button>
         </div>
       </div>
@@ -973,7 +997,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
         <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between px-4 sm:px-6 py-4 border-b border-slate-100'>
           <div>
             {(grupo?.direccion || grupo?.nombre) && (
-              <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-slate-400'>
+              <p className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.14em] text-slate-500'>
                 {formatDireccion(grupo)}{grupo?.ciudad ? ` · ${grupo.ciudad}` : ''}
               </p>
             )}
@@ -981,7 +1005,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
           </div>
           <div className='flex gap-1'>
             {[['todas','Todas'],['pendientes','Pendientes'],['pagadas','Pagadas']].map(([val, lbl]) => (
-              <button key={val} onClick={() => setFiltro(val)}
+              <button key={val} onClick={() => setFiltro(val)} aria-pressed={filtro === val}
                 className={`cursor-pointer! text-xs font-semibold px-3.5 py-1.5 rounded-full transition
                   ${filtro === val ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
                 {lbl}
@@ -993,7 +1017,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
         {facturasFiltradas.length === 0 ? (
           <div className='px-6 py-12 flex flex-col items-center gap-3 text-center'>
             <div className='w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center'>
-              <FileText size={18} className='text-slate-400' />
+              <FileText aria-hidden='true' size={18} className='text-slate-500' />
             </div>
             <p className='text-sm font-semibold text-slate-600'>
               {filtro === 'todas' ? 'Sin facturas todavía' : `Sin facturas ${filtro}`}
@@ -1008,19 +1032,19 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
                   <tr className='border-b border-slate-50'>
                     <th className='w-12 pl-6' />
                     <th className='text-left py-2.5'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Concepto</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Concepto</span>
                     </th>
                     <th className='text-left py-2.5 w-28'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Subida</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Subida</span>
                     </th>
                     <th className='text-left py-2.5 w-28 pr-6'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Vence</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Vence</span>
                     </th>
                     <th className='text-right py-2.5 w-24 pr-6'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Monto</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Monto</span>
                     </th>
                     <th className='text-left py-2.5 w-28'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Estado</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Estado</span>
                     </th>
                     <th className='w-10' />
                   </tr>
@@ -1135,7 +1159,7 @@ function SelectorGrupo({ grupos, grupoActivo, onChange, onVincular }) {
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 mt-0.5 ${activo ? 'bg-emerald-500' : 'bg-slate-300'}`} />
             <span className='flex flex-col leading-tight'>
               <span className={`text-[0.9rem] font-bold ${activo ? 'text-slate-900' : 'text-slate-700'}`}>{direccion}</span>
-              {subtitulo && <span className='text-[0.75rem] font-normal text-slate-400 mt-0.5'>{subtitulo}</span>}
+              {subtitulo && <span className='text-[0.75rem] font-normal text-slate-500 mt-0.5'>{subtitulo}</span>}
             </span>
           </button>
         )
@@ -1147,7 +1171,7 @@ function SelectorGrupo({ grupos, grupoActivo, onChange, onVincular }) {
           onClick={abrirVincular}
           className='cursor-pointer! inline-flex items-center gap-2 text-[0.8125rem] font-semibold px-4 py-2.5 rounded-2xl border border-dashed border-slate-300 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-700 transition'
         >
-          <Plus size={13} /> Vincular grupo con código
+          <Plus aria-hidden='true' size={13} /> Vincular grupo con código
         </button>
       ) : (
         <form onSubmit={vincular} className='inline-flex items-center gap-2'>
@@ -1157,17 +1181,18 @@ function SelectorGrupo({ grupos, grupoActivo, onChange, onVincular }) {
             onChange={e => { setCodigo(e.target.value.toUpperCase()); setErrorCod(null) }}
             maxLength={6}
             placeholder='CÓDIGO'
-            className='w-28 bg-white border border-slate-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 rounded-xl px-3 py-2 text-[0.8125rem] font-mono font-bold text-slate-800 placeholder:text-slate-400 outline-none transition uppercase tracking-widest'
+            aria-label='Código del grupo'
+            className='w-28 bg-white border border-slate-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 rounded-xl px-3 py-2 text-[0.8125rem] font-mono font-bold text-slate-800 placeholder:text-slate-500 outline-none transition uppercase tracking-widest'
           />
-          <button type='submit' disabled={enviando}
+          <button type='submit' disabled={enviando} aria-label='Vincular grupo con el código introducido'
             className='cursor-pointer! inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[0.8125rem] font-semibold px-3.5 py-2 rounded-xl transition disabled:opacity-50'>
-            {enviando ? <div className='w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin' /> : <Check size={13} />}
+            {enviando ? <div className='w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin' /> : <Check aria-hidden='true' size={13} />}
           </button>
           <button type='button' onClick={() => setAbierto(false)}
-            className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition'>
-            <X size={14} />
+            className='cursor-pointer! w-8 h-8 flex items-center justify-center rounded-xl text-slate-500 hover:text-slate-600 hover:bg-slate-100 transition'>
+            <X aria-hidden='true' size={14} />
           </button>
-          {errorCod && <p className='text-xs text-red-500 font-medium'>{errorCod}</p>}
+          {errorCod && <p role='alert' className='text-xs text-red-600 font-medium'>{errorCod}</p>}
         </form>
       )}
     </div>
@@ -1225,7 +1250,7 @@ function Gastos({ onLogout }) {
     try {
       const r = await apiFetch(`/api/grupos/mi-grupo?grupo_id=${grupoNuevo.id}`)
       const data = await r.json()
-      nInquilinos = (data.miembros ?? []).filter(m => !m.es_casero).length
+      nInquilinos = (data.miembros ?? []).filter(m => m.rol_en_grupo !== 'CASERO').length
     } catch { /* no crítico */ }
 
     const nuevoEntry = {
@@ -1233,8 +1258,7 @@ function Gastos({ onLogout }) {
       nombre: grupoNuevo.nombre,
       ciudad: grupoNuevo.ciudad ?? null,
       foto_perfil: grupoNuevo.foto_perfil ?? null,
-      rol: 'MEMBER',
-      es_casero: true,
+      rol: 'CASERO',
       num_inquilinos: nInquilinos,
     }
     setMisGrupos(prev => [...prev, nuevoEntry])
@@ -1244,22 +1268,23 @@ function Gastos({ onLogout }) {
   if (loading) {
     return (
       <div className='min-h-screen bg-slate-200 flex items-center justify-center'>
-        <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+        <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
       </div>
     )
   }
 
   return (
     <div className='min-h-screen bg-slate-200'>
+      <SaltarAlContenido />
       <Header
         user={user}
         esCasero={true}
         onLogout={onLogout}
       />
-      <div className='max-w-8xl mx-auto p-4 sm:p-8 lg:p-15'>
+      <main id='contenido-principal' tabIndex={-1} className='max-w-8xl mx-auto p-4 sm:p-8 lg:p-15'>
         {cargandoFacturas || facturas === null ? (
           <div className='flex justify-center py-20'>
-            <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+            <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
           </div>
         ) : (
           <VistaCasero
@@ -1275,7 +1300,7 @@ function Gastos({ onLogout }) {
           />
         )
         }
-      </div>
+      </main>
     </div>
   )
 }

@@ -53,7 +53,7 @@ function HistorialGastos({ grupoId }) {
   if (historial === null) {
     return (
       <div className='bg-white border border-slate-100 rounded-3xl p-6 flex items-center justify-center' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)', minHeight: '220px' }}>
-        <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+        <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
       </div>
     )
   }
@@ -62,7 +62,7 @@ function HistorialGastos({ grupoId }) {
     return (
       <div className='bg-white border border-slate-100 rounded-3xl p-6 flex flex-col items-center justify-center gap-3 text-center' style={{ boxShadow: '0 1px 0 rgba(15,23,42,.04), 0 0.5rem 2rem rgba(15,23,42,.06)', minHeight: '220px' }}>
         <div className='w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center'>
-          <Receipt size={18} className='text-slate-400' />
+          <Receipt aria-hidden='true' size={18} className='text-slate-500' />
         </div>
         <p className='text-sm font-semibold text-slate-500'>Sin datos para histórico todavía</p>
       </div>
@@ -85,11 +85,11 @@ function HistorialGastos({ grupoId }) {
       <div className='flex items-start justify-between gap-4'>
         <div>
           <h3 className='font-display text-base font-bold text-slate-900'>Histórico de gastos</h3>
-          <p className='text-xs text-slate-400 mt-0.5'>Evolución mensual de tus facturas</p>
+          <p className='text-xs text-slate-500 mt-0.5'>Evolución mensual de tus facturas</p>
         </div>
         {diferencia !== null && Math.abs(diferencia) > 0.01 && (
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${sube ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
-            {sube ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+            {sube ? <TrendingUp aria-hidden='true' size={13} /> : <TrendingDown aria-hidden='true' size={13} />}
             {sube ? '+' : ''}{formatEuros(diferencia)} vs mes anterior
           </div>
         )}
@@ -150,7 +150,7 @@ function HistorialGastos({ grupoId }) {
           <span className='w-3 h-0.5 rounded-full bg-amber-400 inline-block' />
           <span className='text-slate-500'>Pendiente</span>
         </div>
-        <span className='ml-auto font-mono text-[0.7rem] font-semibold text-slate-400'>
+        <span className='ml-auto font-mono text-[0.7rem] font-semibold text-slate-500'>
           Últimos {datos.length} meses
         </span>
       </div>
@@ -192,9 +192,9 @@ function DocumentoMenu({ factura, className }) {
       <button
         onClick={() => setMenuAbierto(v => !v)}
         aria-label='Ver documento'
-        className='cursor-pointer! w-11 h-11 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition'
+        className='cursor-pointer! w-11 h-11 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-600 hover:bg-slate-100 transition'
       >
-        <MoreHorizontal size={15} />
+        <MoreHorizontal aria-hidden='true' size={15} />
       </button>
       {menuAbierto && (
         <div className='absolute right-0 top-10 sm:top-8 bg-white border border-slate-200 rounded-xl shadow-xl z-20 py-1.5 min-w-[150px]'>
@@ -203,7 +203,7 @@ function DocumentoMenu({ factura, className }) {
             onClick={() => setMenuAbierto(false)}
             className='w-full flex items-center gap-2 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition'
           >
-            <FileText size={14} className='text-slate-400' /> Ver documento
+            <FileText aria-hidden='true' size={14} className='text-slate-500' /> Ver documento
           </a>
         </div>
       )}
@@ -224,7 +224,7 @@ function FacturaRow({ factura, userId }) {
       {/* Tipo icon */}
       <td className='py-4 pl-6 pr-3 w-12'>
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${cfg.iconBg}`}>
-          <Icon size={15} className={cfg.iconText} />
+          <Icon aria-hidden='true' size={15} className={cfg.iconText} />
         </div>
       </td>
 
@@ -234,17 +234,17 @@ function FacturaRow({ factura, userId }) {
           {cfg.label}{factura.descripcion ? ` · ${factura.descripcion}` : ''}
         </p>
         {pagado && pago?.fecha_pago && (
-          <p className='text-xs text-slate-400 mt-0.5'>Pagado el {formatFecha(pago.fecha_pago)}</p>
+          <p className='text-xs text-slate-500 mt-0.5'>Pagado el {formatFecha(pago.fecha_pago)}</p>
         )}
       </td>
 
       {/* Emisión */}
-      <td className='py-4 pr-4 text-[0.8125rem] text-slate-400 whitespace-nowrap font-mono'>
+      <td className='py-4 pr-4 text-[0.8125rem] text-slate-500 whitespace-nowrap font-mono'>
         {formatFecha(factura.fecha_emision)}
       </td>
 
       {/* Vencimiento */}
-      <td className='py-4 pr-6 text-[0.8125rem] text-slate-400 whitespace-nowrap font-mono'>
+      <td className='py-4 pr-6 text-[0.8125rem] text-slate-500 whitespace-nowrap font-mono'>
         {formatFecha(factura.fecha_vencimiento)}
       </td>
 
@@ -279,14 +279,14 @@ function FacturaCardMobile({ factura, userId }) {
   return (
     <div className='px-4 py-4 border-b border-slate-50 last:border-0 flex items-start gap-3'>
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg.iconBg}`}>
-        <Icon size={16} className={cfg.iconText} />
+        <Icon aria-hidden='true' size={16} className={cfg.iconText} />
       </div>
 
       <div className='flex-1 min-w-0'>
         <p className='text-[0.9375rem] font-semibold text-slate-800 truncate'>
           {cfg.label}{factura.descripcion ? ` · ${factura.descripcion}` : ''}
         </p>
-        <p className='font-mono text-[0.6875rem] text-slate-400 mt-0.5 truncate'>
+        <p className='font-mono text-[0.6875rem] text-slate-500 mt-0.5 truncate'>
           {pagado && pago?.fecha_pago
             ? `Pagado el ${formatFecha(pago.fecha_pago)}`
             : `${formatFecha(factura.fecha_emision)} · vence ${formatFecha(factura.fecha_vencimiento)}`}
@@ -338,7 +338,7 @@ export default function MisFacturas() {
   if (facturas === null) {
     return (
       <div className='flex items-center justify-center py-20'>
-        <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+        <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
       </div>
     )
   }
@@ -362,7 +362,7 @@ export default function MisFacturas() {
           <h3 className='font-display text-base font-bold text-slate-900'>Historial</h3>
           <div className='flex gap-1'>
             {[['todas','Todas'],['pendientes','Pendientes'],['pagadas','Pagadas']].map(([val, lbl]) => (
-              <button key={val} onClick={() => setFiltro(val)}
+              <button key={val} onClick={() => setFiltro(val)} aria-pressed={filtro === val}
                 className={`cursor-pointer! text-xs font-semibold px-3.5 py-1.5 rounded-full transition
                   ${filtro === val ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
                 {lbl}
@@ -375,7 +375,7 @@ export default function MisFacturas() {
 
           <div className='px-6 py-12 flex flex-col items-center gap-3 text-center'>
             <div className='w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center'>
-              {filtro === 'pagadas' ? <Check size={18} className='text-emerald-400' /> : <FileText size={18} className='text-slate-400' />}
+              {filtro === 'pagadas' ? <Check aria-hidden='true' size={18} className='text-emerald-400' /> : <FileText aria-hidden='true' size={18} className='text-slate-500' />}
             </div>
             <p className='text-sm font-semibold text-slate-600'>
               {filtro === 'todas' ? 'Sin facturas todavía' : `Sin facturas ${filtro}`}
@@ -390,19 +390,19 @@ export default function MisFacturas() {
                   <tr className='border-b border-slate-50'>
                     <th className='w-12 pl-6' />
                     <th className='text-left py-2.5'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Concepto</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Concepto</span>
                     </th>
                     <th className='text-left py-2.5 w-28'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Emisión</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Emisión</span>
                     </th>
                     <th className='text-left py-2.5 w-28 pr-6'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Vence</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Vence</span>
                     </th>
                     <th className='text-right py-2.5 w-24 pr-6'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Importe</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Importe</span>
                     </th>
                     <th className='text-left py-2.5 w-28'>
-                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-400'>Estado</span>
+                      <span className='font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-slate-500'>Estado</span>
                     </th>
                     <th className='w-10' />
                   </tr>

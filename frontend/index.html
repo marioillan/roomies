@@ -2,14 +2,93 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/housielogo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Encuentra tu compañero de piso ideal - Housie</title>
+    <link rel="icon" type="image/svg+xml" href="/housielogo.svg" />
+
+    <!-- ── SEO base ────────────────────────────────────────────────── -->
+    <title>Housie | Encuentra piso compartido y compañeros compatibles</title>
+    <meta name="description" content="Encuentra piso compartido en España con compañeros compatibles. Housie te empareja por afinidad de convivencia y gestiona gastos, tareas y calendario del piso. Gratis." />
+    <link rel="canonical" href="https://www.housie.es/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="theme-color" content="#0b8059" />
+    <meta name="author" content="Housie" />
+
+    <!-- ── Open Graph (WhatsApp, LinkedIn, Facebook) ───────────────── -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Housie" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content="https://www.housie.es/" />
+    <meta property="og:title" content="Housie | Encuentra piso compartido y compañeros compatibles" />
+    <meta property="og:description" content="Housie te empareja por afinidad de convivencia y gestiona gastos, tareas y calendario del piso. Gratis." />
+    <meta property="og:image" content="https://www.housie.es/portada-housie.jpg" />
+    <meta property="og:image:alt" content="Salón luminoso de un piso compartido con sofá y mesa de comedor" />
+
+    <!-- ── Twitter / X ─────────────────────────────────────────────── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Housie | Encuentra piso compartido y compañeros compatibles" />
+    <meta name="twitter:description" content="Housie te empareja por afinidad de convivencia y gestiona gastos, tareas y calendario del piso. Gratis." />
+    <meta name="twitter:image" content="https://www.housie.es/portada-housie.jpg" />
+
+    <!-- ── Tipografías ─────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-    <link rel="canonical" href="https://www.housie.es/" />
-    <meta name="description" content="Housie: encuentra compañeros de piso compatibles y gestiona tu convivencia. Match por afinidad, gastos, tareas y calendario compartido, todo en un solo sitio." />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+    <!-- ── Datos estructurados: la organización y el buscador del sitio ── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.housie.es/#organizacion",
+          "name": "Housie",
+          "url": "https://www.housie.es/",
+          "logo": "https://www.housie.es/housienegrologo.png",
+          "description": "Plataforma española para encontrar piso compartido con compañeros compatibles y gestionar la convivencia.",
+          "areaServed": { "@type": "Country", "name": "España" }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.housie.es/#sitio",
+          "url": "https://www.housie.es/",
+          "name": "Housie",
+          "inLanguage": "es-ES",
+          "publisher": { "@id": "https://www.housie.es/#organizacion" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://www.housie.es/buscar?ciudad={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "name": "Housie",
+          "url": "https://www.housie.es/",
+          "applicationCategory": "LifestyleApplication",
+          "operatingSystem": "Web",
+          "inLanguage": "es-ES",
+          "publisher": { "@id": "https://www.housie.es/#organizacion" },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR"
+          },
+          "featureList": [
+            "Búsqueda de habitaciones por ciudad, precio y compatibilidad",
+            "Perfil de convivencia y emparejamiento por afinidad",
+            "Chat con el grupo del piso",
+            "Reparto rotativo de tareas de limpieza",
+            "División automática de facturas y gastos",
+            "Calendario y lista de la compra compartidos"
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

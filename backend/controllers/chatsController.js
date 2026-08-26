@@ -65,7 +65,7 @@ export const solicitarContacto = async (req, res) => {
   Promise.all([
     prisma.usuario.findFirst({ where: { id: req.userId }, select: { nombre: true, email: true } }),
     prisma.miembroGrupo.findFirst({
-      where: { grupo_id: grupoId, rol: 'ADMIN', activo: true, es_casero: false },
+      where: { grupo_id: grupoId, rol: 'ADMIN', activo: true},
       select: {
         usuario: { select: { nombre: true, email: true } },
         grupo:   { select: { nombre: true } },
@@ -88,7 +88,15 @@ export const solicitarContacto = async (req, res) => {
 // ── GET /api/chats/solicitudes ────────────────────────────────
 export const getSolicitudes = async (req, res, next) => {
   try {
-    const [solicitudesData, pcg] = await Promise.all([
+    // Las 7 dimensiones del algoritmo: si alguna no se selecciona,
+    // `matchOrdinal` la puntúa como 0.5 y el porcentaje sale falseado.
+    const CAMPOS_CONVIVENCIA = {
+      horario: true, ambiente: true, frecuencia_visitas: true,
+      tolerancia_fiestas: true, ocupacion: true,
+      limpieza_orden: true, nivel_ruido: true,
+    };
+
+    const [solicitudesData, pcg, interesesGrupo] = await Promise.all([
       prisma.solicitudContacto.findMany({
         where: { grupo_id: req.grupoId },
         select: {
@@ -96,9 +104,9 @@ export const getSolicitudes = async (req, res, next) => {
           usuario: {
             select: {
               id: true, nombre: true, foto_perfil: true, email: true,
-              perfil_convivencia: {
-                select: { horario: true, ambiente: true, frecuencia_visitas: true, tolerancia_fiestas: true, ocupacion: true },
-              },
+              perfil_convivencia:     { select: CAMPOS_CONVIVENCIA },
+              preferencias_companero: { select: CAMPOS_CONVIVENCIA },
+              intereses: { select: { interes_id: true } },
             },
           },
           chat: { select: { id: true } },
@@ -106,10 +114,18 @@ export const getSolicitudes = async (req, res, next) => {
         orderBy: { fecha_envio: 'desc' },
       }),
       prisma.perfilConvivenciaGrupo.findFirst({ where: { grupo_id: req.grupoId } }),
+      prisma.grupoInteres.findMany({
+        where: { grupo_id: req.grupoId },
+        select: { interes: { select: { id: true, nombre: true } } },
+      }),
     ]);
 
     const solicitudes = solicitudesData.map(sc => {
-      const pcu = sc.usuario.perfil_convivencia;
+      // Igual que en /api/publicaciones y en las solicitudes de unión: lo que
+      // el usuario busca en un compañero manda sobre su propio perfil.
+      const perfilUsuario = sc.usuario.preferencias_companero ?? sc.usuario.perfil_convivencia;
+      const interesesUsuario = new Set(sc.usuario.intereses.map(i => i.interes_id));
+
       return {
         id: sc.id, estado: sc.estado, fecha_envio: sc.fecha_envio,
         usuario_id:     sc.usuario.id,
@@ -117,7 +133,10 @@ export const getSolicitudes = async (req, res, next) => {
         foto_perfil:    sc.usuario.foto_perfil,
         email:          sc.usuario.email,
         chat_id:        sc.chat?.id ?? null,
-        compatibilidad: (pcg && pcu) ? calcularCompatibilidad(pcu, pcg).score : null,
+        compatibilidad: (pcg && perfilUsuario) ? calcularCompatibilidad(perfilUsuario, pcg).score : null,
+        intereses_comunes: interesesGrupo
+          .filter(g => interesesUsuario.has(g.interes.id))
+          .map(g => g.interes.nombre),
       };
     });
 

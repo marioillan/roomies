@@ -124,7 +124,7 @@ export const unirseGrupo = async (req, res, next) => {
       if (yaEsCaseroAqui) return res.status(400).json({ message: 'Ya eres casero de este grupo' });
 
       await prisma.miembroGrupo.create({
-        data: { id: randomUUID(), usuario_id: req.userId, grupo_id: grupo.id, rol: 'MEMBER', es_casero: true },
+        data: { id: randomUUID(), usuario_id: req.userId, grupo_id: grupo.id, rol: 'CASERO' },
       });
       return res.json({ grupo: grupoPublico, esCasero: true });
     }
@@ -218,15 +218,15 @@ export const editarGrupo = async (req, res, next) => {
 export const getMisGrupos = async (req, res, next) => {
   try {
     const rows = await prisma.$queryRaw`
-      SELECT g.id, g.nombre, g.ciudad, g.foto_perfil, mg.rol, mg.es_casero,
+      SELECT g.id, g.nombre, g.ciudad, g.foto_perfil, mg.rol,
              p.direccion, p.piso_puerta,
-             COUNT(mg2.usuario_id) FILTER (WHERE mg2.es_casero = FALSE AND mg2.activo = TRUE) AS num_inquilinos
+             COUNT(mg2.usuario_id) FILTER (WHERE mg2.rol <> 'CASERO' AND mg2.activo = TRUE) AS num_inquilinos
       FROM miembros_grupo mg
       JOIN grupos g ON g.id = mg.grupo_id
       LEFT JOIN publicaciones p ON p.grupo_id = g.id
       LEFT JOIN miembros_grupo mg2 ON mg2.grupo_id = g.id
       WHERE mg.usuario_id = ${req.userId} AND mg.activo = TRUE
-      GROUP BY g.id, g.nombre, g.ciudad, g.foto_perfil, mg.rol, mg.es_casero, mg.fecha_union, p.direccion, p.piso_puerta
+      GROUP BY g.id, g.nombre, g.ciudad, g.foto_perfil, mg.rol, mg.fecha_union, p.direccion, p.piso_puerta
       ORDER BY mg.fecha_union ASC
     `;
     res.json({ grupos: rows.map(r => ({ ...r, num_inquilinos: Number(r.num_inquilinos) })) });
@@ -261,7 +261,7 @@ export const getMiGrupo = async (req, res, next) => {
       prisma.miembroGrupo.findMany({
         where: { grupo_id: grupoId, activo: true },
         select: {
-          rol: true, es_casero: true, fecha_union: true,
+          rol: true, fecha_union: true,
           usuario: {
             select: {
               id: true, nombre: true, foto_perfil: true,
@@ -278,7 +278,6 @@ export const getMiGrupo = async (req, res, next) => {
       username: mg.usuario.nombre,
       foto_perfil: mg.usuario.foto_perfil,
       rol_en_grupo: mg.rol,
-      es_casero: mg.es_casero,
       fecha_union: mg.fecha_union,
       fecha_nacimiento: mg.usuario.perfil_convivencia?.fecha_nacimiento ?? null,
     }));
@@ -306,14 +305,14 @@ export const editarConvivencia = async (req, res, next) => {
   const grupoId = req.grupoId;
   const parsed = grupoConvivenciaSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
-  const { horario, ambiente, frecuencia_visitas, tolerancia_fiestas, frecuencia_salidas,
+  const { horario, ambiente, frecuencia_visitas, tolerancia_fiestas,
           ocupacion, acepta_fumadores, acepta_mascotas, lgbtq_friendly,
           limpieza_orden, nivel_ruido } = parsed.data;
 
   const campos = {
     horario: horario ?? null, ambiente: ambiente ?? null,
     frecuencia_visitas: frecuencia_visitas ?? null, tolerancia_fiestas: tolerancia_fiestas ?? null,
-    frecuencia_salidas: frecuencia_salidas ?? null, ocupacion: ocupacion ?? null,
+    ocupacion: ocupacion ?? null,
     acepta_fumadores: acepta_fumadores ?? null, acepta_mascotas: acepta_mascotas ?? null,
     lgbtq_friendly: lgbtq_friendly ?? null,
     limpieza_orden: limpieza_orden ?? null, nivel_ruido: nivel_ruido ?? null,
@@ -358,6 +357,20 @@ export const editarPublicacion = async (req, res, next) => {
   const grupoId = req.grupoId;
   const parsed = publicacionSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+
+  // El anuncio solo tiene sentido si el grupo ha definido su perfil de
+  // convivencia: es lo que permite calcular la afinidad con cada candidato
+  const DIMENSIONES = ['ocupacion', 'horario', 'ambiente', 'frecuencia_visitas',
+                       'tolerancia_fiestas', 'limpieza_orden', 'nivel_ruido'];
+
+  const perfilGrupo = await prisma.perfilConvivenciaGrupo.findFirst({ where: { grupo_id: grupoId } });
+  if (!perfilGrupo || DIMENSIONES.some(c => perfilGrupo[c] === null)) {
+    return res.status(409).json({
+      message: 'Completa el perfil de convivencia del grupo antes de publicar el anuncio',
+      faltaPerfilConvivencia: true,
+    });
+  }
+
   const d = parsed.data;
 
   const campos = {
@@ -727,7 +740,7 @@ export const transferirAdmin = async (req, res, next) => {
 
   try {
     const miembro = await prisma.miembroGrupo.findFirst({
-      where: { usuario_id: nuevo_admin_id, grupo_id: grupoId, activo: true, es_casero: false },
+      where: { usuario_id: nuevo_admin_id, grupo_id: grupoId, activo: true, rol: 'MIEMBRO' },
       select: { id: true },
     });
     if (!miembro) return res.status(404).json({ message: 'El usuario no es miembro activo del grupo' });
@@ -735,7 +748,7 @@ export const transferirAdmin = async (req, res, next) => {
     await prisma.$transaction([
       prisma.miembroGrupo.updateMany({
         where: { usuario_id: req.userId, grupo_id: grupoId },
-        data: { rol: 'MEMBER' },
+        data: { rol: 'MIEMBRO' },
       }),
       prisma.miembroGrupo.updateMany({
         where: { usuario_id: nuevo_admin_id, grupo_id: grupoId },
@@ -756,7 +769,7 @@ export const salirGrupo = async (req, res, next) => {
 
     if (rol === 'ADMIN') {
       const otrosMiembros = await prisma.miembroGrupo.findFirst({
-        where: { grupo_id: grupoId, usuario_id: { not: req.userId }, activo: true, es_casero: false },
+        where: { grupo_id: grupoId, usuario_id: { not: req.userId }, activo: true, rol: 'MIEMBRO' },
         select: { id: true },
       });
       if (otrosMiembros) {
@@ -861,7 +874,7 @@ export const aceptarSolicitudUnion = async (req, res, next) => {
     await prisma.$transaction([
       prisma.solicitudUnion.update({ where: { id: solicitud.id }, data: { estado: 'ACEPTADA' } }),
       prisma.miembroGrupo.create({
-        data: { id: randomUUID(), usuario_id: solicitud.usuario_id, grupo_id: req.grupoId, rol: 'MEMBER', es_casero: false, activo: true },
+        data: { id: randomUUID(), usuario_id: solicitud.usuario_id, grupo_id: req.grupoId, rol: 'MIEMBRO', activo: true },
       }),
     ]);
 

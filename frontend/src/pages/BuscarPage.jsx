@@ -4,12 +4,15 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
 import LoginModal from '../components/LoginModal.jsx'
 import RegistroModal from '../components/RegistroModal.jsx'
+import PieDePagina from '../components/PieDePagina.jsx'
 import {
   Search, MapPin, Euro, Bed, Wifi, Car, PawPrint, Home, House, Receipt,
   ChevronLeft, ChevronRight, X, ImageOff,
   Ruler, Building2, Heart, MessageCircle, Check, SlidersHorizontal,
   Phone, Users, Sparkles, ArrowRight,
 } from 'lucide-react'
+import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
+import { useModalAccesible } from '../lib/useModalAccesible.js'
 
 const ESMERALDA = '#10b981'
 
@@ -31,7 +34,7 @@ function Chip({ icon: Icon, label, accent }) {
         ? 'text-emerald-700 bg-emerald-50 border-emerald-100'
         : 'text-slate-500 bg-slate-50 border-slate-100'
     }`}>
-      <Icon size={9} /> {label}
+      <Icon aria-hidden='true' size={9} /> {label}
     </span>
   )
 }
@@ -62,7 +65,7 @@ function FotoCarrusel({ fotos, titulo, publicacionId, user, esFavorito, onToggle
     <div className='relative w-full h-full bg-slate-100 overflow-hidden'>
       {total > 0
         ? <img src={fotos[idx]} alt={titulo} className='w-full h-full object-cover' />
-        : <div className='w-full h-full flex items-center justify-center'><ImageOff size={28} className='text-slate-300' /></div>
+        : <div className='w-full h-full flex items-center justify-center'><ImageOff aria-hidden='true' size={28} className='text-slate-500' /></div>
       }
 
       {/* Botón favorito — esquina superior izquierda */}
@@ -71,9 +74,10 @@ function FotoCarrusel({ fotos, titulo, publicacionId, user, esFavorito, onToggle
         onClick={toggleFav}
         disabled={guardando}
         className='cursor-pointer! absolute top-2 left-2 w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-sm transition disabled:opacity-60'
-        title={esFavorito ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+        aria-pressed={esFavorito}
+        aria-label={esFavorito ? `Quitar ${titulo} de favoritos` : `Guardar ${titulo} en favoritos`}
       >
-        <Heart
+        <Heart aria-hidden='true'
           size={15}
           className={esFavorito ? 'text-red-500 fill-red-500' : 'text-slate-500'}
         />
@@ -83,19 +87,19 @@ function FotoCarrusel({ fotos, titulo, publicacionId, user, esFavorito, onToggle
         <>
           <button
             type='button'
-            onClick={prev}
+            aria-label='Foto anterior' onClick={prev}
             disabled={idx === 0}
             className='cursor-pointer! absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center disabled:opacity-0 transition'
           >
-            <ChevronLeft size={14} />
+            <ChevronLeft aria-hidden='true' size={14} />
           </button>
           <button
             type='button'
-            onClick={next}
+            aria-label='Foto siguiente' onClick={next}
             disabled={idx === total - 1}
             className='cursor-pointer! absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center disabled:opacity-0 transition'
           >
-            <ChevronRight size={14} />
+            <ChevronRight aria-hidden='true' size={14} />
           </button>
           <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1'>
             {fotos.map((_, i) => (
@@ -158,7 +162,7 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito, onRequireLog
             </p>
 
             <p className='flex items-center gap-1.5 text-sm text-slate-900'>
-              <MapPin size={13} className='shrink-0 text-slate-900' />
+              <MapPin aria-hidden='true' size={13} className='shrink-0 text-slate-900' />
               {pub.ciudad}
             </p>
 
@@ -194,7 +198,7 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito, onRequireLog
               <span className={`flex items-center gap-1.5
                 ${pub.compatibilidad >= 75 ? 'text-emerald-600'
                 : pub.compatibilidad >= 50 ? 'text-amber-500'
-                : 'text-slate-400'}`}>
+                : 'text-slate-500'}`}>
                 <span className={`w-2 h-2 rounded-full shrink-0
                   ${pub.compatibilidad >= 75 ? 'bg-emerald-400'
                   : pub.compatibilidad >= 50 ? 'bg-amber-400'
@@ -226,13 +230,13 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito, onRequireLog
               onClick={e => e.stopPropagation()}
               className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 text-slate-700 text-xs font-semibold transition'
             >
-              <Phone size={13} />
+              <Phone aria-hidden='true' size={13} />
               Llamar
             </a>
           )}
           {enviado ? (
             <span className='flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-xl'>
-              <Check size={13} />
+              <Check aria-hidden='true' size={13} />
               Solicitud enviada
             </span>
           ) : (
@@ -244,7 +248,7 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito, onRequireLog
             >
               {enviando
                 ? <span className='w-3 h-3 border border-white border-t-transparent rounded-full animate-spin' />
-                : <MessageCircle size={13} />
+                : <MessageCircle aria-hidden='true' size={13} />
               }
               Contactar
             </button>
@@ -287,21 +291,23 @@ function InputCiudad({ value, onChange, onBuscar }) {
 
   return (
     <div className='flex-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition'>
-      <MapPin size={14} className='text-slate-400 shrink-0' />
+      <MapPin aria-hidden='true' size={14} className='text-slate-500 shrink-0' />
       <input
         ref={inputRef}
         type='text'
+        aria-label='Buscar por ciudad'
         value={value}
         onChange={e => onChange(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') onBuscar(value) }}
         placeholder='Ciudad...'
-        className='flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none'
+        className='flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-500 outline-none'
       />
       <button
         onClick={() => onBuscar(value)}
-        className='cursor-pointer! shrink-0 w-7 h-7 bg-emerald-500 hover:bg-emerald-600 rounded-lg flex items-center justify-center transition'
+        aria-label='Buscar'
+        className='cursor-pointer! shrink-0 w-7 h-7 bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center justify-center transition'
       >
-        <Search size={13} className='text-white' />
+        <Search size={13} aria-hidden='true' className='text-white' />
       </button>
     </div>
   )
@@ -349,14 +355,14 @@ function FilterPanelContent({
         <div className='flex items-center gap-2'>
           {filtrosActivos && (
             <button type='button' onClick={onLimpiar}
-              className='cursor-pointer! flex items-center gap-1 text-xs text-emerald-200 hover:text-white transition'>
-              <X size={11} /> Limpiar
+              className='cursor-pointer! flex items-center gap-1 text-xs text-emerald-100 hover:text-white transition'>
+              <X aria-hidden='true' size={11} /> Limpiar
             </button>
           )}
           {onClose && (
-            <button type='button' onClick={onClose}
-              className='cursor-pointer! p-1 text-emerald-200 hover:text-white transition'>
-              <X size={16} />
+            <button aria-label='Cerrar' type='button' onClick={onClose}
+              className='cursor-pointer! p-1 text-emerald-100 hover:text-white transition'>
+              <X aria-hidden='true' size={16} />
             </button>
           )}
         </div>
@@ -368,19 +374,19 @@ function FilterPanelContent({
           <div className='flex gap-2'>
             <div className='relative flex-1'>
               <input
-                type='number' min='0' placeholder='Mín'
+                type='number' min='0' placeholder='Mín' aria-label='Precio mínimo en euros'
                 value={precioMin}
                 onChange={e => setPrecioMin(e.target.value)}
-                className='w-full px-3 py-2.5 text-sm border border-white/20 rounded-xl bg-white/10 text-white placeholder:text-emerald-200 outline-none focus:ring-2 focus:ring-white/30 focus:border-white/50 focus:bg-white/20 transition'
+                className='w-full px-3 py-2.5 text-sm border border-white/20 rounded-xl bg-white/10 text-white placeholder:text-emerald-100 outline-none focus:ring-2 focus:ring-white/30 focus:border-white/50 focus:bg-white/20 transition'
               />
             </div>
-            <span className='text-emerald-200 text-sm self-center'>—</span>
+            <span className='text-emerald-100 text-sm self-center'>—</span>
             <div className='relative flex-1'>
               <input
-                type='number' min='0' placeholder='Máx'
+                type='number' min='0' placeholder='Máx' aria-label='Precio máximo en euros'
                 value={precioMax}
                 onChange={e => setPrecioMax(e.target.value)}
-                className='w-full px-3 py-2.5 text-sm border border-white/20 rounded-xl bg-white/10 text-white placeholder:text-emerald-200 outline-none focus:ring-2 focus:ring-white/30 focus:border-white/50 focus:bg-white/20 transition'
+                className='w-full px-3 py-2.5 text-sm border border-white/20 rounded-xl bg-white/10 text-white placeholder:text-emerald-100 outline-none focus:ring-2 focus:ring-white/30 focus:border-white/50 focus:bg-white/20 transition'
               />
             </div>
           </div>
@@ -410,12 +416,13 @@ function FilterPanelContent({
               const active = tipoPiso === value
               return (
                 <button key={value} type='button'
+                  aria-pressed={active}
                   onClick={() => setTipoPiso(active ? '' : value)}
                   className='cursor-pointer! w-full flex items-center gap-3 group'>
                   <span className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition ${
                     active ? 'bg-white border-white' : 'border-white/30 group-hover:border-white/60'
                   }`}>
-                    {active && <Check size={10} className='text-emerald-600' />}
+                    {active && <Check aria-hidden='true' size={10} className='text-emerald-600' />}
                   </span>
                   <span className='text-sm text-white text-left'>{label}</span>
                 </button>
@@ -472,7 +479,7 @@ function FilterPanelContent({
             <div className='flex flex-col gap-3'>
               {Object.entries(todosIntereses).map(([categoria, lista]) => (
                 <div key={categoria}>
-                  <p className='text-[9px] font-bold uppercase tracking-widest text-emerald-200 mb-1.5'>{categoria}</p>
+                  <p className='text-[9px] font-bold uppercase tracking-widest text-emerald-100 mb-1.5'>{categoria}</p>
                   <div className='flex flex-wrap gap-1.5'>
                     {lista.map(({ id, nombre }) => {
                       const activo = filtIntereses.has(id)
@@ -511,16 +518,16 @@ function FilterPanelContent({
 }
 
 function FilterAside({ mobileOpen, onMobileClose, ...filterProps }) {
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [mobileOpen])
+  // El panel de filtros en móvil es un cajón modal: se comporta como diálogo
+  // (foco atrapado, Escape cierra, el foco vuelve al botón "Filtros").
+  // El hook también bloquea el scroll del fondo mientras está abierto.
+  const refCajon = useModalAccesible(onMobileClose, mobileOpen)
 
   return (
     <>
       {/* Desktop — siempre visible */}
       <aside className='hidden md:block w-72 shrink-0'>
-        <div className='bg-emerald-600 rounded-2xl border border-emerald-500 shadow-sm overflow-hidden'>
+        <div className='bg-emerald-700 rounded-2xl border border-emerald-600 shadow-sm overflow-hidden'>
           <FilterPanelContent {...filterProps} />
         </div>
       </aside>
@@ -532,7 +539,8 @@ function FilterAside({ mobileOpen, onMobileClose, ...filterProps }) {
             className='absolute inset-0 bg-black/40 backdrop-blur-sm'
             onClick={onMobileClose}
           />
-          <div className='absolute left-0 top-0 bottom-0 w-[min(20rem,100vw)] bg-emerald-600 overflow-y-auto shadow-2xl'>
+          <div ref={refCajon} role='dialog' aria-modal='true' aria-label='Filtros de búsqueda' tabIndex={-1}
+            className='absolute left-0 top-0 bottom-0 w-[min(20rem,100vw)] bg-emerald-700 overflow-y-auto shadow-2xl'>
             <FilterPanelContent {...filterProps} onClose={onMobileClose} />
           </div>
         </div>
@@ -543,7 +551,7 @@ function FilterAside({ mobileOpen, onMobileClose, ...filterProps }) {
 
 // ── Página ─────────────────────────────────────────────────────────
 export default function BuscarPage() {
-  const { user, setUser, tieneGrupo, cargando } = useAuth()
+  const { user, tieneGrupo, cargando, recargarUsuario } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [loginOpen, setLoginOpen] = useState(false)
@@ -719,7 +727,7 @@ export default function BuscarPage() {
   if (cargandoInicial) {
     return (
       <div className='min-h-screen bg-slate-200 flex items-center justify-center'>
-        <div className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
+        <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
       </div>
     )
   }
@@ -728,6 +736,7 @@ export default function BuscarPage() {
     <div className='min-h-screen bg-slate-200 overflow-x-hidden'>
 
       {/* ── Header ── */}
+      <SaltarAlContenido />
       <header className='sticky top-0 z-30 bg-white border-b border-slate-200'>
         <div className='max-w-[80rem] mx-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-6 lg:px-10 py-2.5'>
 
@@ -744,7 +753,7 @@ export default function BuscarPage() {
               onClick={() => setMobileFiltersOpen(true)}
               className='cursor-pointer! md:hidden relative shrink-0 p-2 rounded-xl border border-slate-200 text-slate-600 hover:border-slate-300 transition'
             >
-              <SlidersHorizontal size={18} />
+              <SlidersHorizontal aria-hidden='true' size={18} />
               {filtrosActivos && (
                 <span className='absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center'>
                   {nFiltros}
@@ -760,23 +769,23 @@ export default function BuscarPage() {
                 {user.es_casero ? (
                   <button onClick={() => navigate('/casero/facturas')}
                     className='cursor-pointer! hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-600 transition'>
-                    <Receipt size={15} />
+                    <Receipt aria-hidden='true' size={15} />
                     Mis facturas
                   </button>
                 ) : tieneGrupo ? (
-                  <button onClick={() => navigate('/grupo')} title='Mi grupo'
+                  <button onClick={() => navigate('/grupo')} aria-label='Mi grupo'
                     className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                    <House size={20} />
+                    <House aria-hidden='true' size={20} />
                   </button>
                 ) : (
                   <>
-                    <button onClick={() => navigate('/perfil/favoritos')} title='Favoritos'
+                    <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
                       className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <Heart size={20} />
+                      <Heart aria-hidden='true' size={20} />
                     </button>
-                    <button onClick={() => navigate('/perfil/chat')} title='Mensajes'
+                    <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
                       className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <MessageCircle size={20} />
+                      <MessageCircle aria-hidden='true' size={20} />
                     </button>
                   </>
                 )}
@@ -803,7 +812,10 @@ export default function BuscarPage() {
       </header>
 
       {/* ── Layout principal ── */}
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-10'>
+      <main id='contenido-principal' tabIndex={-1} className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-10'>
+        {/* El título de la página es visualmente redundante con la cabecera de
+            búsqueda, pero un lector de pantalla necesita el <h1> para situarse. */}
+        <h1 className='sr-only'>Buscar piso compartido</h1>
         <div className='flex gap-6 pt-6 pb-10 items-start min-h-0'>
 
           {/* Aside filtros */}
@@ -831,17 +843,20 @@ export default function BuscarPage() {
             onMobileClose={() => setMobileFiltersOpen(false)}
           />
 
-          {/* Área de resultados */}
-          <main className='flex-1 min-w-0'>
+          {/* Área de resultados — es un <div>, no un <main>: la landmark
+              principal de la página es el <main> exterior y solo puede haber
+              una por documento. */}
+          <div className='flex-1 min-w-0'>
 
             {/* Resumen + ordenar */}
             {!loading && total > 0 && (
               <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 sm:mb-5'>
                 <p className='text-sm sm:text-base lg:text-lg text-slate-500'>
                   <span className='font-bold text-slate-800'>{total}</span> anuncio{total !== 1 ? 's' : ''}{ciudadBuscada ? <> en <span className='font-bold text-slate-800'>{ciudadBuscada}</span></> : ' disponibles'}
-                  {filtrosActivos && <span className='text-slate-400'> · con filtros activos</span>}
+                  {filtrosActivos && <span className='text-slate-500'> · con filtros activos</span>}
                 </p>
                 <select
+                  aria-label='Ordenar resultados'
                   value={ordenar}
                   onChange={e => handleOrdenar(e.target.value)}
                   className='cursor-pointer! text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-700 outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 transition appearance-none pr-8'
@@ -861,7 +876,7 @@ export default function BuscarPage() {
             {tienePerfilConvivencia === false && (
               <div className='mb-5 flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl'>
                 <div className='w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0'>
-                  <Sparkles size={18} className='text-emerald-600' />
+                  <Sparkles aria-hidden='true' size={18} className='text-emerald-600' />
                 </div>
                 <div className='flex-1 min-w-0'>
                   <p className='text-sm font-semibold text-slate-800'>Encuentra tu piso ideal</p>
@@ -875,7 +890,7 @@ export default function BuscarPage() {
                   className='cursor-pointer! shrink-0 flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-xl transition'
                 >
                   Registrarse
-                  <ArrowRight size={13} />
+                  <ArrowRight aria-hidden='true' size={13} />
                 </button>
               </div>
             )}
@@ -896,11 +911,11 @@ export default function BuscarPage() {
             {!loading && !error && total === 0 && (
               <div className='flex flex-col items-center justify-center py-28 gap-4'>
                 <div className='w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center'>
-                  <Search size={28} className='text-slate-300' />
+                  <Search aria-hidden='true' size={28} className='text-slate-500' />
                 </div>
                 <div className='text-center'>
                   <p className='text-sm font-semibold text-slate-600'>{ciudadBuscada ? `Sin anuncios en ${ciudadBuscada}` : 'No hay anuncios disponibles'}</p>
-                  <p className='text-xs text-slate-400 mt-1'>Prueba con otra ciudad o amplía los filtros</p>
+                  <p className='text-xs text-slate-500 mt-1'>Prueba con otra ciudad o amplía los filtros</p>
                 </div>
                 {filtrosActivos && (
                   <button
@@ -935,16 +950,19 @@ export default function BuscarPage() {
                     <button
                       type='button'
                       onClick={() => cambiarPagina(page - 1)}
+                      aria-label='Página anterior'
                       disabled={page === 1}
                       className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition'
                     >
-                      <ChevronLeft size={15} />
+                      <ChevronLeft aria-hidden='true' size={15} />
                     </button>
                     {Array.from({ length: paginas }, (_, i) => i + 1).map(n => (
                       <button
                         key={n}
                         type='button'
                         onClick={() => cambiarPagina(n)}
+                        aria-label={`Página ${n}`}
+                        aria-current={n === page ? 'page' : undefined}
                         className={`cursor-pointer! w-9 h-9 rounded-xl text-sm font-semibold transition ${
                           n === page
                             ? 'bg-emerald-500 text-white shadow-sm'
@@ -957,30 +975,33 @@ export default function BuscarPage() {
                     <button
                       type='button'
                       onClick={() => cambiarPagina(page + 1)}
+                      aria-label='Página siguiente'
                       disabled={page === paginas}
                       className='cursor-pointer! w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition'
                     >
-                      <ChevronRight size={15} />
+                      <ChevronRight aria-hidden='true' size={15} />
                     </button>
                   </div>
                 )}
               </>
             )}
-          </main>
+          </div>
         </div>
-      </div>
+      </main>
+
+      <PieDePagina />
 
       {loginOpen && (
         <LoginModal
           onClose={() => setLoginOpen(false)}
-          onSuccess={(u) => { setUser(u); setLoginOpen(false) }}
+          onSuccess={async () => { await recargarUsuario(); setLoginOpen(false) }}
           onSwitchToRegistro={() => { setLoginOpen(false); setRegistroOpen(true) }}
         />
       )}
       {registroOpen && (
         <RegistroModal
           onClose={() => setRegistroOpen(false)}
-          onSuccess={(u, esCasero) => { setUser(u); setRegistroOpen(false); navigate(esCasero ? '/' : '/perfil/usuario/editar') }}
+          onSuccess={async (esCasero) => { await recargarUsuario(); setRegistroOpen(false); navigate(esCasero ? '/' : '/perfil/usuario/editar') }}
           onSwitchToLogin={() => { setRegistroOpen(false); setLoginOpen(true) }}
         />
       )}

@@ -28,19 +28,20 @@ import Calendario from './pages/Calendario.jsx'
 import FAQ from './pages/FAQ.jsx'
 import SolicitudesUnion from './pages/SolicitudesUnion.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
+import TituloPagina from './components/TituloPagina.jsx'
 
 
 function App() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { user, setUser, tieneGrupo, setTieneGrupo, recargarUsuario } = useAuth()
+  const { user, setUser, setTieneGrupo, recargarUsuario } = useAuth()
 
   useEffect(() => {
     // Limpiar parámetros de retorno de Google OAuth
     if (searchParams.has('auth') || searchParams.has('auth_error') ||
         searchParams.has('calendar') || searchParams.has('calendar_error')) {
       const authParam = searchParams.get('auth')
-      if (searchParams.get('calendar') === 'connected') recargarUsuario()
+      if (authParam === 'success' || authParam === 'google_new' || searchParams.get('calendar') === 'connected') recargarUsuario()
       setSearchParams({}, { replace: true })
       if (authParam === 'google_new') navigate('/perfil/usuario/editar')
     }
@@ -49,12 +50,14 @@ function App() {
   const handleLogout = async () => {
     await apiFetch('/api/auth/logout', { method: 'POST' })
     setUser(null)
+    setTieneGrupo(false)
     navigate('/')
   }
 
   return (
     <>
     <ScrollToTop />
+    <TituloPagina />
     <Routes>
       <Route path="/perfil" element={<LayoutPerfil onLogout={handleLogout} />}>
         <Route path="usuario" element={<PerfilUsuario />} />
@@ -82,9 +85,7 @@ function App() {
       <Route path="/anuncio/:id/convivencia" element={<PerfilPublicoGrupo />} />
       <Route path="/usuario/:id" element={<PerfilPublicoUsuario />} />
       <Route path="/faq" element={<FAQ />} />
-      <Route path="/" element={
-        <Home tieneGrupo={tieneGrupo} setTieneGrupo={setTieneGrupo} />
-      } />
+      <Route path="/" element={<Home />} />
     </Routes>
     </>
   )

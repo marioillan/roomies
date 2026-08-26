@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 import {
   ArrowLeft, CircleUserRound, LogOut, User, Heart, MessageCircle,
-  Home, UserCheck, House,
+  Home, UserCheck, Users,
 } from 'lucide-react'
 
 const navItems = [
@@ -25,6 +26,7 @@ function LayoutPerfil({ onLogout }) {
 
   return (
     <div className='min-h-screen bg-slate-100 md:h-screen md:overflow-hidden md:flex'>
+      <SaltarAlContenido />
 
       {/* Sidebar izquierdo — oculto en mobile */}
       <aside
@@ -33,26 +35,27 @@ function LayoutPerfil({ onLogout }) {
       >
         {/* Logo */}
         <div className='flex justify-center py-5'>
-          <button onClick={() => navigate('/')} className='cursor-pointer!'>
+          <button onClick={() => navigate('/')} aria-label='Ir al inicio' className='cursor-pointer!'>
             <img src='/logohousie.png' alt='Housie' className='w-20 h-20 object-contain' />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className='flex-1 px-2 py-4 flex flex-col gap-1'>
+        <nav aria-label='Navegación de mi perfil' className='flex-1 px-2 py-4 flex flex-col gap-1'>
           {navItems.filter(n => n.path !== '/').map(({ icon: Icon, path, exact, title }) => {
             const active = exact ? pathname === path : pathname.startsWith(path)
             return (
               <button
                 key={path}
                 onClick={() => navigate(path)}
+                aria-current={active ? 'page' : undefined}
                 className='cursor-pointer! w-full flex flex-col items-center justify-center py-2.5 gap-1 rounded-xl transition'
                 style={{ backgroundColor: active ? 'rgba(255,255,255,0.25)' : 'transparent' }}
                 onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
                 onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent' }}
               >
-                <Icon size={20} style={{ color: 'rgba(255,255,255,0.85)' }} />
-                <span className='text-[0.6rem] font-semibold tracking-wide text-white/70 opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-none'>
+                <Icon size={20} aria-hidden='true' style={{ color: 'rgba(255,255,255,0.9)' }} />
+                <span className='text-[0.6rem] font-semibold tracking-wide text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 leading-none'>
                   {title}
                 </span>
               </button>
@@ -69,8 +72,8 @@ function LayoutPerfil({ onLogout }) {
               onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
             >
-              <House size={20} style={{ color: 'rgba(255,255,255,0.85)' }} />
-              <span className='text-[0.6rem] font-semibold tracking-wide text-white/70 opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-none'>
+              <Users size={20} aria-hidden='true' style={{ color: 'rgba(255,255,255,0.9)' }} />
+              <span className='text-[0.6rem] font-semibold tracking-wide text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 leading-none'>
                 Mi grupo
               </span>
             </button>
@@ -82,12 +85,12 @@ function LayoutPerfil({ onLogout }) {
             onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
           >
             {user?.foto_perfil
-              ? <img src={user.foto_perfil} alt='Perfil' className='w-8 h-8 rounded-full object-cover ring-2 ring-white/30' />
+              ? <img src={user.foto_perfil} alt='' className='w-8 h-8 rounded-full object-cover ring-2 ring-white/30' />
               : <div className='w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-sm font-bold'>
-                  {user?.nombre?.[0]?.toUpperCase() ?? <CircleUserRound size={18} />}
+                  {user?.nombre?.[0]?.toUpperCase() ?? <CircleUserRound size={18} aria-hidden='true' />}
                 </div>
             }
-            <span className='text-[0.6rem] font-semibold tracking-wide text-white/70 opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-none'>
+            <span className='text-[0.6rem] font-semibold tracking-wide text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 leading-none'>
               Mi perfil
             </span>
           </button>
@@ -98,8 +101,8 @@ function LayoutPerfil({ onLogout }) {
             onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
             onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
           >
-            <LogOut size={20} />
-            <span className='text-[0.6rem] font-semibold tracking-wide text-white/70 opacity-0 group-hover:opacity-100 transition-opacity duration-150 leading-none'>
+            <LogOut size={20} aria-hidden='true' />
+            <span className='text-[0.6rem] font-semibold tracking-wide text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 leading-none'>
               Salir
             </span>
           </button>
@@ -107,7 +110,7 @@ function LayoutPerfil({ onLogout }) {
       </aside>
 
       {/* Contenido principal */}
-      <main ref={mainRef} className='flex-1 min-w-0 p-4 sm:p-6 md:p-15 overflow-y-auto pb-24 md:pb-10'>
+      <main id='contenido-principal' tabIndex={-1} ref={mainRef} className='flex-1 min-w-0 p-4 sm:p-6 md:p-15 overflow-y-auto pb-24 md:pb-10'>
         <div className='max-w-7xl mx-auto'>
           <Outlet />
         </div>
@@ -115,6 +118,7 @@ function LayoutPerfil({ onLogout }) {
 
       {/* Bottom nav — solo mobile */}
       <nav
+        aria-label='Navegación principal'
         className='md:hidden fixed bottom-0 inset-x-0 z-40 flex items-center justify-around px-1 py-1.5 border-t border-emerald-700'
         style={{ backgroundColor: '#0b8059' }}
       >
@@ -124,31 +128,32 @@ function LayoutPerfil({ onLogout }) {
             <button
               key={path}
               onClick={() => navigate(path)}
-              title={title}
+              aria-label={title}
+              aria-current={active ? 'page' : undefined}
               className='cursor-pointer! flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition'
-              style={{ color: active ? 'white' : 'rgba(255,255,255,0.55)', backgroundColor: active ? 'rgba(255,255,255,0.18)' : 'transparent' }}
+              style={{ color: active ? 'white' : 'rgba(255,255,255,0.8)', backgroundColor: active ? 'rgba(255,255,255,0.18)' : 'transparent' }}
             >
-              <Icon size={20} />
+              <Icon size={20} aria-hidden='true' />
             </button>
           )
         })}
         {tieneGrupo && (
           <button
             onClick={() => navigate('/grupo')}
-            title='Mi grupo'
+            aria-label='Mi grupo'
             className='cursor-pointer! flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition'
-            style={{ color: 'rgba(255,255,255,0.55)' }}
+            style={{ color: 'rgba(255,255,255,0.8)' }}
           >
-            <House size={20} />
+            <Users size={20} aria-hidden='true' />
           </button>
         )}
         <button
           onClick={onLogout}
-          title='Cerrar sesión'
+          aria-label='Cerrar sesión'
           className='cursor-pointer! flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition'
-          style={{ color: 'rgba(255,255,255,0.55)' }}
+          style={{ color: 'rgba(255,255,255,0.8)' }}
         >
-          <LogOut size={20} />
+          <LogOut size={20} aria-hidden='true' />
         </button>
       </nav>
 
