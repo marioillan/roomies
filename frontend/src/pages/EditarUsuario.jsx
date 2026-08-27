@@ -471,6 +471,13 @@ function Paso2({ control, errors }) {
               <BoolPillGroup etiqueta='¿Tienes mascotas?' value={field.value} onChange={field.onChange} />
             )} />
           </div>
+
+          <div>
+            <Label>¿Entorno LGBTQ+ friendly?</Label>
+            <Controller name='lgbtq_friendly' control={control} render={({ field }) => (
+              <BoolPillGroup etiqueta='¿Entorno LGBTQ+ friendly?' value={field.value} onChange={field.onChange} />
+            )} />
+          </div>
         </div>
       </Section>
     </div>
@@ -644,11 +651,6 @@ function Paso3({ control }) {
           )} />
         </CampoPref>
 
-        <CampoPref label='¿Buscas entorno LGBTQ+ friendly?' nameVal='pref_lgbtq_friendly' nameReq='pref_lgbtq_friendly_req' control={control}>
-          <Controller name='pref_lgbtq_friendly' control={control} render={({ field }) => (
-            <BoolPillGroup etiqueta='¿Buscas entorno LGBTQ+ friendly?' value={field.value} onChange={field.onChange} />
-          )} />
-        </CampoPref>
       </Section>
     </div>
   )

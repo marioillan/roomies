@@ -162,7 +162,7 @@ export const unirseGrupo = async (req, res, next) => {
 // ── POST /api/grupos/crear ────────────────────────────────────
 export const crearGrupo = async (req, res, next) => {
   const parsed = crearGrupoSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
   const { nombre, dia_limpieza } = parsed.data;
   const userId = req.userId;
 
@@ -195,7 +195,7 @@ export const crearGrupo = async (req, res, next) => {
 // ── PUT /api/grupos/editar ────────────────────────────────────
 export const editarGrupo = async (req, res, next) => {
   const parsed = editarGrupoSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
   const { nombre, dia_limpieza, descripcion, ciudad, buscar_companero } = parsed.data;
   const grupoId = req.grupoId;
 
@@ -305,7 +305,7 @@ export const getConvivencia = async (req, res, next) => {
 export const editarConvivencia = async (req, res, next) => {
   const grupoId = req.grupoId;
   const parsed = grupoConvivenciaSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
   const { horario, ambiente, frecuencia_visitas, tolerancia_fiestas,
           ocupacion, acepta_fumadores, acepta_mascotas, lgbtq_friendly,
           limpieza_orden, nivel_ruido } = parsed.data;
@@ -357,7 +357,7 @@ export const getPublicacion = async (req, res, next) => {
 export const editarPublicacion = async (req, res, next) => {
   const grupoId = req.grupoId;
   const parsed = publicacionSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
 
   // El anuncio solo tiene sentido si el grupo ha definido su perfil de
   // convivencia: es lo que permite calcular la afinidad con cada candidato
@@ -567,7 +567,7 @@ export const getEventos = async (req, res, next) => {
 // ── POST /api/grupos/eventos ──────────────────────────────────
 export const crearEvento = async (req, res, next) => {
   const parsed = eventoSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
   const d = parsed.data;
 
   try {
@@ -632,7 +632,7 @@ export const editarEvento = async (req, res, next) => {
   }
 
   const parsed = eventoSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
   const d = parsed.data;
 
   try {
@@ -710,7 +710,7 @@ export const getMisIntereses = async (req, res, next) => {
 export const editarIntereses = async (req, res, next) => {
   const grupoId = req.grupoId;
   const parsed = interesesSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
 
   const { intereses } = parsed.data;
   try {

@@ -63,7 +63,7 @@ const setAuthCookies = async (res, userId) => {
 export const registro = async (req, res, next) => {
   const parsed = registroSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ message: parsed.error.errors[0].message });
+    return res.status(400).json({ message: parsed.error.issues[0].message });
   }
   const { nombre, email, password } = parsed.data;
 
@@ -100,7 +100,7 @@ export const registro = async (req, res, next) => {
 export const login = async (req, res, next) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ message: parsed.error.errors[0].message });
+    return res.status(400).json({ message: parsed.error.issues[0].message });
   }
   const { email, password } = parsed.data;
 

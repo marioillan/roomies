@@ -97,7 +97,7 @@ export const getFacturas = async (req, res, next) => {
 // ── POST /api/facturas ────────────────────────────────────────
 export const crearFactura = async (req, res, next) => {
   const parsed = facturaSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
   const d = parsed.data;
 
   try {
@@ -173,7 +173,7 @@ export const crearFactura = async (req, res, next) => {
 // ── PUT /api/facturas/:id ─────────────────────────────────────
 export const editarFactura = async (req, res, next) => {
   const parsed = facturaSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
   const d = parsed.data;
 
   try {

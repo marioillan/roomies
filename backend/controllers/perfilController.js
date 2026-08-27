@@ -22,7 +22,7 @@ export const editarPerfil = async (req, res, next) => {
   const userId = req.userId;
   const parsed = editarPerfilSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ message: parsed.error.errors[0].message });
+    return res.status(400).json({ message: parsed.error.issues[0].message });
   }
 
   const {
@@ -274,7 +274,7 @@ export const getPreferencias = async (req, res, next) => {
 // ── PUT /api/perfil/preferencias ─────────────────────────────
 export const editarPreferencias = async (req, res, next) => {
   const parsed = preferenciasSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
 
   const d = parsed.data;
   const campos = {
@@ -346,7 +346,7 @@ export const getMisIntereses = async (req, res, next) => {
 // ── PUT /api/perfil/intereses ─────────────────────────────────
 export const editarIntereses = async (req, res, next) => {
   const parsed = interesesSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
 
   const { intereses } = parsed.data;
   try {

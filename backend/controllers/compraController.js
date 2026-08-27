@@ -31,7 +31,7 @@ export const getProductos = async (req, res, next) => {
 // ── POST /api/compra ──────────────────────────────────────────
 export const añadirProducto = async (req, res, next) => {
   const parsed = añadirSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
 
   const { nombre, categoria = 'otros' } = parsed.data;
 
@@ -91,7 +91,7 @@ export const toggleComprado = async (req, res, next) => {
 // ── PUT /api/compra/:id ───────────────────────────────────────
 export const editarProducto = async (req, res, next) => {
   const parsed = editarSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+  if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
 
   try {
     const existente = await prisma.producto.findFirst({
