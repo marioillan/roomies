@@ -36,10 +36,9 @@ const schema = z.object({
   ocupacion:          enumReq(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']),
   limpieza_orden:     enumReq(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']),
   nivel_ruido:        enumReq(['SILENCIO_TOTAL', 'MODERADO', 'ALTO']),
-  // campos opcionales
-  acepta_fumadores:   z.string().optional(),
-  acepta_mascotas:    z.string().optional(),
-  lgbtq_friendly:     z.boolean().nullish(),
+  acepta_fumadores:   z.string(),
+  acepta_mascotas:    z.string(),
+  lgbtq_friendly:     z.boolean(),
 })
 
 const DIAS_SEMANA = [

@@ -23,9 +23,9 @@ export const grupoConvivenciaSchema = z.object({
   ocupacion:          z.enum(['ESTUDIO', 'TRABAJO', 'ESTUDIO_Y_TRABAJO']),
   limpieza_orden:     z.enum(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']),
   nivel_ruido:        z.enum(['SILENCIO_TOTAL', 'MODERADO', 'ALTO']),
-  acepta_fumadores:   z.enum(['SI', 'NO', 'INDIFERENTE']).nullable().optional(),
-  acepta_mascotas:    z.enum(['SI', 'NO', 'DEPENDE']).nullable().optional(),
-  lgbtq_friendly:     z.boolean().nullable().optional(),
+  acepta_fumadores:   z.enum(['SI', 'NO', 'INDIFERENTE']),
+  acepta_mascotas:    z.enum(['SI', 'NO', 'DEPENDE']),
+  lgbtq_friendly:     z.boolean(),
 });
 
 export const publicacionSchema = z.object({

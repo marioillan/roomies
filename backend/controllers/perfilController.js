@@ -49,7 +49,7 @@ export const editarPerfil = async (req, res, next) => {
       const usuario = await tx.usuario.update({
         where: { id: userId },
         data: { nombre, updated_at: new Date() },
-        select: { id: true, nombre: true, email: true, foto_perfil: true, fecha_registro: true },
+        select: { id: true, nombre: true, email: true, fecha_registro: true },
       });
 
       const perfil = await tx.perfilConvivenciaUsuario.upsert({

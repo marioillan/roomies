@@ -85,7 +85,6 @@ export const registro = async (req, res, next) => {
         id: true,
         nombre: true,
         email: true,
-        foto_perfil: true,
         fecha_registro: true,
       },
     });
@@ -113,7 +112,6 @@ export const login = async (req, res, next) => {
         nombre: true,
         email: true,
         password: true,
-        foto_perfil: true,
         fecha_registro: true,
       },
     });
@@ -137,7 +135,6 @@ export const login = async (req, res, next) => {
         id: usuario.id,
         nombre: usuario.nombre,
         email: usuario.email,
-        foto_perfil: usuario.foto_perfil,
         fecha_registro: usuario.fecha_registro,
       },
     });

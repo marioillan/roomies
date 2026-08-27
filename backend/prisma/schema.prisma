@@ -235,19 +235,19 @@ model SolicitudUnion {
 model PerfilConvivenciaUsuario {
   id                 String             @id @db.VarChar(36)
   usuario_id         String             @unique @db.VarChar(36)
-  pais               String?            @default("España") @db.VarChar(100)
-  genero             String?            @db.VarChar(50)
-  fecha_nacimiento   DateTime?          @db.Date
-  ocupacion          Ocupacion?
-  horario            Horario?
-  frecuencia_visitas FrecuenciaVisitas?
-  ambiente           Ambiente?
-  tolerancia_fiestas FrecuenciaFiestas?
-  fumador            Boolean?
-  tiene_mascotas     Boolean?
-  lgbtq_friendly     Boolean?
-  limpieza_orden     LimpiezaOrden?
-  nivel_ruido        NivelRuido?
+  pais               String            @default("España") @db.VarChar(100)
+  genero             String            @db.VarChar(50)
+  fecha_nacimiento   DateTime          @db.Date
+  ocupacion          Ocupacion
+  horario            Horario
+  frecuencia_visitas FrecuenciaVisitas
+  ambiente           Ambiente
+  tolerancia_fiestas FrecuenciaFiestas
+  fumador            Boolean
+  tiene_mascotas     Boolean
+  lgbtq_friendly     Boolean
+  limpieza_orden     LimpiezaOrden
+  nivel_ruido        NivelRuido
   sobre_mi           String
   created_at         DateTime           @default(now()) @db.Timestamp(6)
   updated_at         DateTime           @default(now()) @db.Timestamp(6)
