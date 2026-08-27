@@ -184,14 +184,21 @@ export const buscarPublicaciones = async (req, res, next) => {
       const rows = await prisma.$queryRawUnsafe(selectBase, ...params);
 
       const conScore = rows.map(pub => {
-        const score = calcularScore(perfilUsuario, pub);
+        const tienePerfilGrupo = pub.pcg_horario !== null || pub.pcg_ambiente !== null
+          || pub.pcg_frecuencia_visitas !== null || pub.pcg_tolerancia_fiestas !== null
+          || pub.pcg_ocupacion !== null || pub.pcg_limpieza_orden !== null
+          || pub.pcg_nivel_ruido !== null;
+
+        const score = tienePerfilGrupo ? calcularScore(perfilUsuario, pub) : null;
         const { intereses_grupo, pcg_horario, pcg_ambiente, pcg_frecuencia_visitas, pcg_tolerancia_fiestas, pcg_ocupacion, pcg_limpieza_orden, pcg_nivel_ruido, ...resto } = pub;
         return { ...resto, compatibilidad: score, intereses_comunes: calcComunes(pub) };
       });
 
       if (ordenar === 'precio_asc')  conScore.sort((a, b) => a.precio - b.precio);
       else if (ordenar === 'precio_desc') conScore.sort((a, b) => b.precio - a.precio);
-      else conScore.sort((a, b) => b.compatibilidad - a.compatibilidad);
+      // Con null en compatibilidad, una resta directa daría NaN y dejaría el
+      // orden indefinido; los grupos sin perfil quedan al final.
+      else conScore.sort((a, b) => (b.compatibilidad ?? -1) - (a.compatibilidad ?? -1));
 
       const total     = conScore.length;
       const paginadas = conScore.slice(offset, offset + limit);
@@ -279,7 +286,7 @@ export const getPublicacion = async (req, res, next) => {
         where: { grupo_id: pub.grupo_id, activo: true },
         select: {
           rol: true, fecha_union: true,
-          usuario: { select: { id: true, nombre: true, foto_perfil: true } },
+          usuario: { select: { id: true, nombre: true, fotos: { where: { orden: 0 }, select: { url: true }, take: 1 } } },
         },
         orderBy: [{ rol: 'asc' }, { fecha_union: 'asc' }],
       }),
@@ -294,7 +301,7 @@ export const getPublicacion = async (req, res, next) => {
     ]);
 
     const miembros = miembrosData.map(mg => ({
-      id: mg.usuario.id, nombre: mg.usuario.nombre, foto_perfil: mg.usuario.foto_perfil,
+      id: mg.usuario.id, nombre: mg.usuario.nombre, foto_perfil: mg.usuario.fotos[0]?.url ?? null,
       rol_en_grupo: mg.rol, fecha_union: mg.fecha_union,
     }));
 

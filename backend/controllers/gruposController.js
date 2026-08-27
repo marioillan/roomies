@@ -264,7 +264,8 @@ export const getMiGrupo = async (req, res, next) => {
           rol: true, fecha_union: true,
           usuario: {
             select: {
-              id: true, nombre: true, foto_perfil: true,
+              id: true, nombre: true,
+              fotos: { where: { orden: 0 }, select: { url: true }, take: 1 },
               perfil_convivencia: { select: { fecha_nacimiento: true } },
             },
           },
@@ -276,7 +277,7 @@ export const getMiGrupo = async (req, res, next) => {
     const miembros = miembrosData.map(mg => ({
       id: mg.usuario.id,
       username: mg.usuario.nombre,
-      foto_perfil: mg.usuario.foto_perfil,
+      foto_perfil: mg.usuario.fotos[0]?.url ?? null,
       rol_en_grupo: mg.rol,
       fecha_union: mg.fecha_union,
       fecha_nacimiento: mg.usuario.perfil_convivencia?.fecha_nacimiento ?? null,
@@ -827,7 +828,7 @@ export const getSolicitudesUnion = async (req, res, next) => {
           select: {
             id: true,
             nombre: true,
-            foto_perfil: true,
+            fotos: { where: { orden: 0 }, select: { url: true }, take: 1 },
             perfil_convivencia: true,
             preferencias_companero: true,
           },
@@ -842,7 +843,7 @@ export const getSolicitudesUnion = async (req, res, next) => {
       return {
         id: s.id,
         fecha_solicitud: s.fecha_solicitud,
-        usuario: { id: s.usuario.id, nombre: s.usuario.nombre, foto_perfil: s.usuario.foto_perfil },
+        usuario: { id: s.usuario.id, nombre: s.usuario.nombre, foto_perfil: s.usuario.fotos[0]?.url ?? null },
         compatibilidad: compatibilidad?.score ?? null,
         desglose: compatibilidad?.desglose ?? null,
       };

@@ -34,8 +34,8 @@ function matchOrdinal(valorUsuario, valorGrupo, campo) {
 function matchOcupacion(u, g) {
   if (!u || !g) return 0.5
   if (u === g) return 1.0
-  if (u === 'ESTUDIO_Y_TRABAJO' || g === 'ESTUDIO_Y_TRABAJO') return 0.5
-  return 0.5
+  if (u === 'ESTUDIO_Y_TRABAJO' || g === 'ESTUDIO_Y_TRABAJO') return 0.75
+  return 0.0
 }
 
 export function calcularCompatibilidad(usuario, pcg) {

@@ -34,14 +34,14 @@ export const getTareas = async (req, res, next) => {
         where: { grupo_id, activo: true, rol: { not: 'CASERO' } },
         select: {
           rol: true,
-          usuario: { select: { id: true, nombre: true, foto_perfil: true } },
+          usuario: { select: { id: true, nombre: true, fotos: { where: { orden: 0 }, select: { url: true }, take: 1 } } },
         },
         orderBy: { fecha_union: 'asc' },
       }),
     ]);
 
     const miembros = miembrosData.map(mg => ({
-      id: mg.usuario.id, nombre: mg.usuario.nombre, foto_perfil: mg.usuario.foto_perfil, rol: mg.rol,
+      id: mg.usuario.id, nombre: mg.usuario.nombre, foto_perfil: mg.usuario.fotos[0]?.url ?? null, rol: mg.rol,
     }));
 
     if (!zonas.length || !miembros.length) {

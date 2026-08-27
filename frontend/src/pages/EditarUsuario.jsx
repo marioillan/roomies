@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from 'react'
 import { z } from 'zod'
 import {
   ArrowLeft, Camera, User, Users, Search,
-  AlertCircle, Check, ChevronLeft, ChevronRight, X,
+  AlertCircle, Check, ChevronLeft, ChevronRight, X, Star
 } from 'lucide-react'
 import CustomSelect from '../components/CustomSelect'
 import {
@@ -39,9 +39,7 @@ const schema = z.object({
   limpieza_orden:     enumReq(['DESPREOCUPADO', 'FLEXIBLE', 'ORDENADO']),
   nivel_ruido:        enumReq(['SILENCIO_TOTAL', 'MODERADO', 'ALTO']),
   fumador:            z.boolean().nullish(),
-  acepta_fumadores:   z.string().optional(),
   tiene_mascotas:     z.boolean().nullish(),
-  acepta_mascotas:    z.string().optional(),
   lgbtq_friendly:     z.boolean().nullish(),
   // Paso 3 — filtros de convivencia (valor + importancia)
   pref_ocupacion:               z.string().optional(),
@@ -86,7 +84,7 @@ const PERFIL_FIELDS = [
   'nombre', 'genero', 'pais', 'sobre_mi',
   'ocupacion', 'horario', 'frecuencia_visitas', 'ambiente', 'tolerancia_fiestas',
   'limpieza_orden', 'nivel_ruido',
-  'fumador', 'acepta_fumadores', 'tiene_mascotas', 'acepta_mascotas', 'lgbtq_friendly',
+  'fumador', 'tiene_mascotas', 'lgbtq_friendly',
 ]
 
 // Preferencias del compañero. En el formulario llevan prefijo pref_ y cada una
@@ -133,37 +131,15 @@ const STEP_META = [
 ]
 
 // ── Paso 1: Datos personales ──────────────────────────────────────
-const MAX_FOTOS_PERFIL = 2
+const MAX_FOTOS_PERFIL = 4
+const MIN_FOTOS_PERFIL = 2
 
-function Paso1({ register, control, errors, watch, user, fotoPreview, fotoLoading, fotoError, onFotoClick, todosIntereses, interesesSeleccionados, onToggleInteres, fotosSlots, onAddFotos, onRemoveFoto, fotosInputRef, fotosReqError, interesesReqError }) {
+function Paso1({ register, control, errors, watch, todosIntereses, interesesSeleccionados, onToggleInteres, fotos, onAddFotos, onRemoveFoto, fotosReqError, interesesReqError }) {
   const [draggingFotos, setDraggingFotos] = useState(false)
+  const fotosInputRef = useRef(null)
   const sobreMiLength = (watch('sobre_mi') ?? '').length
   return (
     <div className='flex flex-col gap-6'>
-
-      {/* Foto */}
-      <div className='flex flex-col items-center gap-2 py-2'>
-        <button type='button' onClick={onFotoClick} disabled={fotoLoading}
-          aria-label='Cambiar foto de perfil'
-          className='cursor-pointer! relative group'>
-          {fotoPreview
-            ? <img src={fotoPreview} alt='' className='w-24 h-24 rounded-full object-cover ring-4 ring-white shadow-lg' />
-            : <div className='w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center text-3xl font-bold text-emerald-600 ring-4 ring-white shadow-lg'>
-                {user?.nombre?.[0]?.toUpperCase()}
-              </div>
-          }
-          <div className='absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition'>
-            <Camera aria-hidden='true' size={22} className='text-white' />
-          </div>
-          {fotoLoading && (
-            <div className='absolute inset-0 rounded-full bg-black/50 flex items-center justify-center'>
-              <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin' />
-            </div>
-          )}
-        </button>
-        <p className='text-xs text-slate-500'>Haz clic para cambiar la foto</p>
-        {fotoError && <p className='text-red-500 text-[11px]'>{fotoError}</p>}
-      </div>
 
       <Section title='Información básica' accent='emerald'>
         <div>
@@ -297,7 +273,8 @@ function Paso1({ register, control, errors, watch, user, fotoPreview, fotoLoadin
 
       <Section title='Fotos de perfil' accent='emerald'>
         <p className='text-xs text-slate-500 -mt-1'>
-          Junto a tu foto de perfil, añade <span className='font-semibold text-slate-600'>2 fotos obligatorias</span> que aparecerán en tu perfil público.
+          Añade entre <span className='font-semibold text-slate-600'>{MIN_FOTOS_PERFIL} y {MAX_FOTOS_PERFIL} fotos</span>.
+          La primera será tu foto principal.
         </p>
         {fotosReqError && (
           <div role='alert' className='flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3'>
@@ -306,23 +283,27 @@ function Paso1({ register, control, errors, watch, user, fotoPreview, fotoLoadin
           </div>
         )}
 
-        {/* Grid de miniaturas */}
-        {fotosSlots.some(s => s !== null) && (
-          <div className='grid grid-cols-3 gap-2.5'>
-            {fotosSlots.map((slot, slotIdx) => {
-              if (slot === null) return null
-              const src = slot instanceof File ? URL.createObjectURL(slot) : slot
-              const esNueva = slot instanceof File
+        {fotos.length > 0 && (
+          <div className='grid grid-cols-2 sm:grid-cols-4 gap-2.5'>
+            {fotos.map((foto, idx) => {
+              const esNueva = foto instanceof File
+              const src = esNueva ? URL.createObjectURL(foto) : foto.url
               return (
-                <div key={slotIdx} className='relative aspect-video rounded-xl overflow-hidden bg-slate-100 group'>
+                <div key={esNueva ? `nueva-${idx}` : foto.id}
+                  className='relative aspect-3/4 rounded-xl overflow-hidden bg-slate-100 group'>
                   <img src={src} alt='' className='w-full h-full object-cover' />
+                  {idx === 0 && (
+                    <span className='absolute bottom-1.5 left-1.5 flex items-center gap-1 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm'>
+                      <Star aria-hidden='true' size={9} className='fill-current' /> Principal
+                    </span>
+                  )}
                   {esNueva && (
                     <div className='absolute top-1.5 left-1.5 bg-emerald-500/80 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md'>
                       Nueva
                     </div>
                   )}
-                  <button type='button' onClick={() => onRemoveFoto(slotIdx)}
-                    aria-label={`Eliminar la foto ${slotIdx + 1}`}
+                  <button type='button' onClick={() => onRemoveFoto(idx)}
+                    aria-label={`Eliminar la foto ${idx + 1}`}
                     className='cursor-pointer! absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'>
                     <X size={11} aria-hidden='true' className='text-white' />
                   </button>
@@ -332,8 +313,7 @@ function Paso1({ register, control, errors, watch, user, fotoPreview, fotoLoadin
           </div>
         )}
 
-        {/* Zona de arrastre */}
-        {fotosSlots.filter(s => s !== null).length < MAX_FOTOS_PERFIL && (
+        {fotos.length < MAX_FOTOS_PERFIL && (
           <div
             onDragOver={e => { e.preventDefault(); setDraggingFotos(true) }}
             onDragLeave={() => setDraggingFotos(false)}
@@ -348,7 +328,7 @@ function Paso1({ register, control, errors, watch, user, fotoPreview, fotoLoadin
             <div className='text-center'>
               <p className='text-sm font-semibold text-slate-700'>Arrastra fotos aquí o haz clic</p>
               <p className='text-xs text-slate-500 mt-0.5'>
-                {MAX_FOTOS_PERFIL - fotosSlots.filter(s => s !== null).length} foto{MAX_FOTOS_PERFIL - fotosSlots.filter(s => s !== null).length !== 1 ? 's' : ''} más · JPG, PNG, WEBP
+                {MAX_FOTOS_PERFIL - fotos.length} foto{MAX_FOTOS_PERFIL - fotos.length !== 1 ? 's' : ''} más · JPG, PNG, WEBP
               </p>
             </div>
             <input ref={fotosInputRef} type='file' multiple accept='image/*' className='hidden'
@@ -356,9 +336,9 @@ function Paso1({ register, control, errors, watch, user, fotoPreview, fotoLoadin
           </div>
         )}
 
-        {fotosSlots.filter(s => s !== null).length === MAX_FOTOS_PERFIL && (
+        {fotos.length === MAX_FOTOS_PERFIL && (
           <p className='text-xs text-center text-slate-500 bg-slate-50 border border-slate-200 rounded-xl py-2.5'>
-            Has añadido las 2 fotos requeridas.
+            Has alcanzado el máximo de {MAX_FOTOS_PERFIL} fotos.
           </p>
         )}
       </Section>
@@ -676,27 +656,18 @@ function Paso3({ control }) {
 
 // ── Componente principal ──────────────────────────────────────────
 function EditarUsuario() {
-  const { user, setUser, recargarUsuario } = useAuth()
+  const { user, recargarUsuario } = useAuth()
   const navigate = useNavigate()
-  // Si el perfil ya estaba incompleto al entrar, es el relleno obligatorio de primera vez
   const [esPrimeraVez] = useState(() => user?.perfil_completo === false)
   const [step, setStep]               = useState(0)
   const [serverError, setServerError] = useState('')
   const [loading, setLoading]         = useState(true)
-  const [fotoPreview, setFotoPreview] = useState(user?.foto_perfil ?? null)
-  const [fotoLoading, setFotoLoading] = useState(false)
-  const [fotoError, setFotoError]     = useState('')
-  // Modelo de 2 slots fijos: null | string (URL existente) | File (nueva)
-  const [fotosSlots, setFotosSlots] = useState([
-    user?.foto_1 ?? null,
-    user?.foto_2 ?? null,
-  ])
+  const [fotos, setFotos] = useState([])
+  const [idsOriginales, setIdsOriginales] = useState([])
   const [fotosReqError, setFotosReqError] = useState('')
   const [todosIntereses, setTodosIntereses]           = useState({})
   const [interesesSeleccionados, setInteresesSeleccionados] = useState(new Set())
   const [interesesReqError, setInteresesReqError] = useState('')
-  const fotoInputRef    = useRef(null)
-  const fotosInputRef   = useRef(null)
 
   const toggleInteres = (id) => {
     setInteresesReqError('')
@@ -713,8 +684,8 @@ function EditarUsuario() {
       nombre: '', genero: '', pais: '', dia: '', mes: '', anio: '', sobre_mi: '',
       ocupacion: '', horario: '', frecuencia_visitas: '', ambiente: '',
       tolerancia_fiestas: '',
-      fumador: null, acepta_fumadores: '',
-      tiene_mascotas: null, acepta_mascotas: '',
+      fumador: null,
+      tiene_mascotas: null,
       lgbtq_friendly: null,
       limpieza_orden: '', nivel_ruido: '',
       pref_ocupacion: '', pref_ocupacion_req: null,
@@ -736,7 +707,8 @@ function EditarUsuario() {
       apiFetch('/api/perfil/intereses').then(r => r.json()),
       apiFetch('/api/perfil/mis-intereses').then(r => r.json()),
       apiFetch('/api/perfil/preferencias').then(r => r.json()),
-    ]).then(([convRes, todosRes, misRes, prefRes]) => {
+      apiFetch('/api/perfil/fotos').then(r => r.json()),
+    ]).then(([convRes, todosRes, misRes, prefRes, fotosRes]) => {
       const perfil = convRes.status === 'fulfilled' ? convRes.value.perfil : null
       const pref   = prefRes.status === 'fulfilled'  ? prefRes.value.preferencias : null
 
@@ -754,9 +726,7 @@ function EditarUsuario() {
           ambiente: perfil.ambiente ?? '',
           tolerancia_fiestas: perfil.tolerancia_fiestas ?? '',
           fumador: perfil.fumador ?? null,
-          acepta_fumadores: perfil.acepta_fumadores ?? '',
           tiene_mascotas: perfil.tiene_mascotas ?? null,
-          acepta_mascotas: perfil.acepta_mascotas ?? '',
           lgbtq_friendly: perfil.lgbtq_friendly ?? null,
           limpieza_orden: perfil.limpieza_orden ?? '',
           nivel_ruido:    perfil.nivel_ruido    ?? '',
@@ -784,65 +754,32 @@ function EditarUsuario() {
       }
       if (todosRes.status === 'fulfilled') setTodosIntereses(todosRes.value.categorias ?? {})
       if (misRes.status   === 'fulfilled') setInteresesSeleccionados(new Set((misRes.value.intereses ?? []).map(i => i.id)))
+      if (fotosRes.status === 'fulfilled') {
+        const lista = fotosRes.value.fotos ?? []
+        setFotos(lista.map(f => ({ id: f.id, url: f.url })))
+        setIdsOriginales(lista.map(f => f.id))
+      }  
     }).finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
-    if (user?.foto_perfil) setFotoPreview(user.foto_perfil)
-  }, [user?.foto_perfil])
-
-  const handleFotoChange = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setFotoPreview(URL.createObjectURL(file))
-    setFotoLoading(true)
-    setFotoError('')
-    try {
-      const formData = new FormData()
-      formData.append('foto', file)
-      const res = await apiFetch('/api/perfil/foto', { method: 'PUT', body: formData })
-      const json = await res.json()
-      if (!res.ok) return setFotoError(json.message)
-      setFotoPreview(json.user.foto_perfil)
-    } catch {
-      setFotoError('Error al subir la imagen')
-    } finally {
-      setFotoLoading(false)
-    }
-  }
-
   const addFotos = (files) => {
     setFotosReqError('')
-    const imagenes = Array.from(files).filter(f => f.type.startsWith('image/'))
-    setFotosSlots(prev => {
-      const next = [...prev]
-      for (const img of imagenes) {
-        const emptyIdx = next.findIndex(x => x === null)
-        if (emptyIdx === -1) break
-        next[emptyIdx] = img
-      }
-      return next
-    })
+    const imagenes = Array.from(files)
+      .filter(f => f.type.startsWith('image/'))
+      .slice(0, MAX_FOTOS_PERFIL - fotos.length)
+    if (imagenes.length) setFotos(prev => [...prev, ...imagenes])
   }
 
-  const removeFotoSlot = (slotIdx) => {
-    setFotosSlots(prev => {
-      const next = [...prev]
-      next[slotIdx] = null
-      return next
-    })
+  const removeFoto = (idx) => {
+    setFotosReqError('')
+    setFotos(prev => prev.filter((_, i) => i !== idx))
   }
 
   const next = async () => {
-    // Se acumulan los fallos de las comprobaciones manuales en lugar de cortar
-    // en el primero, y `trigger` se lanza siempre, para que el usuario vea de
-    // una sola vez todo lo que le falta del paso.
     let hayErrorManual = false
     if (step === 0) {
-      const faltaFotoPerfil = !fotoPreview
-      const faltanFotosExtra = fotosSlots.some(s => s === null)
-      if (faltaFotoPerfil || faltanFotosExtra) {
-        setFotosReqError('Las tres fotos son obligatorias.')
+      if (fotos.length < MIN_FOTOS_PERFIL) {
+        setFotosReqError(`Añade al menos ${MIN_FOTOS_PERFIL} fotos.`)
         hayErrorManual = true
       } else {
         setFotosReqError('')
@@ -885,19 +822,17 @@ function EditarUsuario() {
       const json = await res.json()
       if (!res.ok) return setServerError(json.message)
 
-      // Guardar fotos extra: subir nuevas, eliminar las quitadas
-      const origFotos = [user?.foto_1 ?? null, user?.foto_2 ?? null]
-      await Promise.allSettled(
-        fotosSlots.map(async (slot, i) => {
-          if (slot instanceof File) {
-            const fd = new FormData()
-            fd.append('foto', slot)
-            await apiFetch(`/api/perfil/fotos/${i + 1}`, { method: 'PUT', body: fd })
-          } else if (slot === null && origFotos[i] !== null) {
-            await apiFetch(`/api/perfil/fotos/${i + 1}`, { method: 'DELETE' })
-          }
-        })
-      )
+      const idsActuales = new Set(fotos.filter(f => !(f instanceof File)).map(f => f.id))
+      for (const id of idsOriginales) {
+        if (!idsActuales.has(id)) await apiFetch(`/api/perfil/fotos/${id}`, { method: 'DELETE' })
+      }
+
+      const nuevas = fotos.filter(f => f instanceof File)
+      if (nuevas.length) {
+        const fd = new FormData()
+        nuevas.forEach(f => fd.append('fotos', f))
+        await apiFetch('/api/perfil/fotos', { method: 'PUT', body: fd })
+      }
 
       await recargarUsuario()
       navigate(esPrimeraVez ? '/buscar' : '/perfil/usuario')
@@ -957,16 +892,12 @@ function EditarUsuario() {
               <Paso1
                 register={register} control={control}
                 errors={errors} watch={watch}
-                user={user} fotoPreview={fotoPreview}
-                fotoLoading={fotoLoading} fotoError={fotoError}
-                onFotoClick={() => fotoInputRef.current?.click()}
                 todosIntereses={todosIntereses}
                 interesesSeleccionados={interesesSeleccionados}
                 onToggleInteres={toggleInteres}
-                fotosSlots={fotosSlots}
+                fotos={fotos}
                 onAddFotos={addFotos}
-                onRemoveFoto={removeFotoSlot}
-                fotosInputRef={fotosInputRef}
+                onRemoveFoto={removeFoto}
                 fotosReqError={fotosReqError}
                 interesesReqError={interesesReqError}
               />
@@ -1018,8 +949,6 @@ function EditarUsuario() {
           </form>
         </div>
       </div>
-
-      <input ref={fotoInputRef} type='file' accept='image/*' className='hidden' onChange={handleFotoChange} />
     </div>
   )
 }

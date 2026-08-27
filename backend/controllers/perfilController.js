@@ -39,9 +39,7 @@ export const editarPerfil = async (req, res, next) => {
   if (ambiente != null)           camposOpcionales.ambiente = ambiente;
   if (tolerancia_fiestas != null) camposOpcionales.tolerancia_fiestas = tolerancia_fiestas;
   if (fumador != null)            camposOpcionales.fumador = fumador;
-  if (acepta_fumadores != null)   camposOpcionales.acepta_fumadores = acepta_fumadores;
   if (tiene_mascotas != null)     camposOpcionales.tiene_mascotas = tiene_mascotas;
-  if (acepta_mascotas != null)    camposOpcionales.acepta_mascotas = acepta_mascotas;
   if (lgbtq_friendly != null)     camposOpcionales.lgbtq_friendly = lgbtq_friendly;
   if (limpieza_orden != null)     camposOpcionales.limpieza_orden = limpieza_orden;
   if (nivel_ruido != null)        camposOpcionales.nivel_ruido = nivel_ruido;
@@ -68,9 +66,7 @@ export const editarPerfil = async (req, res, next) => {
           ambiente: ambiente ?? null,
           tolerancia_fiestas: tolerancia_fiestas ?? null,
           fumador: fumador ?? null,
-          acepta_fumadores: acepta_fumadores ?? null,
           tiene_mascotas: tiene_mascotas ?? null,
-          acepta_mascotas: acepta_mascotas ?? null,
           lgbtq_friendly: lgbtq_friendly ?? null,
           limpieza_orden: limpieza_orden ?? null,
           nivel_ruido: nivel_ruido ?? null,
@@ -95,72 +91,85 @@ export const editarPerfil = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/perfil/foto ───────────────────────────────────────
-export const subirFoto = async (req, res, next) => {
-  const userId = req.userId;
-  if (!req.file) return res.status(400).json({ message: 'No se ha enviado ninguna imagen' });
+const MAX_FOTOS_USUARIO = 4
 
+// ── GET /api/perfil/fotos ─────────────────────────────────────
+export const getFotos = async (req, res, next) => {
   try {
-    const url = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: 'roomies/avatars', transformation: [{ width: 900, height: 1200, crop: 'fill', gravity: 'auto', quality: 'auto' }] },
-        (err, result) => err ? reject(err) : resolve(result.secure_url)
-      );
-      stream.end(req.file.buffer);
+    const fotos = await prisma.fotoUsuario.findMany({
+      where: { usuario_id: req.userId },
+      select: { id: true, url: true, orden: true },
+      orderBy: { orden: 'asc' },
     });
-
-    const usuario = await prisma.usuario.update({
-      where: { id: userId },
-      data: { foto_perfil: url, updated_at: new Date() },
-      select: { id: true, nombre: true, email: true, foto_perfil: true, fecha_registro: true },
-    });
-
-    res.json({ user: usuario });
+    res.json({ fotos });
   } catch (err) {
     next(err);
   }
 };
 
-// ── PUT /api/perfil/fotos/:index ──────────────────────────────
-export const subirFotoExtra = async (req, res, next) => {
-  const userId = req.userId;
-  const { index } = req.params;
-  if (!['1', '2'].includes(index)) return res.status(400).json({ message: 'Índice inválido' });
-  if (!req.file) return res.status(400).json({ message: 'No se ha enviado ninguna imagen' });
+// ── PUT /api/perfil/fotos ─────────────────────────────────────
+export const subirFotos = async (req, res, next) => {
+  if (!req.files?.length) return res.status(400).json({ message: 'No se han enviado fotos' });
 
   try {
-    const url = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: 'roomies/fotos-perfil', transformation: [{ width: 900, height: 1200, crop: 'fill', gravity: 'auto', quality: 'auto' }] },
-        (err, result) => err ? reject(err) : resolve(result.secure_url)
-      );
-      stream.end(req.file.buffer);
+    const existentes = await prisma.fotoUsuario.count({ where: { usuario_id: req.userId } });
+    if (existentes + req.files.length > MAX_FOTOS_USUARIO) {
+      return res.status(400).json({ message: `Puedes tener como máximo ${MAX_FOTOS_USUARIO} fotos` });
+    }
+
+    const urls = await Promise.all(req.files.map(file =>
+      new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'roomies/fotos-usuario', transformation: [{ width: 900, height: 1200, crop: 'fill', gravity: 'auto', quality: 'auto' }] },
+          (err, result) => err ? reject(err) : resolve(result.secure_url)
+        );
+        stream.end(file.buffer);
+      })
+    ));
+
+    await prisma.fotoUsuario.createMany({
+      data: urls.map((url, i) => ({
+        id: randomUUID(), usuario_id: req.userId, url, orden: existentes + i,
+      })),
     });
 
-    const campo = `foto_${index}`;
-    await prisma.usuario.update({
-      where: { id: userId },
-      data: { [campo]: url, updated_at: new Date() },
+    const fotos = await prisma.fotoUsuario.findMany({
+      where: { usuario_id: req.userId },
+      select: { id: true, url: true, orden: true },
+      orderBy: { orden: 'asc' },
     });
-
-    res.json({ url });
+    res.json({ fotos });
   } catch (err) {
     next(err);
   }
 };
 
-// ── DELETE /api/perfil/fotos/:index ───────────────────────────
-export const eliminarFotoExtra = async (req, res, next) => {
-  const userId = req.userId;
-  const { index } = req.params;
-  if (!['1', '2', '3'].includes(index)) return res.status(400).json({ message: 'Índice inválido' });
-  const campo = `foto_${index}`;
+// ── DELETE /api/perfil/fotos/:fotoId ──────────────────────────
+export const eliminarFoto = async (req, res, next) => {
   try {
-    await prisma.usuario.update({
-      where: { id: userId },
-      data: { [campo]: null, updated_at: new Date() },
+    const foto = await prisma.fotoUsuario.findFirst({
+      where: { id: req.params.fotoId, usuario_id: req.userId },
+      select: { id: true, orden: true },
     });
-    res.json({ ok: true });
+    if (!foto) return res.status(404).json({ message: 'Foto no encontrada' });
+
+    // Se recompactan los órdenes para no dejar huecos: al borrar una foto
+    // las siguientes ascienden, de modo que la de orden 0 siempre existe
+    // y es la principal.
+    await prisma.$transaction([
+      prisma.fotoUsuario.delete({ where: { id: foto.id } }),
+      prisma.fotoUsuario.updateMany({
+        where: { usuario_id: req.userId, orden: { gt: foto.orden } },
+        data: { orden: { decrement: 1 } },
+      }),
+    ]);
+
+    const fotos = await prisma.fotoUsuario.findMany({
+      where: { usuario_id: req.userId },
+      select: { id: true, url: true, orden: true },
+      orderBy: { orden: 'asc' },
+    });
+    res.json({ fotos });
   } catch (err) {
     next(err);
   }
@@ -188,9 +197,7 @@ export const getPerfilPublico = async (req, res, next) => {
         select: {
           id: true,
           nombre: true,
-          foto_perfil: true,
-          foto_1: true,
-          foto_2: true,
+          fotos: { select: { url: true }, orderBy: { orden: 'asc' } },
           fecha_registro: true,
           perfil_convivencia: {
             select: {
@@ -205,9 +212,7 @@ export const getPerfilPublico = async (req, res, next) => {
               ambiente: true,
               tolerancia_fiestas: true,
               fumador: true,
-              acepta_fumadores: true,
               tiene_mascotas: true,
-              acepta_mascotas: true,
               lgbtq_friendly: true,
               limpieza_orden: true,
               nivel_ruido: true,
@@ -228,9 +233,7 @@ export const getPerfilPublico = async (req, res, next) => {
     const usuario = {
       id: usuarioData.id,
       nombre: usuarioData.nombre,
-      foto_perfil: usuarioData.foto_perfil,
-      foto_1: usuarioData.foto_1 ?? null,
-      foto_2: usuarioData.foto_2 ?? null,
+      fotos: usuarioData.fotos.map(f => f.url),
       fecha_registro: usuarioData.fecha_registro,
       genero: pcu?.genero ?? null,
       fecha_nacimiento: pcu?.fecha_nacimiento ?? null,
@@ -244,9 +247,7 @@ export const getPerfilPublico = async (req, res, next) => {
       ambiente: pcu.ambiente,
       tolerancia_fiestas: pcu.tolerancia_fiestas,
       fumador: pcu.fumador,
-      acepta_fumadores: pcu.acepta_fumadores,
       tiene_mascotas: pcu.tiene_mascotas,
-      acepta_mascotas: pcu.acepta_mascotas,
       lgbtq_friendly: pcu.lgbtq_friendly,
       limpieza_orden: pcu.limpieza_orden,
       nivel_ruido: pcu.nivel_ruido,

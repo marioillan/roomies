@@ -79,7 +79,7 @@ export default function PerfilUsuario() {
   }, [])
 
   const edad  = calcEdad(perfilConvivencia?.fecha_nacimiento)
-  const fotos = [user?.foto_perfil ?? null, user?.foto_1 ?? null, user?.foto_2 ?? null]
+  const fotos = user?.fotos ?? []
 
   if (loading) return (
     <div className='flex justify-center py-16'>

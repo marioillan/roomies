@@ -59,7 +59,7 @@ export const getFacturas = async (req, res, next) => {
           pagos: {
             select: {
               id: true, usuario_id: true, importe_asignado: true, pagado: true, fecha_pago: true,
-              usuario: { select: { nombre: true, foto_perfil: true } },
+              usuario: { select: { nombre: true, fotos: { where: { orden: 0 }, select: { url: true }, take: 1 } } },
             },
             orderBy: [{ pagado: 'asc' }, { usuario: { nombre: 'asc' } }],
           },
@@ -69,7 +69,7 @@ export const getFacturas = async (req, res, next) => {
       facturas = data.map(({ pagos, ...f }) => ({
         ...f,
         pagos: pagos.map(({ usuario: u, ...p }) => ({
-          ...p, nombre_usuario: u.nombre, foto_usuario: u.foto_perfil,
+          ...p, nombre_usuario: u.nombre, foto_usuario: u.fotos[0]?.url ?? null,
         })),
       }));
     } else {
@@ -157,11 +157,11 @@ export const crearFactura = async (req, res, next) => {
       where: { factura_id: facturaId },
       select: {
         id: true, usuario_id: true, importe_asignado: true, pagado: true, fecha_pago: true,
-        usuario: { select: { nombre: true, foto_perfil: true } },
+        usuario: { select: { nombre: true, fotos: { where: { orden: 0 }, select: { url: true }, take: 1 } } },
       },
     });
     const pagos = pagosData.map(({ usuario: u, ...p }) => ({
-      ...p, nombre_usuario: u.nombre, foto_usuario: u.foto_perfil,
+      ...p, nombre_usuario: u.nombre, foto_usuario: u.fotos[0]?.url ?? null,
     }));
 
     res.status(201).json({ factura: { ...factura, pagos } });
@@ -244,14 +244,14 @@ export const editarFactura = async (req, res, next) => {
         where: { factura_id: req.params.id },
         select: {
           id: true, usuario_id: true, importe_asignado: true, pagado: true, fecha_pago: true,
-          usuario: { select: { nombre: true, foto_perfil: true } },
+          usuario: { select: { nombre: true, fotos: { where: { orden: 0 }, select: { url: true }, take: 1 } } },
         },
         orderBy: [{ pagado: 'asc' }, { usuario: { nombre: 'asc' } }],
       }),
     ]);
 
     const pagos = pagosData.map(({ usuario: u, ...p }) => ({
-      ...p, nombre_usuario: u.nombre, foto_usuario: u.foto_perfil,
+      ...p, nombre_usuario: u.nombre, foto_usuario: u.fotos[0]?.url ?? null,
     }));
 
     res.json({ factura: { ...facturaFinal, pagos } });

@@ -304,8 +304,10 @@ export const me = async (req, res, next) => {
   try {
     // BOOL_OR requiere SQL raw porque Prisma no soporta agregaciones booleanas directas
     const rows = await prisma.$queryRaw`
-      SELECT u.id, u.nombre, u.email, u.foto_perfil, u.foto_1, u.foto_2, u.fecha_registro, u.google_calendar_token,
-             BOOL_OR(mg.rol = 'CASERO') AS es_casero,
+      SELECT u.id, u.nombre, u.email, u.fecha_registro, u.google_calendar_token,
+            (SELECT COALESCE(json_agg(fu.url ORDER BY fu.orden ASC), '[]'::json)
+             FROM fotos_usuario fu WHERE fu.usuario_id = u.id) AS fotos,
+            BOOL_OR(mg.rol = 'CASERO') AS es_casero,
              (BOOL_OR(mg.rol = 'CASERO') OR BOOL_OR(
                p.sobre_mi IS NOT NULL AND p.genero IS NOT NULL AND p.pais IS NOT NULL AND p.fecha_nacimiento IS NOT NULL
                AND p.ocupacion IS NOT NULL AND p.horario IS NOT NULL AND p.frecuencia_visitas IS NOT NULL
@@ -326,9 +328,8 @@ export const me = async (req, res, next) => {
         id: u.id,
         nombre: u.nombre,
         email: u.email,
-        foto_perfil: u.foto_perfil,
-        foto_1: u.foto_1 ?? null,
-        foto_2: u.foto_2 ?? null,
+        fotos: u.fotos ?? [],
+        foto_perfil: u.fotos?.[0] ?? null,
         fecha_registro: u.fecha_registro,
         tiene_calendar: !!u.google_calendar_token,
         es_casero: !!u.es_casero,

@@ -109,9 +109,7 @@ export const CHIPS_META = {
   ambiente:           { labels: { TRANQUILO: 'Ambiente tranquilo', EQUILIBRADO: 'Equilibrado', SOCIAL: 'Ambiente social' } },
   tolerancia_fiestas: { labels: { NUNCA: 'Sin fiestas', OCASIONAL: 'Fiestas ocasionales', FRECUENTE: 'Fiestas frecuentes' } },
   fumador:            { labels: { true: 'Fumador/a', false: 'No fumador/a' } },
-  acepta_fumadores:   { labels: { SI: 'Acepta fumadores', NO: 'No acepta fumadores', INDIFERENTE: 'Indiferente al tabaco' } },
   tiene_mascotas:     { labels: { true: 'Tiene mascotas', false: 'Sin mascotas' } },
-  acepta_mascotas:    { labels: { SI: 'Acepta mascotas', NO: 'No acepta mascotas', DEPENDE: 'Mascotas según el caso' } },
   lgbtq_friendly:     { labels: { true: 'LGBTQ+ friendly' } },
 }
 

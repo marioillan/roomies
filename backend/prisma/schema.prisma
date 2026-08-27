@@ -147,9 +147,6 @@ model Usuario {
   nombre                String    @db.VarChar(100)
   email                 String    @unique @db.VarChar(255)
   password              String?
-  foto_perfil           String?
-  foto_1                String?
-  foto_2                String?
   google_id             String?   @unique @db.VarChar(255)
   google_refresh_token  String?
   google_calendar_token String?
@@ -247,9 +244,7 @@ model PerfilConvivenciaUsuario {
   ambiente           Ambiente?
   tolerancia_fiestas FrecuenciaFiestas?
   fumador            Boolean?
-  acepta_fumadores   AceptaFumadores?
   tiene_mascotas     Boolean?
-  acepta_mascotas    AceptaMascotas?
   lgbtq_friendly     Boolean?
   limpieza_orden     LimpiezaOrden?
   nivel_ruido        NivelRuido?

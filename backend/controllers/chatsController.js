@@ -103,7 +103,8 @@ export const getSolicitudes = async (req, res, next) => {
           id: true, estado: true, fecha_envio: true,
           usuario: {
             select: {
-              id: true, nombre: true, foto_perfil: true, email: true,
+              id: true, nombre: true, email: true,
+              fotos: { where: { orden: 0 }, select: { url: true }, take: 1 },
               perfil_convivencia:     { select: CAMPOS_CONVIVENCIA },
               preferencias_companero: { select: CAMPOS_CONVIVENCIA },
               intereses: { select: { interes_id: true } },
@@ -130,7 +131,7 @@ export const getSolicitudes = async (req, res, next) => {
         id: sc.id, estado: sc.estado, fecha_envio: sc.fecha_envio,
         usuario_id:     sc.usuario.id,
         nombre:         sc.usuario.nombre,
-        foto_perfil:    sc.usuario.foto_perfil,
+        foto_perfil:    sc.usuario.fotos[0]?.url ?? null,
         email:          sc.usuario.email,
         chat_id:        sc.chat?.id ?? null,
         compatibilidad: (pcg && perfilUsuario) ? calcularCompatibilidad(perfilUsuario, pcg).score : null,
@@ -258,13 +259,14 @@ export const getChatsComoAdmin = async (req, res, next) => {
         g.nombre       AS nombre_grupo,
         g.foto_perfil  AS foto_grupo,
         u.nombre       AS nombre_solicitante,
-        u.foto_perfil  AS foto_solicitante,
+        fu.url         AS foto_solicitante,
         (SELECT m2.contenido  FROM mensajes m2 WHERE m2.chat_id = c.id ORDER BY m2.enviado_en DESC LIMIT 1) AS ultimo_mensaje,
         (SELECT m2.enviado_en FROM mensajes m2 WHERE m2.chat_id = c.id ORDER BY m2.enviado_en DESC LIMIT 1) AS ultimo_mensaje_en
       FROM chats c
       JOIN solicitudes_contacto sc ON sc.id = c.solicitud_id
       JOIN grupos g ON g.id = sc.grupo_id
       JOIN usuarios u ON u.id = sc.usuario_id
+      LEFT JOIN fotos_usuario fu ON fu.usuario_id = u.id AND fu.orden = 0
       WHERE sc.grupo_id = ${membresia.grupo_id}
       ORDER BY ultimo_mensaje_en DESC NULLS LAST, c.created_at DESC
     `;
@@ -296,7 +298,7 @@ export const getMensajes = async (req, res, next) => {
       where: { chat_id: req.params.chatId },
       select: {
         id: true, contenido: true, enviado_en: true,
-        remitente: { select: { id: true, nombre: true, foto_perfil: true } },
+        remitente: { select: { id: true, nombre: true, fotos: { where: { orden: 0 }, select: { url: true }, take: 1 } } },
       },
       orderBy: { enviado_en: 'desc' },
       take: 50,
@@ -306,7 +308,7 @@ export const getMensajes = async (req, res, next) => {
       id: m.id, contenido: m.contenido, enviado_en: m.enviado_en,
       remitente_id:     m.remitente.id,
       remitente_nombre: m.remitente.nombre,
-      remitente_foto:   m.remitente.foto_perfil,
+      remitente_foto:   m.remitente.fotos[0]?.url ?? null,
     }));
 
     res.json({ mensajes });
@@ -363,7 +365,7 @@ export const enviarMensaje = async (req, res, next) => {
 
     const remitente = await prisma.usuario.findFirst({
       where: { id: req.userId },
-      select: { nombre: true, foto_perfil: true },
+      select: { nombre: true, fotos: { where: { orden: 0 }, select: { url: true }, take: 1 } },
     });
 
     const mensajeCreado = await prisma.mensaje.create({
@@ -375,7 +377,7 @@ export const enviarMensaje = async (req, res, next) => {
       ...mensajeCreado,
       remitente_id:     req.userId,
       remitente_nombre: remitente?.nombre,
-      remitente_foto:   remitente?.foto_perfil,
+      remitente_foto:   remitente?.fotos[0]?.url ?? null,
     };
 
     req.app.get('io')?.to(`chat:${req.params.chatId}`).emit('nuevo_mensaje', mensaje);

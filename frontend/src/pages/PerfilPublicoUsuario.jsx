@@ -94,7 +94,7 @@ export default function PerfilPublicoUsuario() {
 
   const { usuario, convivencia, intereses } = datos
   const edad  = calcEdad(usuario.fecha_nacimiento ?? convivencia?.fecha_nacimiento)
-  const fotos = [usuario.foto_perfil ?? null, usuario.foto_1 ?? null, usuario.foto_2 ?? null]
+  const fotos = usuario.fotos ?? []
 
   return (
     <div className='min-h-screen bg-slate-50'>
