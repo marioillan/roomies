@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
 import { SaltarAlContenido, Cargando } from '../components/Accesibilidad.jsx'
 import {
-  House, LogOut, CircleUserRound,
+  House, CircleUserRound,
   LayoutDashboard, Megaphone, ClipboardList, Receipt, ShoppingCart, Users, CalendarDays,
 } from 'lucide-react'
 
@@ -16,7 +16,7 @@ const TABS = [
   { path: '/grupo/compra',      icon: ShoppingCart,                 title: 'Compra'},
 ]
 
-function LayoutGrupo({ onLogout }) {
+function LayoutGrupo() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -150,18 +150,6 @@ function LayoutGrupo({ onLogout }) {
             }
             <span className='text-[0.6rem] font-semibold tracking-wide text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 leading-none'>
               Mi perfil
-            </span>
-          </button>
-          <button
-            onClick={onLogout}
-            className='cursor-pointer! w-full flex flex-col items-center justify-center py-2.5 gap-1 rounded-xl transition'
-            style={{ color: 'rgba(255,255,255,0.75)' }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)' }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
-          >
-            <LogOut size={20} aria-hidden='true' />
-            <span className='text-[0.6rem] font-semibold tracking-wide text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-150 leading-none'>
-              Salir
             </span>
           </button>
         </div>

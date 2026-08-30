@@ -36,10 +36,6 @@ const VENTAJAS = [
   { icon: MapPin, texto: 'Toda España' },
 ]
 
-// Tarjetas que sobrevuelan la foto del hero: son un adelanto real de lo que
-// hace la app. En escritorio flotan sobre la imagen; en móvil se convierten en
-// una tira desplazable, así que la posición y el retardo solo aplican al primer
-// caso.
 const TARJETAS_HERO = [
   {
     icon: CalendarCheck,
@@ -90,8 +86,6 @@ function useInView(options = {}) {
   return [ref, visible]
 }
 
-// `as` permite que el contenedor de la animación sea el elemento correcto para
-// el marcado: dentro de un <ol> solo puede haber <li>, no <div>.
 function Reveal({ children, delay = 0, className = '', from = 'bottom', as: Etiqueta = 'div' }) {
   const [ref, visible] = useInView()
   const translateMap = { bottom: 'translateY(28px)', left: 'translateX(-28px)', right: 'translateX(28px)' }
@@ -244,7 +238,7 @@ export default function Home() {
   const [loadingHome, setLoadingHome] = useState(false)
   const [errorHome, setErrorHome] = useState('')
   const [mensajeHome, setMensajeHome] = useState('')
-
+  const [scrolled, setScrolled] = useState(false)
   const openRegistro = () => setRegistroOpen(true)
   const openLogin = () => setLoginOpen(true)
 
@@ -252,6 +246,13 @@ export default function Home() {
     const c = ciudad?.trim()
     navigate(c ? `/buscar?ciudad=${encodeURIComponent(c)}` : '/buscar')
   }
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   const handleUnirseCodigo = async (e) => {
     e.preventDefault()
@@ -287,10 +288,14 @@ export default function Home() {
     <div className="overflow-x-hidden">
 
       <SaltarAlContenido />
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
+      <header className={'fixed top-0 left-0 right-0 z-50 transition-all duration-300 ' + (
+        scrolled
+          ? 'bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm'
+          : 'bg-transparent border-b border-transparent'
+      )}>
         <div className="max-w-[80rem] mx-auto flex items-center gap-3 sm:gap-6 px-4 sm:px-10 py-3.5">
 
-          <button onClick={() => navigate('/')} className="cursor-pointer! font-display text-2xl font-bold -tracking-[0.02em] text-slate-900 shrink-0">
+          <button onClick={() => navigate('/')} className={'cursor-pointer! font-display text-2xl font-bold -tracking-[0.02em] shrink-0 transition-colors ' + (scrolled ? 'text-slate-900' : 'text-white')}>
             Housie
           </button>
 
@@ -314,17 +319,17 @@ export default function Home() {
                   <>
                     {tieneGrupo ? (
                       <button onClick={() => navigate('/grupo')} aria-label="Mi grupo"
-                        className="cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
+                        className={'cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center transition ' + (scrolled ? 'text-slate-600 hover:bg-slate-100' : 'text-white hover:bg-white/15')}>
                         <House aria-hidden='true' size={20} />
                       </button>
                     ) : (
                       <>
                         <button onClick={() => navigate('/perfil/favoritos')} aria-label="Favoritos"
-                          className="cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
+                          className={'cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center transition ' + (scrolled ? 'text-slate-600 hover:bg-slate-100' : 'text-white hover:bg-white/15')}>
                           <Heart aria-hidden='true' size={20} />
                         </button>
                         <button onClick={() => navigate('/perfil/chat')} aria-label="Mensajes"
-                          className="cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
+                          className={'cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center transition ' + (scrolled ? 'text-slate-600 hover:bg-slate-100' : 'text-white hover:bg-white/15')}>
                           <MessageCircle aria-hidden='true' size={20} />
                         </button>
                       </>
@@ -344,7 +349,7 @@ export default function Home() {
             ) : (
               <>
                 <button onClick={openLogin}
-                  className="cursor-pointer! hidden sm:inline-flex px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition">
+                  className={'cursor-pointer! hidden sm:inline-flex px-4 py-2 text-sm font-semibold transition ' + (scrolled ? 'text-slate-700 hover:text-slate-900' : 'text-white hover:text-emerald-200')}>
                   Iniciar sesión
                 </button>
                 <button onClick={openRegistro}
@@ -702,14 +707,18 @@ export default function Home() {
             ) : (
               <>
                 <h2 className="font-display text-[clamp(1.9rem,4.6vw,3rem)] font-bold mb-5 leading-[1.05] -tracking-[0.03em] text-slate-900">
-                  {user && !tieneGrupo
-                    ? <>¿Ya tienes piso?<br /><span style={{ color: ESMERALDA }}>Únete</span> o crea tu grupo</>
-                    : <>¿Listo para <span style={{ color: ESMERALDA }}>encontrar</span> tu<br />piso y compañeros ideales?</>}
+                  {!user
+                    ? <>¿Listo para <span style={{ color: ESMERALDA }}>encontrar</span> tu<br />piso y compañeros ideales?</>
+                    : !tieneGrupo
+                      ? <>¿Ya tienes piso?<br /><span style={{ color: ESMERALDA }}>Únete</span> o crea tu grupo</>
+                      : <>Tu piso, <span style={{ color: ESMERALDA }}>organizado</span><br />en un solo sitio</>}
                 </h2>
                 <p className="text-slate-500 text-base sm:text-lg mb-10 max-w-lg mx-auto">
-                  {user && !tieneGrupo
-                    ? 'Introduce el código que te ha dado tu compañero de piso, o crea tú el grupo y comparte el código.'
-                    : 'Entra a tu perfil para completar tu información de convivencia, encuentra pisos compatibles y conecta con tus futuros compañeros.'}
+                  {!user
+                    ? 'Entra a tu perfil para completar tu información de convivencia, encuentra pisos compatibles y conecta con tus futuros compañeros.'
+                    : !tieneGrupo
+                      ? 'Introduce el código que te ha dado tu compañero de piso, o crea tú el grupo y comparte el código.'
+                      : 'Reparte las tareas, controla los gastos y mantén el calendario al día con tus compañeros de piso.'}
                 </p>
 
                 {user && !tieneGrupo ? (

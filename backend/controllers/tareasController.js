@@ -138,7 +138,7 @@ export const iniciarTareas = async (req, res, next) => {
 };
 
 // ── POST /api/tareas/zonas ────────────────────────────────────
-export const añadirZona = async (req, res, next) => {
+export const anadirZona = async (req, res, next) => {
   const parsed = zonaSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
 

@@ -119,7 +119,8 @@ function CreacionGrupo() {
   // ── Estado de éxito ───────────────────────────────────────────
   if (grupoCreado) {
     return (
-      <div className='min-h-screen bg-slate-50'>
+      <div className='min-h-screen'
+        style={{ backgroundImage: 'radial-gradient(circle, #e2e8f0 1px, transparent 1px)', backgroundSize: '20px 20px', backgroundColor: '#f8fafc' }}>
         <div className='sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-100 px-6 py-3.5 flex items-center gap-4'>
           <div className='h-4 w-px bg-slate-200' />
           <p className='text-sm font-semibold text-slate-700'>Grupo creado</p>
@@ -166,14 +167,16 @@ function CreacionGrupo() {
   }
 
   if (checking) return (
-    <div className='min-h-screen bg-slate-50 flex items-center justify-center'>
+      <div className='min-h-screen'
+        style={{ backgroundImage: 'radial-gradient(circle, #e2e8f0 1px, transparent 1px)', backgroundSize: '20px 20px', backgroundColor: '#f8fafc' }}>
       <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
     </div>
   )
 
   // ── Formulario ────────────────────────────────────────────────
   return (
-    <div className='min-h-screen bg-slate-50'>
+      <div className='min-h-screen'
+        style={{ backgroundImage: 'radial-gradient(circle, #e2e8f0 1px, transparent 1px)', backgroundSize: '20px 20px', backgroundColor: '#f8fafc' }}>
       {/* Cabecera */}
       <div className='sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-100 px-6 py-3.5 flex items-center gap-4'>
         <button type='button' onClick={() => navigate('/')}
@@ -193,7 +196,7 @@ function CreacionGrupo() {
               <House aria-hidden='true' size={20} className='text-emerald-600' />
             </div>
             <div>
-              <h1 className='text-base font-bold text-slate-900'>Configura tu grupo</h1>
+              <h1 className='font-display text-base font-bold text-slate-900'>Configura tu grupo</h1>
               <p className='text-xs text-slate-500 mt-0.5'>Nombre del piso compartido y preferencias iniciales.</p>
             </div>
           </div>
@@ -228,7 +231,6 @@ function CreacionGrupo() {
                     ))}
                   </div>
                 )} />
-                <p className='text-[11px] text-slate-500 mt-1.5'>Opcional — lo puedes cambiar después.</p>
               </div>
             </Section>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom'
-import { Crown, Plus, AlertTriangle, Check, CalendarDays } from 'lucide-react'
+import { Crown, Plus, AlertTriangle, Check, CalendarDays, ArrowRight } from 'lucide-react'
 import { BarChart, Bar, XAxis, CartesianGrid } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import ModalEvento from '../components/ModalEvento.jsx'
@@ -51,9 +51,10 @@ function TareasCard({ grupo, navigate, datosTareas }) {
         </div>
         <button
           onClick={() => navigate('/grupo/tareas')}
+          aria-label='Ver tareas'
           className='cursor-pointer! w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center shrink-0 transition'
         >
-          <span className='text-white text-base'>→</span>
+          <ArrowRight aria-hidden='true' size={16} className='text-white' />
         </button>
       </div>
 
@@ -109,9 +110,9 @@ function AgendaCard({ eventos, user, esAdmin, onNuevo, onEditar = null, onElimin
         <p className='font-mono text-[0.8rem] font-semibold tracking-[0.18em] uppercase text-slate-600'>Agenda</p>
         <button
           onClick={() => navigate('/grupo/calendario')}
-          className='cursor-pointer! font-mono text-[0.7rem] font-semibold uppercase tracking-[0.10em] text-emerald-600 hover:text-emerald-700 transition'
+          className='cursor-pointer! inline-flex items-center gap-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.10em] text-emerald-600 hover:text-emerald-700 transition'
         >
-          Calendario →
+          Calendario <ArrowRight aria-hidden='true' size={13} />
         </button>
       </div>
       <h3 className='font-display text-2xl font-bold text-slate-900 mb-5'>Próximos eventos</h3>
@@ -165,7 +166,7 @@ function AgendaCard({ eventos, user, esAdmin, onNuevo, onEditar = null, onElimin
             <p className='text-xs font-semibold text-blue-700 leading-tight'>Conectar Google Calendar</p>
             <p className='text-[11px] text-blue-400 leading-tight mt-0.5'>Sincroniza los eventos del grupo</p>
           </div>
-          <span className='text-[11px] font-semibold text-blue-500 group-hover:text-blue-700 transition shrink-0'>Conectar →</span>
+          <span className='text-[11px] font-semibold text-blue-500 group-hover:text-blue-700 transition shrink-0'>Conectar</span>
         </a>
       )}
     </div>
@@ -205,8 +206,8 @@ function FacturaCard({ factura, todasPagadas, cargando, navigate }) {
           <p className='text-sm text-emerald-600'>Todas las facturas están pagadas</p>
         </div>
         <button onClick={() => navigate('/grupo/facturas')}
-          className='cursor-pointer! font-mono text-[0.7rem] font-semibold uppercase tracking-[0.10em] text-emerald-700 hover:text-emerald-800 transition text-left'>
-          Ver historial →
+          className='cursor-pointer! inline-flex items-center gap-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.10em] text-emerald-700 hover:text-emerald-800 transition text-left'>
+          Ver historial <ArrowRight aria-hidden='true' size={13} />
         </button>
       </div>
     )
@@ -246,7 +247,7 @@ function FacturaCard({ factura, todasPagadas, cargando, navigate }) {
         <p className={`font-mono text-[13px] font-bold uppercase tracking-widest ${colorDias}`}>{diasLabel}</p>
         <button onClick={() => navigate('/grupo/facturas')}
           className={`cursor-pointer! text-white text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap ${colorBtn}`}>
-          Ver facturas →
+          Ver facturas
         </button>
       </div>
     </div>
@@ -327,9 +328,9 @@ function ListaCompraCard({ productos, navigate }) {
         </p>
         <button
           onClick={() => navigate('/grupo/compra')}
-          className='cursor-pointer! font-mono text-[0.7rem] font-semibold uppercase tracking-[0.10em] text-emerald-600 hover:text-emerald-700 transition'
+          className='cursor-pointer! inline-flex items-center gap-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.10em] text-emerald-600 hover:text-emerald-700 transition'
         >
-          VER →
+          VER <ArrowRight aria-hidden='true' size={13} />
         </button>
       </div>
 
@@ -449,9 +450,9 @@ function HistoricoCard({ grupoId, navigate }) {
 
       <button
         onClick={() => navigate('/grupo/facturas')}
-        className='cursor-pointer! font-mono text-[0.7rem] font-semibold uppercase tracking-[0.10em] text-emerald-600 hover:text-emerald-700 transition text-left'
+        className='cursor-pointer! inline-flex items-center gap-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.10em] text-emerald-600 hover:text-emerald-700 transition text-left'
       >
-        Ver historial completo →
+        Ver historial completo <ArrowRight aria-hidden='true' size={13} />
       </button>
     </div>
   )

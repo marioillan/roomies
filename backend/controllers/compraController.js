@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { prisma } from '../src/config/db.js';
-import { añadirSchema, editarSchema } from '../validators/compraValidator.js';
+import { anadirSchema, editarSchema } from '../validators/compraValidator.js';
 
 // ── GET /api/compra ───────────────────────────────────────────
 export const getProductos = async (req, res, next) => {
@@ -29,8 +29,8 @@ export const getProductos = async (req, res, next) => {
 };
 
 // ── POST /api/compra ──────────────────────────────────────────
-export const añadirProducto = async (req, res, next) => {
-  const parsed = añadirSchema.safeParse(req.body);
+export const anadirProducto = async (req, res, next) => {
+  const parsed = anadirSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
 
   const { nombre, categoria = 'otros' } = parsed.data;

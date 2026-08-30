@@ -7,6 +7,7 @@ import {
   preferenciasSchema,
   interesesSchema,
 } from '../validators/perfilValidator.js';
+import {ACCESS_COOKIE_OPTIONS, REFRESH_COOKIE_OPTIONS} from './authController.js';
 
 export const upload = multer({
   storage: multer.memoryStorage(),
@@ -43,6 +44,9 @@ export const editarPerfil = async (req, res, next) => {
   if (lgbtq_friendly != null)     camposOpcionales.lgbtq_friendly = lgbtq_friendly;
   if (limpieza_orden != null)     camposOpcionales.limpieza_orden = limpieza_orden;
   if (nivel_ruido != null)        camposOpcionales.nivel_ruido = nivel_ruido;
+  if (genero != null)           camposOpcionales.genero = genero;
+  if (pais != null)             camposOpcionales.pais = pais;
+  if (fecha_nacimiento != null) camposOpcionales.fecha_nacimiento = new Date(fecha_nacimiento);
 
   try {
     const [usuarioActualizado, perfilActualizado] = await prisma.$transaction(async (tx) => {
@@ -57,25 +61,22 @@ export const editarPerfil = async (req, res, next) => {
         create: {
           id: randomUUID(),
           usuario_id: userId,
-          genero: genero ?? null,
-          fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
-          pais: pais ?? null,
-          ocupacion: ocupacion ?? null,
-          horario: horario ?? null,
-          frecuencia_visitas: frecuencia_visitas ?? null,
-          ambiente: ambiente ?? null,
-          tolerancia_fiestas: tolerancia_fiestas ?? null,
-          fumador: fumador ?? null,
-          tiene_mascotas: tiene_mascotas ?? null,
-          lgbtq_friendly: lgbtq_friendly ?? null,
-          limpieza_orden: limpieza_orden ?? null,
-          nivel_ruido: nivel_ruido ?? null,
+          genero,
+          fecha_nacimiento: new Date(fecha_nacimiento),
+          pais,
+          ocupacion,
+          horario,
+          frecuencia_visitas,
+          ambiente,
+          tolerancia_fiestas,
+          fumador,
+          tiene_mascotas,
+          lgbtq_friendly,
+          limpieza_orden,
+          nivel_ruido,
           sobre_mi,
         },
         update: {
-          genero: genero ?? null,
-          fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
-          pais: pais ?? null,
           sobre_mi,
           updated_at: new Date(),
           ...camposOpcionales,
@@ -359,6 +360,42 @@ export const editarIntereses = async (req, res, next) => {
         : []),
     ]);
     res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── DELETE /api/perfil/cuenta ─────────────────────────────────
+export const eliminarCuenta = async (req, res, next) => {
+  try {
+    const membresia = await prisma.miembroGrupo.findFirst({
+      where: { usuario_id: req.userId, activo: true, rol: 'ADMIN' },
+      select: { grupo_id: true },
+    });
+    if (membresia) {
+      return res.status(409).json({
+        message: 'Eres administrador de un grupo. Transfiere la administración o abandona el grupo antes de eliminar tu cuenta.',
+        esAdmin: true,
+      });
+    }
+
+    const grupos = await prisma.miembroGrupo.findMany({
+      where: { usuario_id: req.userId, activo: true },
+      select: { grupo_id: true },
+    });
+
+    for (const { grupo_id } of grupos) {
+      const otros = await prisma.miembroGrupo.count({
+        where: { grupo_id, activo: true, usuario_id: { not: req.userId } },
+      });
+      if (otros === 0) await prisma.grupo.delete({ where: { id: grupo_id } });
+    }
+
+    await prisma.usuario.delete({ where: { id: req.userId } });
+
+    res.clearCookie('token', ACCESS_COOKIE_OPTIONS);
+    res.clearCookie('refresh_token', REFRESH_COOKIE_OPTIONS);
+    res.json({ message: 'Cuenta eliminada' });
   } catch (err) {
     next(err);
   }

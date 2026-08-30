@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Heart, MessageCircle, House, ChevronLeft, ChevronRight, Camera } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Camera } from 'lucide-react'
 import { CARD_SHADOW, TARJETAS_CONVIVENCIA_USUARIO, labelsUsuario, calcEdad } from '../lib/convivencia.js'
-import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
 import PieDePagina from '../components/PieDePagina.jsx'
 import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
+import HeaderPublico from '../components/HeaderPublico.jsx'
+import LoginModal from '../components/LoginModal.jsx'
+import RegistroModal from '../components/RegistroModal.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const STRIPE_BG = 'repeating-linear-gradient(45deg,#f1f5f9,#f1f5f9 6px,#e2e8f0 6px,#e2e8f0 12px)'
 
@@ -64,9 +67,16 @@ function TraitCard({ cfg, valor }) {
 }
 
 export default function PerfilPublicoUsuario() {
-  const { user, tieneGrupo } = useAuth()
   const { id }   = useParams()
   const navigate = useNavigate()
+  const { recargarUsuario } = useAuth()
+  const [ciudad, setCiudad] = useState('')
+  const [loginOpen, setLoginOpen] = useState(false)
+  const [registroOpen, setRegistroOpen] = useState(false)
+
+  const handleCiudadBuscar = (c) => {
+    if (c?.trim()) navigate(`/buscar?ciudad=${encodeURIComponent(c.trim())}`)
+  }
 
   const [datos,    setDatos]    = useState(null)
   const [cargando, setCargando] = useState(true)
@@ -101,49 +111,12 @@ export default function PerfilPublicoUsuario() {
 
       {/* Header */}
       <SaltarAlContenido />
-      <header className='sticky top-0 z-20 bg-white border-b border-slate-200'>
-        <div className='max-w-[80rem] mx-auto flex items-center gap-6 px-4 sm:px-10 py-3.5'>
-          <button onClick={() => navigate('/buscar')}
-            className='cursor-pointer! font-display text-2xl font-bold -tracking-[0.02em] text-slate-900 shrink-0'>
-            Housie
-          </button>
-          <div className='flex-1' />
-          <div className='flex items-center gap-2'>
-            {user ? (
-              <>
-                {tieneGrupo ? (
-                  <button onClick={() => navigate('/grupo')} aria-label='Mi grupo'
-                    className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                    <House aria-hidden='true' size={20} />
-                  </button>
-                ) : (
-                  <>
-                    <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
-                      className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <Heart aria-hidden='true' size={20} />
-                    </button>
-                    <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
-                      className='cursor-pointer! w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <MessageCircle aria-hidden='true' size={20} />
-                    </button>
-                  </>
-                )}
-                {user.foto_perfil
-                  ? <img src={user.foto_perfil} alt={user.nombre} className='w-10 h-10 rounded-full object-cover cursor-pointer' onClick={() => navigate('/perfil/usuario')} />
-                  : <button onClick={() => navigate('/perfil/usuario')}
-                      className='cursor-pointer! w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center ring-2 ring-emerald-500 ring-offset-2 ring-offset-white'>
-                      <span className='text-sm font-bold text-emerald-700'>{user.nombre?.[0]?.toUpperCase()}</span>
-                    </button>
-                }
-              </>
-            ) : (
-              <button onClick={() => navigate('/')} className='cursor-pointer! text-sm font-semibold text-slate-700 hover:text-slate-900 transition px-4 py-2'>
-                Iniciar sesión
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+      <HeaderPublico
+        ciudad={ciudad}
+        onCiudadChange={setCiudad}
+        onBuscarCiudad={handleCiudadBuscar}
+        onIniciarSesion={() => setLoginOpen(true)}
+      />
 
       <main id='contenido-principal' tabIndex={-1} className='max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 py-8 flex flex-col gap-5'>
 
@@ -276,6 +249,21 @@ export default function PerfilPublicoUsuario() {
       </main>
 
       <PieDePagina />
+
+      {loginOpen && (
+        <LoginModal
+          onClose={() => setLoginOpen(false)}
+          onSuccess={async () => { await recargarUsuario(); setLoginOpen(false) }}
+          onSwitchToRegistro={() => { setLoginOpen(false); setRegistroOpen(true) }}
+        />
+      )}
+      {registroOpen && (
+        <RegistroModal
+          onClose={() => setRegistroOpen(false)}
+          onSuccess={async (esCasero) => { await recargarUsuario(); setRegistroOpen(false); navigate(esCasero ? '/' : '/perfil/usuario/editar') }}
+          onSwitchToLogin={() => { setRegistroOpen(false); setLoginOpen(true) }}
+        />
+      )}
     </div>
   )
 }

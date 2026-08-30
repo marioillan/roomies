@@ -28,14 +28,14 @@ const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 días en ms
 const generarAccessToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL });
 
-const ACCESS_COOKIE_OPTIONS = {
+export const ACCESS_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
   maxAge: 15 * 60 * 1000, // 15 min
 };
 
-const REFRESH_COOKIE_OPTIONS = {
+export const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
@@ -117,7 +117,7 @@ export const login = async (req, res, next) => {
     });
 
     if (!usuario) {
-      return res.status(400).json({ message: 'Credenciales inválidas' });
+      return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
     if (!usuario.password) {
@@ -126,7 +126,7 @@ export const login = async (req, res, next) => {
 
     const valido = await bcrypt.compare(password, usuario.password);
     if (!valido) {
-      return res.status(400).json({ message: 'Credenciales inválidas' });
+      return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
     await setAuthCookies(res, usuario.id);

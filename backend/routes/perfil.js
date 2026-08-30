@@ -13,6 +13,7 @@ import {
   getIntereses,
   getMisIntereses,
   editarIntereses,
+  eliminarCuenta,
 } from '../controllers/perfilController.js';
 
 const router = express.Router();
@@ -28,5 +29,6 @@ router.put('/preferencias',    requireAuth,                              editarP
 router.get('/intereses',                                                 getIntereses);
 router.get('/mis-intereses',   requireAuth,                              getMisIntereses);
 router.put('/intereses',       requireAuth,                              editarIntereses);
+router.delete('/cuenta',       requireAuth,                              eliminarCuenta);
 
 export default router;

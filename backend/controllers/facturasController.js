@@ -3,6 +3,9 @@ import multer from 'multer';
 import { prisma } from '../src/config/db.js';
 import cloudinary from '../src/config/cloudinary.js';
 import { facturaSchema } from '../validators/facturasValidator.js';
+import { sendMail, emailFacturaNueva } from '../src/config/email.js';
+
+const APP_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 
 export const upload = multer({
   storage: multer.memoryStorage(),
@@ -163,6 +166,19 @@ export const crearFactura = async (req, res, next) => {
     const pagos = pagosData.map(({ usuario: u, ...p }) => ({
       ...p, nombre_usuario: u.nombre, foto_usuario: u.fotos[0]?.url ?? null,
     }));
+
+    const vence = new Date(d.fecha_vencimiento).toLocaleDateString('es-ES');
+    const destinatarios = await prisma.usuario.findMany({
+      where: { id: { in: pagosAInsertar.map(p => p.usuario_id) } },
+      select: { id: true, nombre: true, email: true },
+    });
+    for (const u of destinatarios) {
+      const importe = pagosAInsertar.find(p => p.usuario_id === u.id).importe_asignado;
+      sendMail({ to: u.email, ...emailFacturaNueva({
+        nombreInquilino: u.nombre, tipo: d.tipo, descripcion: d.descripcion,
+        importe, fechaVencimiento: vence, appUrl: APP_URL,
+      }) });
+    }
 
     res.status(201).json({ factura: { ...factura, pagos } });
   } catch (err) {

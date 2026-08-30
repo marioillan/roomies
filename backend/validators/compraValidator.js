@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const añadirSchema = z.object({
+export const anadirSchema = z.object({
   nombre:    z.string().min(1, 'El nombre es obligatorio').max(255).trim(),
   categoria: z.enum(['comida', 'hogar', 'limpieza', 'otros']).optional(),
 });

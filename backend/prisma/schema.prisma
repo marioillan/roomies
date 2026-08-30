@@ -291,16 +291,16 @@ model PreferenciasCompanero {
 model PerfilConvivenciaGrupo {
   id                 String             @id @db.VarChar(36)
   grupo_id           String             @unique @db.VarChar(36)
-  ocupacion          Ocupacion?
-  horario            Horario?
-  frecuencia_visitas FrecuenciaVisitas?
-  ambiente           Ambiente?
-  tolerancia_fiestas FrecuenciaFiestas?
-  acepta_fumadores   AceptaFumadores?
-  acepta_mascotas    AceptaMascotas?
-  lgbtq_friendly     Boolean?
-  limpieza_orden     LimpiezaOrden?
-  nivel_ruido        NivelRuido?
+  ocupacion          Ocupacion
+  horario            Horario
+  frecuencia_visitas FrecuenciaVisitas
+  ambiente           Ambiente
+  tolerancia_fiestas FrecuenciaFiestas
+  acepta_fumadores   AceptaFumadores
+  acepta_mascotas    AceptaMascotas
+  lgbtq_friendly     Boolean
+  limpieza_orden     LimpiezaOrden
+  nivel_ruido        NivelRuido
   created_at         DateTime           @default(now()) @db.Timestamp(6)
   updated_at         DateTime           @default(now()) @db.Timestamp(6)
 
@@ -417,12 +417,12 @@ model Chat {
 model Mensaje {
   id           String    @id @db.VarChar(36)
   chat_id      String    @db.VarChar(36)
-  remitente_id String    @db.VarChar(36)
+  remitente_id String?    @db.VarChar(36)
   contenido    String
   enviado_en   DateTime  @default(now()) @db.Timestamp(6)
 
   chat      Chat    @relation(fields: [chat_id], references: [id], onDelete: Cascade)
-  remitente Usuario @relation(fields: [remitente_id], references: [id])
+  remitente Usuario? @relation(fields: [remitente_id], references: [id], onDelete: SetNull)
 
   @@map("mensajes")
 }
@@ -444,13 +444,13 @@ model Tarea {
 model AsignacionTarea {
   id               String      @id @db.VarChar(36)
   tarea_id         String      @db.VarChar(36)
-  usuario_id       String      @db.VarChar(36)
+  usuario_id       String?     @db.VarChar(36)
   semana           DateTime    @db.Date
   estado           EstadoTarea @default(PENDIENTE)
   fecha_completada DateTime?   @db.Timestamp(6)
 
   tarea   Tarea   @relation(fields: [tarea_id], references: [id], onDelete: Cascade)
-  usuario Usuario @relation(fields: [usuario_id], references: [id])
+  usuario Usuario? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
 
   @@unique([tarea_id, usuario_id, semana])
   @@map("asignaciones_tarea")
@@ -459,7 +459,7 @@ model AsignacionTarea {
 model Factura {
   id                String       @id @db.VarChar(36)
   grupo_id          String       @db.VarChar(36)
-  casero_id         String       @db.VarChar(36)
+  casero_id         String?      @db.VarChar(36)
   tipo              TipoFactura
   descripcion       String?
   importe_total     Decimal      @db.Decimal(10, 2)
@@ -471,7 +471,7 @@ model Factura {
   updated_at        DateTime     @default(now()) @db.Timestamp(6)
 
   grupo  Grupo       @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
-  casero Usuario     @relation("CaseroFacturas", fields: [casero_id], references: [id])
+  casero Usuario?    @relation("CaseroFacturas", fields: [casero_id], references: [id], onDelete: SetNull)
   pagos  PagoFactura[]
 
   @@map("facturas")
@@ -480,13 +480,13 @@ model Factura {
 model PagoFactura {
   id               String    @id @db.VarChar(36)
   factura_id       String    @db.VarChar(36)
-  usuario_id       String    @db.VarChar(36)
+  usuario_id       String?   @db.VarChar(36)
   importe_asignado Decimal   @db.Decimal(10, 2)
   pagado           Boolean?  @default(false)
   fecha_pago       DateTime? @db.Timestamp(6)
 
   factura Factura @relation(fields: [factura_id], references: [id], onDelete: Cascade)
-  usuario Usuario @relation(fields: [usuario_id], references: [id])
+  usuario Usuario? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
 
   @@unique([factura_id, usuario_id])
   @@map("pagos_factura")
@@ -495,7 +495,7 @@ model PagoFactura {
 model Evento {
   id                       String    @id @db.VarChar(36)
   grupo_id                 String    @db.VarChar(36)
-  creado_por_id            String    @db.VarChar(36)
+  creado_por_id            String?   @db.VarChar(36)
   titulo                   String    @db.VarChar(255)
   descripcion              String?
   fecha_inicio             DateTime  @db.Timestamp(6)
@@ -505,7 +505,7 @@ model Evento {
   updated_at               DateTime  @default(now()) @db.Timestamp(6)
 
   grupo      Grupo   @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
-  creado_por Usuario @relation(fields: [creado_por_id], references: [id])
+  creado_por Usuario? @relation(fields: [creado_por_id], references: [id], onDelete: SetNull)
 
   @@map("eventos")
 }
@@ -513,7 +513,7 @@ model Evento {
 model Producto {
   id              String    @id @db.VarChar(36)
   grupo_id        String    @db.VarChar(36)
-  anadido_por_id  String    @db.VarChar(36)
+  anadido_por_id  String?   @db.VarChar(36)
   nombre          String    @db.VarChar(255)
   categoria       String    @default("otros") @db.VarChar(20)
   comprado        Boolean?  @default(false)
@@ -522,8 +522,8 @@ model Producto {
   created_at      DateTime  @default(now()) @db.Timestamp(6)
 
   grupo        Grupo    @relation(fields: [grupo_id], references: [id], onDelete: Cascade)
-  anadido_por  Usuario  @relation("ProductoAnadidoPor", fields: [anadido_por_id], references: [id])
-  comprado_por Usuario? @relation("ProductoCompradoPor", fields: [comprado_por_id], references: [id])
+  anadido_por  Usuario? @relation("ProductoAnadidoPor", fields: [anadido_por_id], references: [id], onDelete: SetNull)
+  comprado_por Usuario? @relation("ProductoCompradoPor", fields: [comprado_por_id], references: [id], onDelete: SetNull)
 
   @@map("productos")
 }

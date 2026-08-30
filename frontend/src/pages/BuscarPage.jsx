@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
@@ -12,6 +12,7 @@ import {
   Phone, Users, Sparkles, ArrowRight,
 } from 'lucide-react'
 import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
+import HeaderPublico from '../components/HeaderPublico.jsx'
 import { useModalAccesible } from '../lib/useModalAccesible.js'
 
 const ESMERALDA = '#10b981'
@@ -260,59 +261,6 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito, onRequireLog
 }
 
 // ── Input ciudad con Google Places ────────────────────────────────
-function InputCiudad({ value, onChange, onBuscar }) {
-  const inputRef = useRef(null)
-  const acRef    = useRef(null)
-
-  useEffect(() => {
-    function init() {
-      if (!inputRef.current || !window.google?.maps?.places) return
-      acRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-        types: ['(cities)'],
-        componentRestrictions: { country: 'es' },
-        fields: ['name'],
-      })
-      acRef.current.addListener('place_changed', () => {
-        const place = acRef.current.getPlace()
-        if (place?.name) { onChange(place.name); onBuscar(place.name) }
-      })
-    }
-    if (window.google?.maps?.places) { init(); return }
-    if (!import.meta.env.VITE_GOOGLE_PLACES_KEY) return
-    if (!document.querySelector('script[data-places]')) {
-      const s = document.createElement('script')
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_PLACES_KEY}&libraries=places&language=es&region=ES&loading=async`
-      s.async = true
-      s.dataset.places = '1'
-      s.onload = init
-      document.head.appendChild(s)
-    }
-  }, [])
-
-  return (
-    <div className='flex-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition'>
-      <MapPin aria-hidden='true' size={14} className='text-slate-500 shrink-0' />
-      <input
-        ref={inputRef}
-        type='text'
-        aria-label='Buscar por ciudad'
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') onBuscar(value) }}
-        placeholder='Ciudad...'
-        className='flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-500 outline-none'
-      />
-      <button
-        onClick={() => onBuscar(value)}
-        aria-label='Buscar'
-        className='cursor-pointer! shrink-0 w-7 h-7 bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center justify-center transition'
-      >
-        <Search size={13} aria-hidden='true' className='text-white' />
-      </button>
-    </div>
-  )
-}
-
 // ── Panel de filtros ───────────────────────────────────────────────
 function FilterSection({ title, children }) {
   return (
@@ -551,7 +499,7 @@ function FilterAside({ mobileOpen, onMobileClose, ...filterProps }) {
 
 // ── Página ─────────────────────────────────────────────────────────
 export default function BuscarPage() {
-  const { user, tieneGrupo, cargando, recargarUsuario } = useAuth()
+  const { user, cargando, recargarUsuario } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [loginOpen, setLoginOpen] = useState(false)
@@ -737,79 +685,27 @@ export default function BuscarPage() {
 
       {/* ── Header ── */}
       <SaltarAlContenido />
-      <header className='sticky top-0 z-30 bg-white border-b border-slate-200'>
-        <div className='max-w-[80rem] mx-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-6 lg:px-10 py-2.5'>
-
-          <button onClick={() => navigate('/')} className='cursor-pointer! shrink-0 flex items-center'>
-            <span className='font-display text-xl sm:text-2xl font-bold -tracking-[0.02em] text-slate-900'>Housie</span>
-          </button>
-
-          <div className='flex-1 min-w-0 flex items-center gap-2 sm:max-w-[34rem] sm:mx-auto'>
-            <InputCiudad value={ciudad} onChange={setCiudad} onBuscar={handleCiudadBuscar} />
-
-            {/* Botón filtros — solo mobile */}
-            <button
-              type='button'
-              onClick={() => setMobileFiltersOpen(true)}
-              className='cursor-pointer! md:hidden relative shrink-0 p-2 rounded-xl border border-slate-200 text-slate-600 hover:border-slate-300 transition'
-            >
-              <SlidersHorizontal aria-hidden='true' size={18} />
-              {filtrosActivos && (
-                <span className='absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center'>
-                  {nFiltros}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* Nav usuario */}
-          <div className='flex items-center gap-1.5 sm:gap-2 shrink-0'>
-            {user ? (
-              <>
-                {user.es_casero ? (
-                  <button onClick={() => navigate('/casero/facturas')}
-                    className='cursor-pointer! hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-600 transition'>
-                    <Receipt aria-hidden='true' size={15} />
-                    Mis facturas
-                  </button>
-                ) : tieneGrupo ? (
-                  <button onClick={() => navigate('/grupo')} aria-label='Mi grupo'
-                    className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                    <House aria-hidden='true' size={20} />
-                  </button>
-                ) : (
-                  <>
-                    <button onClick={() => navigate('/perfil/favoritos')} aria-label='Favoritos'
-                      className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <Heart aria-hidden='true' size={20} />
-                    </button>
-                    <button onClick={() => navigate('/perfil/chat')} aria-label='Mensajes'
-                      className='cursor-pointer! hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-slate-600 hover:bg-slate-100 transition'>
-                      <MessageCircle aria-hidden='true' size={20} />
-                    </button>
-                  </>
-                )}
-                {user.foto_perfil
-                  ? <img src={user.foto_perfil} alt={user.nombre}
-                      className='hidden sm:block sm:w-10 sm:h-10 rounded-full object-cover cursor-pointer shrink-0'
-                      onClick={() => navigate('/perfil/usuario')} />
-                  : <button onClick={() => navigate('/perfil/usuario')}
-                      className='cursor-pointer! hidden sm:flex sm:w-10 sm:h-10 rounded-full bg-emerald-100 items-center justify-center shrink-0'>
-                      <span className='text-sm font-bold text-emerald-700'>{user.nombre?.[0]?.toUpperCase()}</span>
-                    </button>
-                }
-              </>
-            ) : (
-              <button
-                onClick={() => setLoginOpen(true)}
-                className='cursor-pointer! hidden sm:block text-sm font-semibold text-slate-700 hover:text-slate-900 transition px-4 py-2 whitespace-nowrap'
-              >
-                Iniciar sesión
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+      <HeaderPublico
+        ciudad={ciudad}
+        onCiudadChange={setCiudad}
+        onBuscarCiudad={handleCiudadBuscar}
+        onIniciarSesion={() => setLoginOpen(true)}
+      >
+        {/* Botón filtros — solo mobile */}
+        <button
+          type='button'
+          onClick={() => setMobileFiltersOpen(true)}
+          aria-label='Filtros'
+          className='cursor-pointer! md:hidden relative shrink-0 p-2 rounded-xl border border-slate-200 text-slate-600 hover:border-slate-300 transition'
+        >
+          <SlidersHorizontal aria-hidden='true' size={18} />
+          {filtrosActivos && (
+            <span className='absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center'>
+              {nFiltros}
+            </span>
+          )}
+        </button>
+      </HeaderPublico>
 
       {/* ── Layout principal ── */}
       <main id='contenido-principal' tabIndex={-1} className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-10'>

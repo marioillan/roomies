@@ -145,3 +145,24 @@ export function emailPublicacionConfirmada({ nombreAdmin, nombreGrupo, tituloAnu
     `),
   }
 }
+
+// ── Emails de facturas ────────────────────────────────────────────
+
+export function emailFacturaNueva({ nombreInquilino, tipo, descripcion, importe, fechaVencimiento, appUrl }) {
+  return {
+    subject: `Nueva factura pendiente — ${tipo}`,
+    html: base(`
+      ${titulo(`Nueva factura en tu piso`)}
+      ${parrafo(`Hola <strong>${nombreInquilino}</strong>, el casero ha registrado una nueva factura y ya puedes consultar la parte que te corresponde.`)}
+      <div style="margin:20px 0;padding:16px;background:#f8fafc;border-radius:10px">
+        <p style="margin:0 0 4px;font-size:13px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Concepto</p>
+        <p style="margin:0 0 12px;font-size:16px;font-weight:600;color:#0f172a">${tipo}${descripcion ? ` — ${descripcion}` : ''}</p>
+        <p style="margin:0 0 4px;font-size:13px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Tu parte</p>
+        <p style="margin:0 0 12px;font-size:20px;font-weight:700;color:#0f172a">${importe} €</p>
+        <p style="margin:0;font-size:14px;color:#475569">Vence el <strong>${fechaVencimiento}</strong></p>
+      </div>
+      ${parrafo(`Cuando hayas realizado el pago, márcalo desde la aplicación para que el casero quede informado.`)}
+      ${boton('Ver facturas', `${appUrl}/grupo/facturas`)}
+    `),
+  }
+}
