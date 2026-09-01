@@ -462,11 +462,6 @@ export default function Home() {
     <div className="overflow-x-hidden">
 
       <SaltarAlContenido />
-      {/* Cabecera flotante: se separa del borde de la ventana por arriba y por
-          los lados. El fondo va en la caja interior y no en la cabecera, para
-          que al hacer scroll quede una isla redondeada —el hueco superior se
-          lee como parte del diseño— en vez de una barra de ancho completo con
-          una franja transparente encima por la que se cuela el contenido. */}
       <header className="fixed top-0 left-0 right-0 z-50 pt-2 px-2 sm:px-4">
         <div className={'max-w-[80rem] mx-auto flex items-center gap-3 sm:gap-6 px-4 sm:px-8 py-3 rounded-2xl transition-all duration-300 ' + (
           scrolled
@@ -484,16 +479,15 @@ export default function Home() {
             {user ? (
               <>
                 {user.es_casero ? (
-                  <>
-                    <button onClick={() => navigate('/casero/facturas')} aria-label="Gestión de facturas"
-                      className="cursor-pointer! sm:hidden w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
-                      <Receipt aria-hidden='true' size={20} />
-                    </button>
-                    <button onClick={() => navigate('/casero/facturas')}
-                      className="cursor-pointer! hidden sm:inline-flex px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:underline underline-offset-4 decoration-2 transition">
-                      Gestión de facturas
-                    </button>
-                  </>
+                  // Mismo botón esmeralda que "Crear cuenta" y que la cabecera
+                  // de las páginas públicas: en texto plano se perdía sobre el
+                  // hero oscuro y cambiaba de color al hacer scroll.
+                  <button onClick={() => navigate('/casero/facturas')}
+                    className="cursor-pointer! inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white whitespace-nowrap transition hover:opacity-90 active:scale-95"
+                    style={{ backgroundColor: ESMERALDA }}>
+                    <Receipt aria-hidden='true' size={15} />
+                    Gestión de facturas
+                  </button>
                 ) : (
                   <>
                     {tieneGrupo ? (
