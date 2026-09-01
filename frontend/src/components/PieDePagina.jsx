@@ -1,18 +1,6 @@
 import { Link } from 'react-router-dom'
 
 const ESMERALDA = '#10b981'
-
-/**
- * Pie de página común a todas las páginas públicas.
- *
- * Vivía duplicado en `Home.jsx` y en `FAQ.jsx`, y las dos copias se habían
- * desincronizado (distinto tamaño de logo, distinto espaciado y, sobre todo,
- * la copia de FAQ navegaba con `<button onClick={navigate}>`). Al estar en un
- * único sitio, cualquier cambio se refleja en todas las páginas a la vez.
- *
- * Los enlaces son `<Link>`, que renderiza un `<a href>` real: los rastreadores
- * pueden seguirlos y el usuario abrirlos en otra pestaña.
- */
 function PieDePagina() {
   return (
     <footer className="relative bg-slate-900 text-white pt-20 pb-10 overflow-hidden">
@@ -24,7 +12,7 @@ function PieDePagina() {
       />
 
       <div className="relative max-w-7xl mx-auto px-6 sm:px-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 mb-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10 mb-14">
           <div className="md:col-span-2">
             <span className="font-display font-bold text-white text-3xl -tracking-[0.02em]">Housie</span>
             <p className="mt-4 text-slate-300 text-sm max-w-xs leading-relaxed">
@@ -68,6 +56,29 @@ function PieDePagina() {
                 <a href="mailto:housie.app@gmail.com" className="text-slate-300 hover:text-emerald-300 text-sm transition">
                   Contactar por correo
                 </a>
+              </li>
+            </ul>
+          </nav>
+
+          <nav aria-label="Legal">
+            <p className="font-mono text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-slate-400 mb-5">
+              Legal
+            </p>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <Link to="/aviso-legal" className="text-slate-300 hover:text-emerald-300 text-sm transition">
+                  Aviso legal
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacidad" className="text-slate-300 hover:text-emerald-300 text-sm transition">
+                  Política de privacidad
+                </Link>
+              </li>
+              <li>
+                <Link to="/cookies" className="text-slate-300 hover:text-emerald-300 text-sm transition">
+                  Política de cookies
+                </Link>
               </li>
             </ul>
           </nav>

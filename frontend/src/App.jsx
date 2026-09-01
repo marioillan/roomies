@@ -26,6 +26,9 @@ import MisFacturas from './pages/MisFacturas.jsx'
 import Tareas from './pages/Tareas.jsx'
 import Calendario from './pages/Calendario.jsx'
 import FAQ from './pages/FAQ.jsx'
+import AvisoLegal from './pages/AvisoLegal.jsx'
+import PoliticaPrivacidad from './pages/PoliticaPrivacidad.jsx'
+import PoliticaCookies from './pages/PoliticaCookies.jsx'
 import SolicitudesUnion from './pages/SolicitudesUnion.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import TituloPagina from './components/TituloPagina.jsx'
@@ -85,6 +88,9 @@ function App() {
       <Route path="/anuncio/:id/convivencia" element={<PerfilPublicoGrupo />} />
       <Route path="/usuario/:id" element={<PerfilPublicoUsuario />} />
       <Route path="/faq" element={<FAQ />} />
+      <Route path="/aviso-legal" element={<AvisoLegal />} />
+      <Route path="/privacidad" element={<PoliticaPrivacidad />} />
+      <Route path="/cookies" element={<PoliticaCookies />} />
       <Route path="/" element={<Home />} />
     </Routes>
     </>

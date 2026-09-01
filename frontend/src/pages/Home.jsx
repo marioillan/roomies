@@ -3,9 +3,9 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
 import {
-  ArrowRight, Bed, Users, CalendarCheck,
+  ArrowRight, Bed, Users, CalendarCheck, Calendar, Clock,
   ShoppingCart, Receipt, MessageCircle, House,
-  Heart, CheckCircle2, MapPin, Shield, Zap, Search, Handshake, AlertCircle,
+  Heart, CheckCircle2, MapPin, Shield, Zap, AlertCircle, ChevronDown, ChevronsLeftRight, RefreshCw,
 } from 'lucide-react'
 import habitacionhero from '../assets/habitacionhero.jpg'
 import LoginModal from '../components/LoginModal.jsx'
@@ -22,47 +22,74 @@ const GRANO = {
     "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23r)'/%3E%3C/svg%3E\")",
 }
 
-// Rejilla de puntos que se desvanece hacia los bordes del hero.
-const REJILLA = {
-  backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.65) 1px, transparent 1px)',
-  backgroundSize: '26px 26px',
-  maskImage: 'radial-gradient(ellipse 90% 70% at 50% 0%, #000 20%, transparent 75%)',
-  WebkitMaskImage: 'radial-gradient(ellipse 90% 70% at 50% 0%, #000 20%, transparent 75%)',
-}
-
 const VENTAJAS = [
   { icon: Shield, texto: 'Gratis, sin comisiones' },
   { icon: Zap,    texto: 'Registro en segundos' },
   { icon: MapPin, texto: 'Toda España' },
 ]
 
+// Tarjetas que flotan a los lados del titular en escritorio. `posicion` se
+// aplica en línea porque son coordenadas del diseño, no utilidades de Tailwind.
 const TARJETAS_HERO = [
-  {
-    icon: CalendarCheck,
-    titulo: 'Tarea completada',
-    detalle: 'Cocina — María',
-    acento: false,
-    posicion: 'top-4 left-[-20px]',
-    retardo: 0.5,
-    duracion: 7,
-  },
   {
     icon: Receipt,
     titulo: 'Factura de la luz',
     detalle: 'Pagada por los 4',
     acento: true,
-    posicion: 'bottom-6 right-[-20px]',
-    retardo: 0.65,
-    duracion: 8.5,
+    posicion: { top: '25%', right: '-18px' },
+    rotacion: '1.6deg',
+    retardo: 0.62,
+    duracion: 8.4,
   },
   {
-    icon: Heart,
+    icon: Users,
     titulo: '3 compañeros compatibles',
     detalle: 'Disponibles ahora',
     acento: false,
-    posicion: 'bottom-[-18px] left-14',
-    retardo: 0.8,
-    duracion: 7.8,
+    posicion: { top: '30%', left: '-18px' },
+    rotacion: '1.2deg',
+    retardo: 0.74,
+    duracion: 7.6,
+  },
+  {
+    icon: Calendar,
+    titulo: 'Cena de piso',
+    detalle: 'Viernes, 21:00',
+    acento: false,
+    posicion: { top: '54%', left: '26px' },
+    rotacion: '2.1deg',
+    retardo: 0.98,
+    duracion: 7.3,
+  },
+  {
+    icon: Clock,
+    titulo: 'Turno de basura',
+    detalle: 'Hoy le toca a Dani',
+    acento: false,
+    posicion: { top: '56%', right: '30px' },
+    rotacion: '-2deg',
+    retardo: 1.1,
+    duracion: 8.7,
+  },
+  {
+    icon: ShoppingCart,
+    titulo: 'Lista de la compra',
+    detalle: '6 cosas pendientes',
+    acento: false,
+    posicion: { top: '79%', right: '-4px' },
+    rotacion: '-1.8deg',
+    retardo: 0.86,
+    duracion: 8.1,
+  },
+  {
+    icon: CheckCircle2,
+    titulo: 'Tarea completada',
+    detalle: 'Cocina — María',
+    acento: false,
+    posicion: { top: '82%', left: '-6px' },
+    rotacion: '-1.4deg',
+    retardo: 0.5,
+    duracion: 7,
   },
 ]
 
@@ -105,27 +132,16 @@ function Reveal({ children, delay = 0, className = '', from = 'bottom', as: Etiq
   )
 }
 
-const pasos =[
+// Dos puntos de partida ALTERNATIVOS, no dos pasos consecutivos: cada usuario
+// entra por uno o por el otro según su situación.
+const puntosDePartida = [
   {
-    n: '01',
-    icon: Search,
-    title: 'Buscas piso',
-    descripcion:'Creas tu perfil de convivencia, ves pisos ordenados por compatibilidad, mandas solicitud y chateas directo con el grupo.',
-    destacado:false,
+    title: 'Si buscas habitación',
+    descripcion: 'Creas tu perfil de convivencia, ves pisos ordenados por compatibilidad, mandas solicitud y chateas directo con el grupo.',
   },
   {
-    n: '02',
-    icon: House,
-    title: 'Tienes habitación libre',
-    descripcion:'Publicas la habitación, recibes solicitudes filtradas por compatibilidad, aceptas el match e integras al nuevo compañero.',
-    destacado:false,
-  },
-  {
-    n: '03',
-    icon: Handshake,
-    title: 'Ya vivís juntos',
-    descripcion:'Gestionáis tareas rotativas, gastos divididos, calendario y lista de la compra. Todo conectado, nada se olvida ni se discute.',
-    destacado:true,
+    title: 'Si tienes habitación libre',
+    descripcion: 'Publicas la habitación, recibes solicitudes filtradas por compatibilidad, aceptas el match e integras al nuevo compañero.',
   },
 ]
 
@@ -161,6 +177,164 @@ const funcionalidades = [
     descripcion:'Crea listas compartidas en tiempo real. Todos saben qué falta y quién lo añadió.',
   },
 ]
+
+// Anuncio de ejemplo del comparador de compatibilidad. Se pinta dos veces —con
+// y sin perfil de convivencia— para enseñar qué información se pierde sin él.
+const ANUNCIO_DEMO = {
+  titulo: 'Piso universitario — Valladolid',
+  precio: 280,
+  ciudad: 'Valladolid',
+  descripcion: 'Ideal para estudiantes. Cerca de la UVa y del campus Miguel Delibes. Muy bien comunicado.',
+  grupo: 'Piso Valladolid',
+  compatibilidad: 90,
+  interesesComunes: ['Running', 'Cine'],
+}
+
+function TarjetaAnuncioDemo({ conPerfil }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-[1.25rem] overflow-hidden shadow-[0_1px_0_rgba(15,23,42,0.04),0_0.5rem_2rem_rgba(15,23,42,0.06)]">
+      <div className="flex flex-col sm:flex-row">
+        <img
+          src={habitacionhero} alt=""
+          className="w-full h-44 sm:w-[330px] sm:h-auto sm:min-h-[232px] shrink-0 self-stretch object-cover"
+        />
+        <div className="flex-1 min-w-0 px-5 py-5 sm:px-7 sm:py-6">
+          <h3 className="font-display text-lg sm:text-xl font-semibold text-slate-900">{ANUNCIO_DEMO.titulo}</h3>
+          <p className="mt-2 sm:mt-2.5 flex items-baseline gap-1.5">
+            <span className="font-display text-2xl sm:text-3xl font-bold text-slate-900 -tracking-[0.02em]">{ANUNCIO_DEMO.precio}</span>
+            <span className="text-sm text-slate-500">€/mes</span>
+          </p>
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+            <MapPin aria-hidden="true" size={14} />
+            {ANUNCIO_DEMO.ciudad}
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-slate-500 text-pretty">{ANUNCIO_DEMO.descripcion}</p>
+          <p className="mt-4 flex items-center gap-2.5">
+            <span aria-hidden="true" className="w-[30px] h-[30px] rounded-full bg-emerald-500 text-white flex items-center justify-center text-[0.8125rem] font-bold">P</span>
+            <span className="text-sm font-medium text-slate-700">{ANUNCIO_DEMO.grupo}</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Pie: es la única parte que cambia entre las dos versiones. La altura
+          fija en escritorio mantiene alineadas las dos capas del comparador. */}
+      <div className="min-h-[86px] sm:h-[78px] px-5 sm:px-7 py-4 sm:py-0 flex items-center justify-between gap-4 sm:gap-5 border-t border-slate-200 bg-slate-50">
+        {conPerfil ? (
+          <div className="flex flex-col gap-2 min-w-0">
+            <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700 whitespace-nowrap">
+              <span aria-hidden="true" className="w-2 h-2 rounded-full bg-emerald-500" />
+              {ANUNCIO_DEMO.compatibilidad}% de compatibilidad
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline font-mono text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-slate-600">En común:</span>
+              {ANUNCIO_DEMO.interesesComunes.map(interes => (
+                <span key={interes} className="bg-emerald-100 text-emerald-800 rounded-full px-3 py-1 text-xs font-semibold">
+                  {interes}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : <span />}
+        <span className="shrink-0 inline-flex items-center gap-2 rounded-full bg-emerald-500 text-white text-sm font-semibold px-4 sm:px-5 py-2.5 whitespace-nowrap">
+          <MessageCircle aria-hidden="true" size={15} />
+          Contactar
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// La divisoria puede llegar a los dos extremos de la tarjeta.
+const limitar = (n) => Math.min(100, Math.max(0, n))
+
+// Comparador de la sección de compatibilidad: en escritorio una divisoria
+// arrastrable (y manejable con el teclado) revela una versión u otra del mismo
+// anuncio; en móvil, donde arrastrar es incómodo, la misma tarjeta se cambia
+// de una versión a la otra con un botón fijo debajo.
+function ComparadorCompatibilidad() {
+  const refCaja = useRef(null)
+  const [posicion, setPosicion] = useState(52)
+  const [arrastrando, setArrastrando] = useState(false)
+  const [conPerfilMovil, setConPerfilMovil] = useState(false)
+
+  const mover = (e) => {
+    const caja = refCaja.current
+    if (!caja) return
+    const r = caja.getBoundingClientRect()
+    setPosicion(limitar(((e.clientX - r.left) / r.width) * 100))
+  }
+
+  const alPulsarTecla = (e) => {
+    const salto = { ArrowLeft: -4, ArrowRight: 4, Home: -100, End: 100 }[e.key]
+    if (salto === undefined) return
+    e.preventDefault()
+    setPosicion(p => limitar(p + salto))
+  }
+
+  return (
+    <>
+      {/* ── Escritorio: divisoria arrastrable ── */}
+      <div className="hidden lg:block mt-10">
+        <div className="mb-3 flex justify-between font-mono text-[0.65rem] font-semibold uppercase tracking-[0.16em]">
+          <span className="text-emerald-700">Con perfil de convivencia</span>
+          <span className="text-slate-500">Sin perfil</span>
+        </div>
+
+        <div
+          ref={refCaja}
+          onPointerMove={e => { if (arrastrando) mover(e) }}
+          onPointerUp={() => setArrastrando(false)}
+          className="relative select-none touch-none"
+        >
+          <TarjetaAnuncioDemo conPerfil />
+
+          {/* La versión sin perfil se recorta desde la izquierda: solo se ve
+              la parte de la tarjeta que queda a la derecha de la divisoria. */}
+          <div className="absolute inset-0" aria-hidden="true" style={{ clipPath: `inset(0 0 0 ${posicion}%)` }}>
+            <TarjetaAnuncioDemo conPerfil={false} />
+          </div>
+
+          <div className="absolute top-0 bottom-0 w-0.5 bg-emerald-500" style={{ left: `${posicion}%` }}>
+            <button
+              type="button"
+              role="slider"
+              aria-label="Arrastrar para comparar el anuncio con y sin perfil de convivencia"
+              aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(posicion)}
+              aria-valuetext={`${Math.round(posicion)} % del anuncio con perfil de convivencia`}
+              onPointerDown={e => { e.preventDefault(); e.currentTarget.setPointerCapture?.(e.pointerId); setArrastrando(true) }}
+              onKeyDown={alPulsarTecla}
+              className="cursor-ew-resize! absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full border-2 border-emerald-500 bg-white flex items-center justify-center shadow-lg shadow-slate-900/20"
+            >
+              <ChevronsLeftRight aria-hidden="true" size={18} strokeWidth={2.2} className="text-emerald-700" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Móvil: la misma tarjeta, cambiada con un botón fijo ── */}
+      <div className="lg:hidden mt-8">
+        <p aria-live="polite"
+          className="mb-3 flex items-center gap-2 font-mono text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          <span aria-hidden="true"
+            className={'w-2 h-2 rounded-full ' + (conPerfilMovil ? 'bg-emerald-500' : 'bg-slate-300')} />
+          {conPerfilMovil ? 'Con perfil de convivencia' : 'Sin perfil de convivencia'}
+        </p>
+
+        <TarjetaAnuncioDemo conPerfil={conPerfilMovil} />
+
+        <button
+          type="button"
+          aria-pressed={conPerfilMovil}
+          onClick={() => setConPerfilMovil(v => !v)}
+          className="cursor-pointer! mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white text-[0.9375rem] font-semibold px-6 py-3.5 transition-colors"
+        >
+          <RefreshCw aria-hidden="true" size={16} />
+          {conPerfilMovil ? 'Ver sin perfil de convivencia' : 'Ver con perfil de convivencia'}
+        </button>
+      </div>
+    </>
+  )
+}
 
 function BuscadorCiudad({ onBuscar }) {
   const inputRef = useRef(null)
@@ -288,12 +462,17 @@ export default function Home() {
     <div className="overflow-x-hidden">
 
       <SaltarAlContenido />
-      <header className={'fixed top-0 left-0 right-0 z-50 transition-all duration-300 ' + (
-        scrolled
-          ? 'bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm'
-          : 'bg-transparent border-b border-transparent'
-      )}>
-        <div className="max-w-[80rem] mx-auto flex items-center gap-3 sm:gap-6 px-4 sm:px-10 py-3.5">
+      {/* Cabecera flotante: se separa del borde de la ventana por arriba y por
+          los lados. El fondo va en la caja interior y no en la cabecera, para
+          que al hacer scroll quede una isla redondeada —el hueco superior se
+          lee como parte del diseño— en vez de una barra de ancho completo con
+          una franja transparente encima por la que se cuela el contenido. */}
+      <header className="fixed top-0 left-0 right-0 z-50 pt-2 px-2 sm:px-4">
+        <div className={'max-w-[80rem] mx-auto flex items-center gap-3 sm:gap-6 px-4 sm:px-8 py-3 rounded-2xl transition-all duration-300 ' + (
+          scrolled
+            ? 'bg-white/85 backdrop-blur-md ring-1 ring-slate-200/70 shadow-lg shadow-slate-900/5'
+            : 'bg-transparent ring-1 ring-transparent'
+        )}>
 
           <button onClick={() => navigate('/')} className={'cursor-pointer! font-display text-2xl font-bold -tracking-[0.02em] shrink-0 transition-colors ' + (scrolled ? 'text-slate-900' : 'text-white')}>
             Housie
@@ -368,34 +547,55 @@ export default function Home() {
       <section aria-label="Inicio"
         className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white">
 
-        {/* Atmósfera del hero: halos de color, rejilla de puntos que se
-            desvanece y una capa de grano. Todo decorativo. */}
+        {/* Atmósfera del hero: dos halos de color difuminados y una capa de
+            grano. Todo decorativo. */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           <div className="absolute inset-0 opacity-25">
             <div className="absolute -top-10 -left-10 w-[28rem] h-[28rem] rounded-full blur-[120px]" style={{ backgroundColor: ESMERALDA }} />
             <div className="absolute bottom-0 right-0 w-[30rem] h-[30rem] bg-teal-500 rounded-full blur-[140px]" />
           </div>
-          <div className="absolute inset-0 opacity-[0.13]" style={REJILLA} />
           <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay" style={GRANO} />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 sm:px-10 pt-14 pb-16 sm:pt-24 sm:pb-28 flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
+        <div className="relative max-w-[78rem] mx-auto px-6 sm:px-10 pt-24 pb-20 sm:pt-32 sm:pb-26 flex flex-col items-center">
 
-          {/* ── Columna de texto ── */}
-          <div className="max-w-xl w-full">
-            <div
-              className="inline-flex items-center gap-2.5 bg-emerald-500/15 border border-emerald-400/30 text-emerald-200 text-[0.7rem] font-mono font-medium uppercase tracking-[0.14em] px-4 py-1.5 rounded-full mb-7"
+          {/* ── Tarjetas flotantes a los lados del titular (escritorio) ── */}
+          <div className="hidden xl:block" aria-hidden="true">
+            {TARJETAS_HERO.map(({ icon: Icono, titulo, detalle, acento, posicion, rotacion, retardo, duracion }) => (
+              <div
+                key={titulo}
+                className="absolute z-[5] w-[236px] pointer-events-none bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-xl ring-1 ring-slate-900/5 flex items-center gap-3 tarjeta-flotante"
+                style={{
+                  ...posicion,
+                  '--rot': rotacion,
+                  '--retardo': retardo + 's',
+                  '--duracion': duracion + 's',
+                  '--retardo-flote': (retardo + 1) + 's',
+                }}
+              >
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-100 shrink-0">
+                  <Icono aria-hidden="true" size={18} className="text-emerald-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-800 text-xs leading-tight">{titulo}</p>
+                  <p className={'text-xs leading-tight mt-0.5 ' + (acento ? 'text-emerald-600 font-medium' : 'text-slate-500')}>{detalle}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Columna central de texto ── */}
+          <div className="relative z-[2] w-full max-w-2xl flex flex-col items-center text-center">
+            <p
+              className="inline-flex items-center gap-2.5 mb-7 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-4 py-1.5 font-mono text-[0.7rem] font-medium uppercase tracking-[0.14em] text-emerald-200"
               style={{ animation: 'heroFadeUp 0.6s ease both' }}
             >
-              <span className="relative flex w-1.5 h-1.5" aria-hidden="true">
-                <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-300" />
-              </span>
+              <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
               Pisos compartidos en España
-            </div>
+            </p>
 
             <h1
-              className="font-display font-extrabold text-[clamp(2.4rem,7.2vw,4.25rem)] leading-[1] -tracking-[0.035em]"
+              className="font-display font-extrabold text-[clamp(2.4rem,6.4vw,4.25rem)] leading-[1] -tracking-[0.035em] text-balance"
               style={{ animation: 'heroFadeUp 0.7s ease 0.08s both' }}
             >
               El piso perfecto<br />
@@ -418,14 +618,14 @@ export default function Home() {
             </h1>
 
             <p
-              className="mt-7 text-slate-300 text-base sm:text-lg leading-relaxed max-w-lg"
+              className="mt-7 text-slate-300 text-base sm:text-lg leading-relaxed max-w-lg text-pretty"
               style={{ animation: 'heroFadeUp 0.7s ease 0.16s both' }}
             >
               Housie te empareja con quien encaja con tu forma de vivir y después os
               organiza el día a día: gastos, tareas, calendario y lista de la compra.
             </p>
 
-            <div className="mt-8 max-w-md" style={{ animation: 'heroFadeUp 0.7s ease 0.24s both' }}>
+            <div className="mt-8 w-full max-w-md" style={{ animation: 'heroFadeUp 0.7s ease 0.24s both' }}>
               <BuscadorCiudad onBuscar={handleBuscar} />
               <p className="mt-3 text-xs text-slate-300">
                 ¿Aún no tienes ciudad decidida?{' '}
@@ -439,7 +639,7 @@ export default function Home() {
             </div>
 
             <ul
-              className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-300"
+              className="mt-9 flex flex-wrap justify-center gap-x-7 gap-y-3 text-sm text-slate-300"
               style={{ animation: 'heroFadeUp 0.7s ease 0.32s both' }}
             >
               {VENTAJAS.map(({ icon: Icono, texto }) => (
@@ -449,44 +649,11 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-          </div>
 
-          {/* ── Columna visual: foto con tarjetas flotantes (escritorio) ── */}
-          <div className="hidden lg:block relative min-w-0 shrink-0" style={{ animation: 'heroFadeRight 0.8s ease 0.2s both' }}>
-            <div className="absolute -inset-5 rounded-[2.25rem] bg-gradient-to-tr from-emerald-500/25 via-emerald-400/10 to-transparent blur-2xl" aria-hidden="true" />
-            <img
-              src={habitacionhero}
-              alt="Salón luminoso de un piso compartido con sofá, mesa de comedor y ventanales grandes"
-              width={520} height={380}
-              className="relative w-full max-w-[520px] h-[380px] object-cover rounded-[1.75rem] ring-1 ring-white/15 shadow-2xl"
-              loading="eager" fetchPriority="high"
-            />
-
-            {TARJETAS_HERO.map(({ icon: Icono, titulo, detalle, acento, posicion, retardo, duracion }) => (
-              <div
-                key={titulo}
-                className={'absolute z-10 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-xl ring-1 ring-slate-900/5 flex items-center gap-3 tarjeta-flotante ' + posicion}
-                style={{
-                  '--retardo': retardo + 's',
-                  '--duracion': duracion + 's',
-                  '--retardo-flote': (retardo + 1) + 's',
-                }}
-              >
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-100 shrink-0">
-                  <Icono aria-hidden="true" size={18} className="text-emerald-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-800 text-xs leading-tight">{titulo}</p>
-                  <p className={'text-xs leading-tight mt-0.5 ' + (acento ? 'text-emerald-600 font-medium' : 'text-slate-500')}>{detalle}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Las mismas tarjetas en móvil, donde la foto no cabe: pasan a ser una
-              tira desplazable para que el hero siga enseñando el producto. */}
+          {/* Las mismas tarjetas en móvil, donde no caben a los lados: pasan a
+              ser una tira desplazable para que el hero siga enseñando el producto. */}
           <ul
-            className="lg:hidden self-stretch -mx-6 sm:-mx-10 px-6 sm:px-10 flex gap-3 overflow-x-auto no-scrollbar"
+            className="xl:hidden self-stretch -mx-6 sm:-mx-10 mt-10 px-6 sm:px-10 flex gap-3 overflow-x-auto no-scrollbar"
             style={{ animation: 'heroFadeUp 0.7s ease 0.4s both' }}
           >
             {TARJETAS_HERO.map(({ icon: Icono, titulo, detalle, acento }) => (
@@ -504,13 +671,14 @@ export default function Home() {
               </li>
             ))}
           </ul>
+          </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────── */}
       {/* CÓMO FUNCIONA                                */}
       {/* ─────────────────────────────────────────── */}
-      <section aria-labelledby="como-funciona-heading" className="relative bg-white py-20 sm:py-28 px-6 sm:px-10">
+      <section aria-labelledby="como-funciona-heading" className="relative bg-white pt-20 sm:pt-28 px-6 sm:px-10">
         <div className="max-w-5xl mx-auto">
 
           <Reveal className="mb-4 flex items-baseline gap-4">
@@ -525,83 +693,110 @@ export default function Home() {
               id="como-funciona-heading"
               className="font-display text-[clamp(2rem,5vw,3.25rem)] font-bold text-slate-900 leading-[1.05] -tracking-[0.03em] max-w-2xl"
             >
-              Tres situaciones,<br />una sola plataforma
+              Dos formas de <span style={{ color: '#059669' }}>empezar</span>,<br />una sola plataforma
             </h2>
-            <p className="mt-5 text-slate-500 text-base sm:text-lg leading-relaxed max-w-xl">
-              Da igual en qué punto estés: buscando habitación, con una libre en tu
-              piso o ya conviviendo. Housie cubre las tres.
+            <p className="mt-5 text-slate-500 text-base sm:text-lg leading-relaxed max-w-xl text-pretty">
+              Da igual en qué punto estés: buscando habitación o con una libre en tu piso.
+              Housie cubre las dos y sigue contigo después.
             </p>
           </Reveal>
 
-          {/* Stepper: horizontal en escritorio, vertical en móvil */}
-          <ol className="mt-16 relative grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-0">
-
-            {/* Línea conectora — solo escritorio */}
-            <div
-              className="hidden sm:block absolute h-px z-0"
-              style={{
-                top: '27px',
-                left: 'calc(100% / 6 + 28px)',
-                right: 'calc(100% / 6 + 28px)',
-                background: 'linear-gradient(to right, #e2e8f0, #6ee7b7 55%, ' + ESMERALDA + ')',
-              }}
-              aria-hidden="true"
-            />
-
-            {pasos.map(({ n, icon: Icono, title, descripcion, destacado }, i) => (
-              <Reveal key={n} as="li" delay={i * 130} className="group relative sm:px-6 list-none">
-                <div className="flex flex-col sm:items-center gap-4 sm:gap-0 text-left sm:text-center">
-
-                  {/* Número dentro del círculo */}
-                  <div
-                    className={'relative z-10 w-14 h-14 rounded-full flex items-center justify-center font-mono font-bold text-sm shrink-0 transition-transform duration-300 group-hover:-translate-y-1 ' + (
-                      destacado
-                        ? 'text-white shadow-lg'
-                        : 'text-slate-600 bg-white border-2 border-slate-200 group-hover:border-emerald-300'
-                    )}
-                    style={destacado
-                      ? { backgroundColor: ESMERALDA, boxShadow: '0 10px 30px -6px rgba(16,185,129,0.45)' }
-                      : {}}
-                  >
-                    {n}
-                  </div>
-
-                  <div
-                    className={'mt-1 sm:mt-8 mb-1 sm:mb-5 w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center transition-colors ' + (
-                      destacado ? 'bg-emerald-50' : 'bg-slate-50 group-hover:bg-emerald-50'
-                    )}
-                  >
-                    <Icono aria-hidden="true" size={21} style={{ color: destacado ? ESMERALDA : '#64748b' }} />
-                  </div>
-
-                  <h3 className={'font-bold text-lg leading-snug mb-2 ' + (destacado ? 'text-emerald-700' : 'text-slate-900')}>
-                    {title}
-                  </h3>
-
-                  <p className="text-slate-500 text-sm leading-relaxed max-w-xs sm:mx-auto">
-                    {descripcion}
-                  </p>
+          {/* Los dos puntos de partida — alternativas en paralelo, no pasos */}
+          <ul className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-6 list-none">
+            {puntosDePartida.map(({ title, descripcion }, i) => (
+              // El desplazamiento del hover va en el div interior: `Reveal` ya
+              // usa `transform` en línea para su animación de entrada y una
+              // clase de Tailwind no podría sobreescribirlo.
+              <Reveal key={title} as="li" delay={i * 130}>
+                <div className="h-full bg-white border border-slate-200 rounded-3xl p-7 sm:p-8 shadow-[0_2px_4px_rgba(15,23,42,0.04),0_14px_36px_-12px_rgba(15,23,42,0.22)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1.5 hover:border-emerald-200 hover:shadow-[0_6px_12px_rgba(15,23,42,0.05),0_26px_52px_-14px_rgba(15,23,42,0.3)]">
+                  <h3 className="font-display text-xl sm:text-[1.375rem] font-semibold leading-snug text-slate-900">{title}</h3>
+                  <p className="mt-3 text-slate-500 text-sm leading-relaxed text-pretty">{descripcion}</p>
                 </div>
               </Reveal>
             ))}
-          </ol>
+          </ul>
 
-          <Reveal delay={350} className="mt-16 flex flex-wrap items-center gap-x-8 gap-y-4">
-            {!user?.es_casero && (
-              <button
-                onClick={user ? () => navigate('/perfil/usuario') : openRegistro}
-                className="cursor-pointer! group inline-flex items-center gap-2 bg-slate-900 hover:bg-emerald-700 text-white text-sm font-semibold px-6 py-3.5 rounded-xl transition-colors"
+          {/* Confluencia: las dos alternativas desembocan en la sección siguiente */}
+          <Reveal delay={260} className="flex flex-col items-center pt-10">
+            <span aria-hidden="true" className="w-0.5 h-14" style={{ background: 'linear-gradient(to bottom, #e2e8f0, ' + ESMERALDA + ')' }} />
+            <ChevronDown aria-hidden="true" size={18} strokeWidth={2.4} className="-mt-1" style={{ color: ESMERALDA }} />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────── */}
+      {/* Y DESPUÉS — LA CONVIVENCIA                   */}
+      {/* ─────────────────────────────────────────── */}
+      <section aria-labelledby="convivencia-heading" className="bg-white pt-10 pb-20 sm:pb-28 px-6 sm:px-10">
+        <Reveal className="relative max-w-5xl mx-auto bg-slate-900 rounded-3xl p-8 sm:p-14 overflow-hidden">
+          <div aria-hidden="true"
+            className="pointer-events-none absolute -top-32 -right-20 w-96 h-96 rounded-full blur-[130px] opacity-20"
+            style={{ backgroundColor: ESMERALDA }} />
+
+          <div className="relative">
+            <p className="font-mono text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-slate-300 mb-5">
+              Y después
+            </p>
+            <h2 id="convivencia-heading"
+              className="font-display text-[clamp(1.9rem,4.4vw,2.75rem)] font-bold text-white leading-[1.05] -tracking-[0.03em]">
+              Ya vivís juntos
+            </h2>
+            <p className="mt-5 text-slate-300 text-base leading-relaxed max-w-2xl text-pretty">
+              Gestionáis tareas rotativas, gastos divididos, calendario y lista de la compra.
+              Todo conectado, nada se olvida ni se discute.
+            </p>
+
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              {!user?.es_casero && (
+                <button
+                  onClick={user ? () => navigate('/perfil/usuario') : openRegistro}
+                  className="cursor-pointer! group inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white text-[0.9375rem] font-semibold px-6 py-3.5 rounded-xl transition-colors"
+                >
+                  Empezar ahora — es gratis
+                  <ArrowRight aria-hidden="true" size={16} className="transition-transform group-hover:translate-x-1" />
+                </button>
+              )}
+              <Link
+                to="/faq"
+                className="inline-flex items-center border-2 border-slate-300/25 hover:border-emerald-500 rounded-xl text-[0.9375rem] font-semibold text-slate-300 hover:text-white px-6 py-3 transition-colors"
               >
-                Empezar ahora — es gratis
-                <ArrowRight aria-hidden="true" size={16} className="transition-transform group-hover:translate-x-1" />
-              </button>
-            )}
-            <Link
-              to="/faq"
-              className="text-sm font-semibold text-slate-600 hover:text-emerald-700 underline underline-offset-4 decoration-slate-300 hover:decoration-emerald-400 transition"
+                Resolver dudas en las preguntas frecuentes
+              </Link>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ─────────────────────────────────────────── */}
+      {/* COMPATIBILIDAD                               */}
+      {/* ─────────────────────────────────────────── */}
+      <section aria-labelledby="compatibilidad-heading" className="bg-white pb-20 sm:pb-28 px-6 sm:px-10">
+        <div className="max-w-5xl mx-auto">
+
+          <Reveal className="mb-4 flex items-baseline gap-4">
+            <span className="flex-1 h-px bg-slate-200" aria-hidden="true" />
+            <p className="font-mono text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-emerald-700 shrink-0">
+              Compatibilidad
+            </p>
+          </Reveal>
+
+          <Reveal delay={60} className="sm:text-right">
+            <h2
+              id="compatibilidad-heading"
+              className="font-display text-[clamp(2rem,5vw,3.25rem)] font-bold text-slate-900 leading-[1.05] -tracking-[0.03em] sm:ml-auto max-w-2xl text-balance"
             >
-              Resolver dudas en las preguntas frecuentes
-            </Link>
+              Sabes cuánto <span style={{ color: '#059669' }}>encajáis</span> antes de escribir el primer mensaje
+            </h2>
+            <p className="mt-5 text-slate-500 text-base sm:text-lg leading-relaxed sm:ml-auto max-w-xl text-pretty">
+              Mismo anuncio, dos personas: una con su perfil de convivencia
+              completo y otra sin él.{' '}
+              <span className="hidden lg:inline">Arrastra para comprobarlo.</span>
+              <span className="lg:hidden">Pulsa el botón para comprobarlo.</span>
+            </p>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <ComparadorCompatibilidad />
           </Reveal>
         </div>
       </section>
@@ -612,19 +807,19 @@ export default function Home() {
       <section aria-labelledby="features-heading" className="bg-slate-50 py-20 sm:py-28 px-6 sm:px-10">
         <div className="max-w-5xl mx-auto">
 
-          <Reveal className="mb-4 flex items-baseline gap-4 sm:flex-row-reverse">
+          <Reveal className="mb-4 flex items-baseline gap-4">
             <p className="font-mono text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-emerald-700 shrink-0">
               La plataforma
             </p>
             <span className="flex-1 h-px bg-slate-200" aria-hidden="true" />
           </Reveal>
 
-          <Reveal delay={60} className="sm:text-right">
+          <Reveal delay={60}>
             <h2
               id="features-heading"
-              className="font-display text-[clamp(2rem,5vw,3.25rem)] font-bold text-slate-900 leading-[1.05] -tracking-[0.03em] sm:ml-auto max-w-2xl"
+              className="font-display text-[clamp(2rem,5vw,3.25rem)] font-bold text-slate-900 leading-[1.05] -tracking-[0.03em] max-w-2xl"
             >
-              Todo lo que necesitas,<br />ya está cubierto
+              Todo lo que <span style={{ color: '#059669' }}>necesitas</span>,<br />ya está cubierto
             </h2>
           </Reveal>
 
@@ -645,12 +840,7 @@ export default function Home() {
                     <Icono aria-hidden="true" size={19} style={{ color: '#047857' }} />
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-2.5 mb-1.5">
-                      <span className="font-mono text-[0.65rem] font-bold text-emerald-700/70" aria-hidden="true">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <h3 className="font-bold text-slate-900 text-base">{title}</h3>
-                    </div>
+                    <h3 className="font-bold text-slate-900 text-base mb-1.5">{title}</h3>
                     <p className="text-slate-500 text-sm leading-relaxed">{descripcion}</p>
                   </div>
                 </article>
@@ -828,9 +1018,10 @@ export default function Home() {
           from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes heroFadeRight {
-          from { opacity: 0; transform: translateX(32px); }
-          to   { opacity: 1; transform: translateX(0); }
+        /* Igual que heroFadeUp, pero conservando la inclinación de la tarjeta. */
+        @keyframes heroFadeUpInclinado {
+          from { opacity: 0; transform: translateY(24px) rotate(var(--rot, 0deg)); }
+          to   { opacity: 1; transform: translateY(0) rotate(var(--rot, 0deg)); }
         }
 
         /* El subrayado del titular se dibuja de izquierda a derecha una vez que
@@ -848,12 +1039,12 @@ export default function Home() {
         /* Flotación muy lenta y desincronizada de las tarjetas del hero: cada
            una recibe su retardo y su duración por variables CSS en línea. */
         @keyframes flotar {
-          0%, 100% { transform: translateY(0); }
-          50%      { transform: translateY(-7px); }
+          0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+          50%      { transform: translateY(-7px) rotate(var(--rot, 0deg)); }
         }
         .tarjeta-flotante {
           animation:
-            heroFadeUp 0.6s ease var(--retardo, 0s) both,
+            heroFadeUpInclinado 0.6s ease var(--retardo, 0s) both,
             flotar var(--duracion, 8s) ease-in-out var(--retardo-flote, 1.5s) infinite;
         }
 
