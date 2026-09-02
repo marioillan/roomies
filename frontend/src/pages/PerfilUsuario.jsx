@@ -7,6 +7,7 @@ import { apiFetch } from '../lib/apiFetch'
 
 const STRIPE_BG = 'repeating-linear-gradient(45deg,#f1f5f9,#f1f5f9 6px,#e2e8f0 6px,#e2e8f0 12px)'
 
+// ─── Carrusel de fotos ───
 function CarruselFotos({ fotos, nombre }) {
   const [idx, setIdx] = useState(0)
   const total = fotos.length
@@ -46,6 +47,7 @@ function CarruselFotos({ fotos, nombre }) {
   )
 }
 
+// ─── Tarjeta de rasgo de convivencia ───
 function TraitCard({ cfg, valor }) {
   const frase = labelsUsuario[cfg.campo]?.[valor]
   return (
@@ -61,6 +63,7 @@ function TraitCard({ cfg, valor }) {
   )
 }
 
+// ─── Página ───
 export default function PerfilUsuario() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -107,7 +110,7 @@ export default function PerfilUsuario() {
   return (
     <div className='flex flex-col gap-5'>
 
-      {/* ── Header ── */}
+      {/* ─── Header ─── */}
       <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between'>
         <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>Mi perfil</h1>
         {/* Botones de acción — solo escritorio; en móvil se muestran al final de la página */}
@@ -116,7 +119,7 @@ export default function PerfilUsuario() {
         </div>
       </div>
 
-      {/* ── Hero card ── */}
+      {/* ─── Hero card ─── */}
       <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 md:grid-cols-2 gap-8 items-center' style={CARD_SHADOW}>
 
         {/* Carrusel de fotos */}
@@ -152,7 +155,7 @@ export default function PerfilUsuario() {
         </div>
       </div>
 
-      {/* ── Datos + Intereses ── */}
+      {/* ─── Datos + Intereses ─── */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
 
         <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-4' style={CARD_SHADOW}>
@@ -216,7 +219,7 @@ export default function PerfilUsuario() {
         </div>
       </div>
 
-      {/* ── Compatibilidad — grid 3×2 de tarjetas ── */}
+      {/* ─── Compatibilidad — grid 3×2 de tarjetas ─── */}
       <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-6' style={CARD_SHADOW}>
         <div>
           <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500 mb-1.5'>Compatibilidad</p>

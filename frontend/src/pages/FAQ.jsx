@@ -5,6 +5,7 @@ import PieDePagina from '../components/PieDePagina.jsx'
 import Reveal from '../components/Reveal.jsx'
 import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 
+// ─── Acordeón de una pregunta ───
 function AccordionItem({ pregunta, respuesta, abierto, onToggle }) {
   const contentRef = useRef(null)
   const [height, setHeight] = useState(0)
@@ -64,6 +65,7 @@ function AccordionItem({ pregunta, respuesta, abierto, onToggle }) {
   )
 }
 
+// ─── Bloque de categoría ───
 function CategoriaFAQ({ titulo, preguntas }) {
   const [abierto, setAbierto] = useState(null)
   return (
@@ -88,6 +90,7 @@ function CategoriaFAQ({ titulo, preguntas }) {
   )
 }
 
+// ─── Contenido de las preguntas ───
 const CATEGORIAS = [
   {
     titulo: 'Cuenta y registro',
@@ -212,6 +215,7 @@ const CATEGORIAS = [
   },
 ]
 
+// ─── Página ───
 export default function FAQ() {
   useEffect(() => { window.scrollTo(0, 0) }, [])
 

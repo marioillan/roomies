@@ -15,13 +15,13 @@ import {
   Label, FieldError, Section, PillGroup, BoolPillGroup, StepBar,
 } from '../components/FormPrimitivos'
 
-// ── Helpers ───────────────────────────────────────────────────────
+// ─── Helpers ───
 const enumReq = (values) =>
   z.string({ required_error: 'Obligatorio' })
     .min(1, 'Selecciona una opción')
     .refine(v => values.includes(v), 'Selecciona una opción')
 
-// ── Schema ────────────────────────────────────────────────────────
+// ─── Schema ───
 const schema = z.object({
   nombre:             z.string().min(2, 'Mínimo 2 caracteres').max(100, 'Máximo 100 caracteres'),
   genero:             z.string().min(1, 'El género es obligatorio'),
@@ -64,7 +64,7 @@ const schema = z.object({
   pref_nivel_ruido_req:         z.boolean().nullish(),
 })
 
-// ── Opciones de fecha ─────────────────────────────────────────────
+// ─── Opciones de fecha ───
 const DIAS  = Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
   .map((m, i) => ({ value: String(i + 1), label: m }))
@@ -87,7 +87,8 @@ const PERFIL_FIELDS = [
   'fumador', 'tiene_mascotas', 'lgbtq_friendly',
 ]
 
-// Preferencias del compañero. En el formulario llevan prefijo pref_ y cada una
+// Preferencias del compañero. En el formulario llevan el prefijo `pref_` y cada
+// una arrastra un `pref_<campo>_req` con su importancia (obligatorio o no).
 const PREF_FIELDS = [
   'ocupacion', 'horario', 'frecuencia_visitas', 'ambiente', 'tolerancia_fiestas',
   'limpieza_orden', 'nivel_ruido', 'acepta_fumadores', 'acepta_mascotas', 'lgbtq_friendly',
@@ -96,7 +97,7 @@ const PREF_FIELDS = [
 const tieneValor = v => v !== '' && v !== null && v !== undefined
 const limpiar    = v => (tieneValor(v) ? v : null)
 
-// ── Steps ─────────────────────────────────────────────────────────
+// ─── Steps ───
 const STEPS = ['Datos personales', 'Tu perfil', 'Filtros de convivencia']
 const STEP_FIELDS = [
   ['nombre', 'sobre_mi', 'genero', 'pais', 'dia', 'mes', 'anio'],
@@ -130,7 +131,7 @@ const STEP_META = [
   },
 ]
 
-// ── Paso 1: Datos personales ──────────────────────────────────────
+// ─── Paso 1: Datos personales ───
 const MAX_FOTOS_PERFIL = 4
 const MIN_FOTOS_PERFIL = 2
 
@@ -346,7 +347,7 @@ function Paso1({ register, control, errors, watch, todosIntereses, interesesSele
   )
 }
 
-// ── Paso 2: Convivencia ───────────────────────────────────────────
+// ─── Paso 2: Convivencia ───
 function Paso2({ control, errors }) {
   return (
     <div className='flex flex-col gap-6'>
@@ -484,7 +485,7 @@ function Paso2({ control, errors }) {
   )
 }
 
-// ── Toggle de importancia (aparece al seleccionar un valor) ──────
+// ─── Toggle de importancia (aparece al seleccionar un valor) ───
 function ImportanciaToggle({ nameReq, control }) {
   return (
     <Controller name={nameReq} control={control} render={({ field }) => (
@@ -528,7 +529,7 @@ function CampoPref({ label, nameVal, nameReq, control, children }) {
   )
 }
 
-// ── Paso 3: Filtros de convivencia ──────────────────────────────────────────
+// ─── Paso 3: Filtros de convivencia ───
 function Paso3({ control }) {
   return (
     <div className='flex flex-col gap-6'>
@@ -656,7 +657,7 @@ function Paso3({ control }) {
   )
 }
 
-// ── Componente principal ──────────────────────────────────────────
+// ─── Componente principal ───
 function EditarUsuario() {
   const { user, recargarUsuario } = useAuth()
   const navigate = useNavigate()

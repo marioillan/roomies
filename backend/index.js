@@ -29,7 +29,7 @@ const io = new Server(httpServer, {
   },
 });
 
-// Verify JWT from cookie on socket connection
+// ─── Autenticación de sockets ───
 io.use((socket, next) => {
   const rawCookie = socket.handshake.headers.cookie ?? '';
   const cookies = parse(rawCookie);
@@ -45,7 +45,6 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
-  // Client joins a chat room after verifying access
   socket.on('join_chat', async (chatId) => {
     const chat = await prisma.chat.findFirst({
       where: {
@@ -67,7 +66,8 @@ io.on('connection', (socket) => {
   });
 });
 
-// Attach io to app so routes can emit events
+// Se expone `io` en la app para que las rutas puedan emitir eventos con
+// req.app.get('io') sin importar este módulo (evita una dependencia circular).
 app.set('io', io);
 
 app.use(cors({

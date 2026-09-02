@@ -6,7 +6,7 @@ import {
   AlertCircle, Loader2, Pencil, X,
 } from 'lucide-react'
 
-// ── Constantes ────────────────────────────────────────────────────
+// ─── Constantes ───
 
 const CATEGORIAS = [
   { value: 'comida',   label: 'Comida',   color: '#f59e0b' },
@@ -23,7 +23,7 @@ function labelCategoria(cat) {
   return CATEGORIAS.find(c => c.value === cat)?.label ?? 'Otros'
 }
 
-// ── Componente fila de producto ───────────────────────────────────
+// ─── Componente fila de producto ───
 
 function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
   const [cargando, setCargando] = useState(false)
@@ -179,7 +179,7 @@ function FilaProducto({ producto, onToggle, onEditar, onEliminar }) {
   )
 }
 
-// ── Formulario añadir ─────────────────────────────────────────────
+// ─── Formulario añadir ───
 
 function FormularioAnadir({ onAnadir }) {
   const [nombre, setNombre] = useState('')
@@ -249,7 +249,7 @@ function FormularioAnadir({ onAnadir }) {
   )
 }
 
-// ── Página principal ──────────────────────────────────────────────
+// ─── Página principal ───
 
 function ListaCompra() {
   const { miembros, user } = useOutletContext()

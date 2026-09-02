@@ -9,6 +9,7 @@ import {
 } from '../validators/perfilValidator.js';
 import {ACCESS_COOKIE_OPTIONS, REFRESH_COOKIE_OPTIONS} from './authController.js';
 
+// ─── Subida de imágenes a Cloudinary ───
 export const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -18,7 +19,7 @@ export const upload = multer({
   },
 });
 
-// ── PUT /api/perfil/editar ─────────────────────────────────────
+// ─── PUT /api/perfil/editar ───
 export const editarPerfil = async (req, res, next) => {
   const userId = req.userId;
   const parsed = editarPerfilSchema.safeParse(req.body);
@@ -94,7 +95,7 @@ export const editarPerfil = async (req, res, next) => {
 
 const MAX_FOTOS_USUARIO = 4
 
-// ── GET /api/perfil/fotos ─────────────────────────────────────
+// ─── GET /api/perfil/fotos ───
 export const getFotos = async (req, res, next) => {
   try {
     const fotos = await prisma.fotoUsuario.findMany({
@@ -108,7 +109,7 @@ export const getFotos = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/perfil/fotos ─────────────────────────────────────
+// ─── PUT /api/perfil/fotos ───
 export const subirFotos = async (req, res, next) => {
   if (!req.files?.length) return res.status(400).json({ message: 'No se han enviado fotos' });
 
@@ -145,7 +146,7 @@ export const subirFotos = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/perfil/fotos/:fotoId ──────────────────────────
+// ─── DELETE /api/perfil/fotos/:fotoId ───
 export const eliminarFoto = async (req, res, next) => {
   try {
     const foto = await prisma.fotoUsuario.findFirst({
@@ -176,7 +177,7 @@ export const eliminarFoto = async (req, res, next) => {
   }
 };
 
-// ── GET /api/perfil/convivencia ────────────────────────────────
+// ─── GET /api/perfil/convivencia ───
 export const getConvivencia = async (req, res, next) => {
   try {
     const perfil = await prisma.perfilConvivenciaUsuario.findFirst({
@@ -188,7 +189,7 @@ export const getConvivencia = async (req, res, next) => {
   }
 };
 
-// ── GET /api/perfil/publico/:userId ───────────────────────────
+// ─── GET /api/perfil/publico/:userId ───
 export const getPerfilPublico = async (req, res, next) => {
   const { userId } = req.params;
   try {
@@ -260,7 +261,7 @@ export const getPerfilPublico = async (req, res, next) => {
   }
 };
 
-// ── GET /api/perfil/preferencias ─────────────────────────────
+// ─── GET /api/perfil/preferencias ───
 export const getPreferencias = async (req, res, next) => {
   try {
     const preferencias = await prisma.preferenciasCompanero.findFirst({
@@ -272,7 +273,7 @@ export const getPreferencias = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/perfil/preferencias ─────────────────────────────
+// ─── PUT /api/perfil/preferencias ───
 export const editarPreferencias = async (req, res, next) => {
   const parsed = preferenciasSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -313,7 +314,7 @@ export const editarPreferencias = async (req, res, next) => {
   }
 };
 
-// ── GET /api/perfil/intereses ─────────────────────────────────
+// ─── GET /api/perfil/intereses ───
 export const getIntereses = async (req, res, next) => {
   try {
     const todos = await prisma.interes.findMany({
@@ -330,7 +331,7 @@ export const getIntereses = async (req, res, next) => {
   }
 };
 
-// ── GET /api/perfil/mis-intereses ─────────────────────────────
+// ─── GET /api/perfil/mis-intereses ───
 export const getMisIntereses = async (req, res, next) => {
   try {
     const data = await prisma.usuarioInteres.findMany({
@@ -344,7 +345,7 @@ export const getMisIntereses = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/perfil/intereses ─────────────────────────────────
+// ─── PUT /api/perfil/intereses ───
 export const editarIntereses = async (req, res, next) => {
   const parsed = interesesSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -365,7 +366,7 @@ export const editarIntereses = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/perfil/cuenta ─────────────────────────────────
+// ─── DELETE /api/perfil/cuenta ───
 export const eliminarCuenta = async (req, res, next) => {
   try {
     const membresia = await prisma.miembroGrupo.findFirst({

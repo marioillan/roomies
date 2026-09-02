@@ -211,7 +211,7 @@ function DocumentoMenu({ factura, className }) {
   )
 }
 
-// ── Fila de tabla (sm+) ─────────────────────────────────────────────────
+// ─── Fila de tabla (sm+) ───
 
 function FacturaRow({ factura, userId }) {
   const pago      = factura.pagos.find(p => p.usuario_id === userId)
@@ -268,7 +268,7 @@ function FacturaRow({ factura, userId }) {
   )
 }
 
-// ── Tarjeta (solo mobile) ───────────────────────────────────────────────
+// ─── Tarjeta (solo mobile) ───
 
 function FacturaCardMobile({ factura, userId }) {
   const pago      = factura.pagos.find(p => p.usuario_id === userId)

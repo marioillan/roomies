@@ -5,7 +5,7 @@ import ModalEvento from '../components/ModalEvento.jsx'
 import { apiFetch } from '../lib/apiFetch'
 import { useModalAccesible } from '../lib/useModalAccesible.js'
 
-// ── Helpers ───────────────────────────────────────────────────────────
+// ─── Helpers ───
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const MESES_CORTO = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
@@ -45,7 +45,7 @@ function formatFechaLarga(iso) {
   return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
-// ── Modal confirmar eliminación ───────────────────────────────────────
+// ─── Modal confirmar eliminación ───
 
 function ModalConfirmarEliminar({ evento, eliminando, onConfirmar, onCancelar }) {
   const refDialogo = useModalAccesible(onCancelar)
@@ -88,7 +88,7 @@ function ModalConfirmarEliminar({ evento, eliminando, onConfirmar, onCancelar })
   )
 }
 
-// ── Componente principal ──────────────────────────────────────────────
+// ─── Componente principal ───
 
 function Calendario() {
   const { grupo, user } = useOutletContext()
@@ -152,7 +152,6 @@ function Calendario() {
 
   const diaLimpiezaIdx = getDiaLimpiezaIdx(grupo?.dia_limpieza)
 
-  // Agrupar eventos por día del mes actual
   const eventosPorDia = {}
   if (eventos) {
     eventos.forEach((ev, idx) => {
@@ -165,7 +164,6 @@ function Calendario() {
     })
   }
 
-  // Eventos de hoy
   const eventosHoy = (eventos ?? []).filter(ev => {
     const d = new Date(ev.fecha_inicio)
     return d.getDate() === hoy.getDate() && d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear()
@@ -173,7 +171,6 @@ function Calendario() {
 
   const esHoyLimpieza = diaLimpiezaIdx !== null && hoy.getDay() === diaLimpiezaIdx
 
-  // Próximos eventos (a partir de mañana, max 6)
   const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1)
   const proximos = (eventos ?? [])
     .filter(ev => new Date(ev.fecha_inicio) >= inicioDia)

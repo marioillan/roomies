@@ -20,7 +20,7 @@ const DIAS = [
   { value: 'DOMINGO',   label: 'Domingo' },
 ]
 
-// ── Primitivos compartidos con PublicacionFormulario ──────────────
+// ─── Primitivos compartidos con PublicacionFormulario ───
 
 function IconInput({ icon: Icon, error, children }) {
   return (
@@ -72,7 +72,7 @@ function Section({ title, children }) {
   )
 }
 
-// ── Componente principal ──────────────────────────────────────────
+// ─── Componente principal ───
 function CreacionGrupo() {
   const { setTieneGrupo } = useAuth()
   const navigate = useNavigate()
@@ -116,7 +116,7 @@ function CreacionGrupo() {
     setTimeout(() => setCopiado(false), 2000)
   }
 
-  // ── Estado de éxito ───────────────────────────────────────────
+  // ─── Estado de éxito ───
   if (grupoCreado) {
     return (
       <div className='min-h-screen'
@@ -173,7 +173,7 @@ function CreacionGrupo() {
     </div>
   )
 
-  // ── Formulario ────────────────────────────────────────────────
+  // ─── Formulario ───
   return (
       <div className='min-h-screen'
         style={{ backgroundImage: 'radial-gradient(circle, #e2e8f0 1px, transparent 1px)', backgroundSize: '20px 20px', backgroundColor: '#f8fafc' }}>

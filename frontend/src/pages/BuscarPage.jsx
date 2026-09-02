@@ -27,7 +27,7 @@ const TIPOS_PISO = [
 
 const HAB_OPTIONS = ['1', '2', '3', '4']
 
-// ── Chip ──────────────────────────────────────────────────────────
+// ─── Chip ───
 function Chip({ icon: Icon, label, accent }) {
   return (
     <span className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${
@@ -40,7 +40,7 @@ function Chip({ icon: Icon, label, accent }) {
   )
 }
 
-// ── Carrusel de fotos ─────────────────────────────────────────────
+// ─── Carrusel de fotos ───
 function FotoCarrusel({ fotos, titulo, publicacionId, user, esFavorito, onToggleFavorito }) {
   const [idx, setIdx] = useState(0)
   const [guardando, setGuardando] = useState(false)
@@ -113,7 +113,7 @@ function FotoCarrusel({ fotos, titulo, publicacionId, user, esFavorito, onToggle
   )
 }
 
-// ── Card publicación ───────────────────────────────────────────────
+// ─── Card publicación ───
 function PublicacionCard({ pub, user, esFavorito, onToggleFavorito, onRequireLogin }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -260,8 +260,9 @@ function PublicacionCard({ pub, user, esFavorito, onToggleFavorito, onRequireLog
   )
 }
 
-// ── Input ciudad con Google Places ────────────────────────────────
-// ── Panel de filtros ───────────────────────────────────────────────
+// ─── Input ciudad con Google Places ───
+
+// ─── Panel de filtros ───
 function FilterSection({ title, children }) {
   return (
     <div className='py-4 border-b border-emerald-500 last:border-0'>
@@ -497,7 +498,7 @@ function FilterAside({ mobileOpen, onMobileClose, ...filterProps }) {
   )
 }
 
-// ── Página ─────────────────────────────────────────────────────────
+// ─── Página ───
 export default function BuscarPage() {
   const { user, cargando, recargarUsuario } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -683,7 +684,7 @@ export default function BuscarPage() {
   return (
     <div className='min-h-screen bg-slate-200 overflow-x-hidden'>
 
-      {/* ── Header ── */}
+      {/* ─── Header ─── */}
       <SaltarAlContenido />
       <HeaderPublico
         ciudad={ciudad}
@@ -707,7 +708,7 @@ export default function BuscarPage() {
         </button>
       </HeaderPublico>
 
-      {/* ── Layout principal ── */}
+      {/* ─── Layout principal ─── */}
       <main id='contenido-principal' tabIndex={-1} className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-10'>
         {/* El título de la página es visualmente redundante con la cabecera de
             búsqueda, pero un lector de pantalla necesita el <h1> para situarse. */}

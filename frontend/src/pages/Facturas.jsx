@@ -10,7 +10,7 @@ import {
 import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 import { useModalAccesible } from '../lib/useModalAccesible.js'
 
-// ── Helpers ───────────────────────────────────────────────────────────
+// ─── Helpers ───
 
 const TIPO_CONFIG = {
   ALQUILER: { label: 'Alquiler', Icon: Home,    iconBg: 'bg-emerald-50', iconText: 'text-emerald-500', chipBg: 'bg-emerald-50', chipText: 'text-emerald-700', dot: 'bg-emerald-500' },
@@ -54,7 +54,7 @@ function esEsteMes(fechaStr) {
   return d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear()
 }
 
-// ── AvatarUsuario ─────────────────────────────────────────────────────
+// ─── AvatarUsuario ───
 
 function AvatarUsuario({ foto, nombre }) {
   if (foto) return <img src={foto} alt={nombre} className='w-7 h-7 rounded-full object-cover shrink-0' />
@@ -65,7 +65,7 @@ function AvatarUsuario({ foto, nombre }) {
   )
 }
 
-// ── División equitativa / personalizada ────────────────────────────────
+// ─── División equitativa / personalizada ───
 
 function calcularDiferenciaDivision(personas, importes, importeTotal) {
   const suma = personas.reduce((s, p) => s + (Number(importes[p.id]) || 0), 0)
@@ -123,7 +123,7 @@ function DivisionPersonalizada({ personas, importes, onCambiarImporte, importeTo
   )
 }
 
-// ── Modal nueva factura ───────────────────────────────────────────────
+// ─── Modal nueva factura ───
 
 function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
   const idBase = useId()
@@ -312,7 +312,7 @@ function ModalNuevaFactura({ onClose, onCreada, grupoId, miembros }) {
   )
 }
 
-// ── ModalEditarFactura ────────────────────────────────────────────────
+// ─── ModalEditarFactura ───
 
 function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
   const idBase = useId()
@@ -500,7 +500,7 @@ function ModalEditarFactura({ onClose, onActualizada, grupoId, factura }) {
   )
 }
 
-// ── Datos derivados comunes a fila y tarjeta ───────────────────────────
+// ─── Datos derivados comunes a fila y tarjeta ───
 
 function useFacturaDatos(factura, esCasero, userId) {
   const estado = getEstado(factura)
@@ -523,7 +523,7 @@ function useFacturaDatos(factura, esCasero, userId) {
   return { cfg, subtitulo, montoDisplay, estadoPersonal }
 }
 
-// ── Badge de estado ─────────────────────────────────────────────────────
+// ─── Badge de estado ───
 
 function EstadoBadge({ estado, size = 'md' }) {
   const text = size === 'sm' ? 'text-[0.625rem]' : 'text-[0.6875rem]'
@@ -541,7 +541,7 @@ function EstadoBadge({ estado, size = 'md' }) {
   )
 }
 
-// ── Menú de acciones de una factura (casero) ───────────────────────────
+// ─── Menú de acciones de una factura (casero) ───
 
 function MenuFactura({ factura, expandido, onToggleExpandido, onEditar, onMarcarPagada, onEliminar, onCerrar }) {
   return (
@@ -591,7 +591,7 @@ function MenuFactura({ factura, expandido, onToggleExpandido, onEditar, onMarcar
   )
 }
 
-// ── Desglose de pagos por inquilino (expandible) ───────────────────────
+// ─── Desglose de pagos por inquilino (expandible) ───
 
 function PagosPorInquilino({ factura, onTogglePago }) {
   const [toggling, setToggling] = useState(null)
@@ -630,7 +630,7 @@ function PagosPorInquilino({ factura, onTogglePago }) {
   )
 }
 
-// ── FacturaRow (tabla, sm+) ─────────────────────────────────────────────
+// ─── FacturaRow (tabla, sm+) ───
 
 function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEditar, onMarcarPagada }) {
   const [expandido,  setExpandido]  = useState(false)
@@ -740,7 +740,7 @@ function FacturaRow({ factura, esCasero, userId, onTogglePago, onEliminar, onEdi
   )
 }
 
-// ── FacturaCardMobile (tarjeta, solo mobile) ───────────────────────────
+// ─── FacturaCardMobile (tarjeta, solo mobile) ───
 
 function FacturaCardMobile({ factura, esCasero, userId, onTogglePago, onEliminar, onEditar, onMarcarPagada }) {
   const [expandido,  setExpandido]  = useState(false)
@@ -824,7 +824,7 @@ function FacturaCardMobile({ factura, esCasero, userId, onTogglePago, onEliminar
   )
 }
 
-// ── Header compartido ─────────────────────────────────────────────────
+// ─── Header compartido ───
 
 function Header({ user, esCasero, onLogout, onVolver }) {
   const navigate = useNavigate()
@@ -871,7 +871,7 @@ function Header({ user, esCasero, onLogout, onVolver }) {
   )
 }
 
-// ── Vista Casero ──────────────────────────────────────────────────────
+// ─── Vista Casero ───
 
 function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selectorGrupo }) {
   const [modalAbierto,    setModalAbierto]    = useState(false)
@@ -1103,7 +1103,7 @@ function VistaCasero({ facturas, setFacturas, grupo, miembros, grupoId, selector
   )
 }
 
-// ── SelectorGrupo (casero con múltiples pisos) ────────────────────────
+// ─── SelectorGrupo (casero con múltiples pisos) ───
 
 function SelectorGrupo({ grupos, grupoActivo, onChange, onVincular }) {
   const [abierto,   setAbierto]   = useState(false)
@@ -1199,7 +1199,7 @@ function SelectorGrupo({ grupos, grupoActivo, onChange, onVincular }) {
   )
 }
 
-// ── Componente principal ──────────────────────────────────────────────
+// ─── Componente principal ───
 
 function Gastos({ onLogout }) {
   const { user } = useAuth()
@@ -1211,7 +1211,6 @@ function Gastos({ onLogout }) {
   const [loading,    setLoading]    = useState(true)
   const [cargandoFacturas, setCargandoFacturas] = useState(false)
 
-  // Carga inicial: todos los grupos del usuario
   useEffect(() => {
     apiFetch('/api/grupos/mis-grupos')
       .then(r => r.json())
@@ -1224,7 +1223,6 @@ function Gastos({ onLogout }) {
       .catch(() => setLoading(false))
   }, [])
 
-  // Cada vez que cambia el grupo activo, recarga miembros y facturas
   useEffect(() => {
     if (!grupoActivo) return
     setCargandoFacturas(true)

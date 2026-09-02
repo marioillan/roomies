@@ -6,11 +6,11 @@ import {
   Trash2, MessageCircle, ChevronLeft, ChevronRight, ImageOff, Globe, UserPlus,
 } from 'lucide-react'
 
-// ── Constantes de estilo ──────────────────────────────────────────────
+// ─── Constantes de estilo ───
 
 const CARD = 'bg-white border border-slate-100 rounded-[1.25rem]'
 
-// ── Toggle ────────────────────────────────────────────────────────────
+// ─── Toggle ───
 
 function Toggle({ checked, onChange, disabled }) {
   return (
@@ -28,7 +28,7 @@ function Toggle({ checked, onChange, disabled }) {
   )
 }
 
-// ── Modal confirmar visibilidad ───────────────────────────────────────
+// ─── Modal confirmar visibilidad ───
 
 function ModalConfirmarVisible({ publicar, onConfirmar, onCancelar }) {
   return (
@@ -82,7 +82,7 @@ function ModalConfirmarVisible({ publicar, onConfirmar, onCancelar }) {
   )
 }
 
-// ── Modal eliminar ────────────────────────────────────────────────────
+// ─── Modal eliminar ───
 
 function ModalEliminar({ eliminando, onConfirmar, onCancelar }) {
   return (
@@ -125,7 +125,7 @@ function ModalEliminar({ eliminando, onConfirmar, onCancelar }) {
   )
 }
 
-// ── Carrusel ──────────────────────────────────────────────────────────
+// ─── Carrusel ───
 
 function Carrusel({ fotos, visible }) {
   const [idx, setIdx] = useState(0)
@@ -226,7 +226,7 @@ function Carrusel({ fotos, visible }) {
   )
 }
 
-// ── Fila de tabla ─────────────────────────────────────────────────────
+// ─── Fila de tabla ───
 
 function FilaInfo({ label, children, last }) {
   return (
@@ -239,7 +239,7 @@ function FilaInfo({ label, children, last }) {
   )
 }
 
-// ── Fila de acción ────────────────────────────────────────────────────
+// ─── Fila de acción ───
 
 function FilaAccion({ icon: Icon, iconBg, iconColor, title, subtitle, onClick, badge, rojo }) {
   if (rojo) {
@@ -280,7 +280,7 @@ function FilaAccion({ icon: Icon, iconBg, iconColor, title, subtitle, onClick, b
   )
 }
 
-// ── Página ────────────────────────────────────────────────────────────
+// ─── Página ───
 
 function Publicacion() {
   const { miembros, user } = useOutletContext()
@@ -359,7 +359,7 @@ function Publicacion() {
     setEliminando(false)
   }
 
-  // ── Loading ───────────────────────────────────────────────────────
+  // ─── Loading ───
 
   if (publicacion === undefined) {
     return (
@@ -369,7 +369,7 @@ function Publicacion() {
     )
   }
 
-  // ── Estado 1 — Sin anuncio ────────────────────────────────────────
+  // ─── Estado 1 — Sin anuncio ───
 
   if (!publicacion) {
     return (
@@ -404,7 +404,7 @@ function Publicacion() {
     )
   }
 
-  // ── Estado 2 / 3 — Con anuncio ────────────────────────────────────
+  // ─── Estado 2 / 3 — Con anuncio ───
 
   return (
     <div className='flex flex-col gap-6'>
@@ -429,7 +429,7 @@ function Publicacion() {
       {/* Grid dos columnas */}
       <div className='grid grid-cols-1 lg:grid-cols-[1fr_19rem] gap-6 items-start'>
 
-        {/* ── Columna izquierda ───────────────────────────────── */}
+        {/* ─── Columna izquierda ─── */}
         <div className='flex flex-col gap-5'>
 
           {/* Carrusel */}
@@ -464,7 +464,7 @@ function Publicacion() {
 
         </div>
 
-        {/* ── Columna derecha ─────────────────────────────────── */}
+        {/* ─── Columna derecha ─── */}
         <div className='flex flex-col gap-4 lg:sticky lg:top-6'>
 
           {/* Visibilidad — solo admin */}

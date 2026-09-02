@@ -17,7 +17,7 @@ import {
 import { apiFetch } from '../lib/apiFetch'
 import ModalConfirmarAccion from '../components/ModalConfirmarAccion.jsx'
 
-// ── Schema ────────────────────────────────────────────────────────
+// ─── Schema ───
 const schema = z.object({
   titulo:               z.string().min(5, 'Mínimo 5 caracteres').max(255),
   descripcion:          z.string().min(10, 'Mínimo 10 caracteres').max(500, 'Máximo 500 caracteres'),
@@ -107,7 +107,7 @@ function YesNo({ value, onChange }) {
   )
 }
 
-// ── Dirección con Google Places Autocomplete ──────────────────────
+// ─── Dirección con Google Places Autocomplete ───
 function DireccionAutocomplete({ setValue, defaultValue = '', error }) {
   const inputRef = useRef(null)
   const acRef    = useRef(null)
@@ -132,7 +132,6 @@ function DireccionAutocomplete({ setValue, defaultValue = '', error }) {
         const lat = place.geometry.location.lat()
         const lng = place.geometry.location.lng()
 
-        // Extrae la ciudad de los componentes de la dirección
         const ciudadComp = place.address_components?.find(c =>
           c.types.includes('locality') || c.types.includes('administrative_area_level_2')
         )
@@ -184,7 +183,7 @@ function DireccionAutocomplete({ setValue, defaultValue = '', error }) {
   )
 }
 
-// ── Paso 1 — Información general ──────────────────────────────────
+// ─── Paso 1 — Información general ───
 const MODO_CONTACTO_OPTIONS = [
   { value: 'CHAT',     label: 'Solo por chat',     desc: 'Los interesados te escriben desde la app', icon: MessageCircle },
   { value: 'TELEFONO', label: 'Solo por teléfono', desc: 'Comparte tu número directamente',           icon: Phone },
@@ -344,7 +343,7 @@ function Paso1({ register, errors, descLength, control, watch, setValue }) {
   )
 }
 
-// ── Paso 2 — Detalles ─────────────────────────────────────────────
+// ─── Paso 2 — Detalles ───
 const COMODIDADES = [
   { name: 'wifi',               label: 'Wifi',         icon: Wifi },
   { name: 'lavadora',           label: 'Lavadora',     icon: WashingMachine },
@@ -476,7 +475,7 @@ function Paso2({ register, errors, control, watch }) {
   )
 }
 
-// ── Paso 3 — Fotos ────────────────────────────────────────────────
+// ─── Paso 3 — Fotos ───
 function Paso3({ fotosExistentes, onDeleteExistente, fotosNuevas, setFotosNuevas }) {
   const inputRef  = useRef(null)
   const [dragging, setDragging] = useState(false)
@@ -581,7 +580,7 @@ const DIMENSIONES_COMPATIBILIDAD = [
   'tolerancia_fiestas', 'limpieza_orden', 'nivel_ruido',
 ]
 
-// ── Página principal ──────────────────────────────────────────────
+// ─── Página principal ───
 function PublicacionFormPage() {
   const navigate = useNavigate()
   const [step, setStep]                     = useState(0)

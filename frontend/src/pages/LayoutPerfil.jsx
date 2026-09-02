@@ -9,6 +9,7 @@ import {
   Home, UserCheck, Users, Settings, Trash2, AlertCircle, TriangleAlert,
 } from 'lucide-react'
 
+// ─── Constantes ───
 // Palabra que el usuario debe teclear para habilitar el borrado de cuenta.
 const CONFIRMACION_BORRADO = 'ELIMINAR'
 
@@ -19,6 +20,7 @@ const navItems = [
   { icon: Heart,         path: '/perfil/favoritos',  exact: false, title: 'Favoritos' },
 ]
 
+// ─── Menú de cuenta ───
 /**
  * Menú flotante de cuenta. `direccion` decide hacia dónde se abre:
  * 'derecha' en la barra lateral de escritorio (mide 100px, no cabe debajo)
@@ -74,6 +76,7 @@ function MenuCuenta({ direccion, refDisparador, onCerrarSesion, onEliminarCuenta
   )
 }
 
+// ─── Layout ───
 function LayoutPerfil({ onLogout }) {
   const { user, tieneGrupo } = useAuth()
   const navigate = useNavigate()
@@ -303,7 +306,7 @@ function LayoutPerfil({ onLogout }) {
         </div>
       </nav>
 
-      {/* ── Modal eliminar cuenta ── */}
+      {/* ─── Modal eliminar cuenta ─── */}
       {modalEliminar && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm' onClick={cerrarModalEliminar}>
           <div ref={refModalEliminar} role='dialog' aria-modal='true' aria-label='Eliminar cuenta' tabIndex={-1}

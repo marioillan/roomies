@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 
 const STRIPE_BG = 'repeating-linear-gradient(45deg,#f1f5f9,#f1f5f9 6px,#e2e8f0 6px,#e2e8f0 12px)'
 
+// ─── Carrusel de fotos ───
 function CarruselFotos({ fotos, nombre }) {
   const [idx, setIdx] = useState(0)
   const total = fotos.length
@@ -51,6 +52,7 @@ function CarruselFotos({ fotos, nombre }) {
   )
 }
 
+// ─── Tarjeta de rasgo de convivencia ───
 function TraitCard({ cfg, valor }) {
   const frase = labelsUsuario[cfg.campo]?.[valor]
   return (
@@ -66,6 +68,7 @@ function TraitCard({ cfg, valor }) {
   )
 }
 
+// ─── Página ───
 export default function PerfilPublicoUsuario() {
   const { id }   = useParams()
   const navigate = useNavigate()
@@ -131,7 +134,7 @@ export default function PerfilPublicoUsuario() {
           </h1>
         </div>
 
-        {/* ── Hero card ── */}
+        {/* ─── Hero card ─── */}
         <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 md:grid-cols-[18rem_1fr] gap-8 items-start' style={CARD_SHADOW}>
 
           {/* Carrusel de fotos */}
@@ -165,7 +168,7 @@ export default function PerfilPublicoUsuario() {
           </div>
         </div>
 
-        {/* ── Datos + Intereses ── */}
+        {/* ─── Datos + Intereses ─── */}
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
 
           <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-4' style={CARD_SHADOW}>
@@ -220,7 +223,7 @@ export default function PerfilPublicoUsuario() {
           </div>
         </div>
 
-        {/* ── Compatibilidad — grid 3×2 de tarjetas ── */}
+        {/* ─── Compatibilidad — grid 3×2 de tarjetas ─── */}
         <div className='bg-slate-50 border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-6' style={CARD_SHADOW}>
           <div>
             <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500 mb-1.5'>Compatibilidad</p>

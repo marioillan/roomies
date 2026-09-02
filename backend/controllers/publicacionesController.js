@@ -3,7 +3,7 @@ import { prisma } from '../src/config/db.js';
 import { calcularCompatibilidad, calcularScore, fusionarPerfil } from '../src/utils/compatibilidad.js';
 import { TIPOS_VALIDOS, GENEROS_VALIDOS, ORDENES_VALIDOS } from '../validators/publicacionesValidator.js';
 
-// GET /api/publicaciones
+// ─── GET /api/publicaciones ───
 export const buscarPublicaciones = async (req, res, next) => {
   const {
     ciudad, page = 1, precio_min, precio_max, habitaciones_min,
@@ -245,7 +245,7 @@ export const buscarPublicaciones = async (req, res, next) => {
   }
 };
 
-// GET /api/publicaciones/:id
+// ─── GET /api/publicaciones/:id ───
 export const getPublicacion = async (req, res, next) => {
   try {
     const pubs = await prisma.$queryRaw`

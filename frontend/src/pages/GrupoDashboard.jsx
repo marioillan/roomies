@@ -16,7 +16,7 @@ function getSaludo() {
   return 'Buenas noches'
 }
 
-// ── TareasCard ────────────────────────────────────────────────────
+// ─── TareasCard ───
 
 function TareasCard({ grupo, navigate, datosTareas }) {
   const asignaciones = datosTareas?.asignaciones ?? []
@@ -93,7 +93,7 @@ function TareasCard({ grupo, navigate, datosTareas }) {
   )
 }
 
-// ── AgendaCard ────────────────────────────────────────────────────
+// ─── AgendaCard ───
 
 const EVENT_COLORS = ['#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#f97316']
 
@@ -173,7 +173,7 @@ function AgendaCard({ eventos, user, esAdmin, onNuevo, onEditar = null, onElimin
   )
 }
 
-// ── FacturaCard ───────────────────────────────────────────────────
+// ─── FacturaCard ───
 
 const TIPO_LABEL_FC = { AGUA: 'Agua', LUZ: 'Luz', INTERNET: 'Internet', ALQUILER: 'Alquiler', OTRO: 'Otro' }
 
@@ -254,7 +254,7 @@ function FacturaCard({ factura, todasPagadas, cargando, navigate }) {
   )
 }
 
-// ── AvisoCard ─────────────────────────────────────────────────────
+// ─── AvisoCard ───
 
 function AvisoCard({ evento }) {
   const iconoAviso = (
@@ -300,7 +300,7 @@ function AvisoCard({ evento }) {
   )
 }
 
-// ── ListaCompraCard ───────────────────────────────────────────────
+// ─── ListaCompraCard ───
 
 const CATS_COMPRA = [
   { value: 'comida',   label: 'Comida',   color: '#f59e0b' },
@@ -366,7 +366,7 @@ function ListaCompraCard({ productos, navigate }) {
   )
 }
 
-// ── HistoricoCard ─────────────────────────────────────────────────
+// ─── HistoricoCard ───
 
 const MESES_CORTO_HIST = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
@@ -458,7 +458,7 @@ function HistoricoCard({ grupoId, navigate }) {
   )
 }
 
-// ── GrupoDashboard ────────────────────────────────────────────────
+// ─── GrupoDashboard ───
 
 function GrupoDashboard() {
   const { grupo, miembros, user } = useOutletContext()

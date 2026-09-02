@@ -15,13 +15,13 @@ import {
   Label, FieldError, Section, PillGroup, BoolPillGroup, StepBar,
 } from '../components/FormPrimitivos'
 
-// ── Helpers ───────────────────────────────────────────────────────
+// ─── Helpers ───
 const enumReq = (values) =>
   z.string({ required_error: 'Obligatorio' })
     .min(1, 'Selecciona una opción')
     .refine(v => values.includes(v), 'Selecciona una opción')
 
-// ── Schema ────────────────────────────────────────────────────────
+// ─── Schema ───
 const schema = z.object({
   nombre:             z.string().min(3, 'Mínimo 3 caracteres').max(100, 'Máximo 100 caracteres'),
   descripcion:        z.string().min(1, 'La descripción es obligatoria').max(500, 'Máximo 500 caracteres'),
@@ -53,7 +53,7 @@ const DIAS_SEMANA = [
 
 const CONV_FIELDS = ['horario','ambiente','frecuencia_visitas','tolerancia_fiestas','ocupacion','acepta_fumadores','acepta_mascotas','lgbtq_friendly','limpieza_orden','nivel_ruido']
 
-// ── Steps ─────────────────────────────────────────────────────────
+// ─── Steps ───
 const STEPS = ['Datos del grupo', 'Convivencia']
 const STEP_FIELDS = [
   ['nombre', 'descripcion'],
@@ -76,7 +76,7 @@ const STEP_META = [
   },
 ]
 
-// ── Paso 1: Datos del grupo ───────────────────────────────────────
+// ─── Paso 1: Datos del grupo ───
 function Paso1({ register, control, errors, watch, fotoPreview, fotoLoading, fotoError, onFotoClick, todosIntereses, interesesSeleccionados, onToggleInteres, interesesReqError }) {
   const descLength = (watch('descripcion') ?? '').length
   return (
@@ -190,7 +190,7 @@ function Paso1({ register, control, errors, watch, fotoPreview, fotoLoading, fot
   )
 }
 
-// ── Paso 2: Convivencia del grupo ─────────────────────────────────
+// ─── Paso 2: Convivencia del grupo ───
 function Paso2({ control, errors }) {
   return (
     <div className='flex flex-col gap-6'>
@@ -339,7 +339,7 @@ function Paso2({ control, errors }) {
   )
 }
 
-// ── Componente principal ──────────────────────────────────────────
+// ─── Componente principal ───
 function EditarPerfilGrupo() {
   const { user } = useAuth()
   const navigate = useNavigate()

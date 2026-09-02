@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { prisma } from '../src/config/db.js';
 import { calcularCompatibilidad } from '../src/utils/compatibilidad.js';
 
-// ── GET /api/favoritos/publicaciones ─────────────────────────
+// ─── GET /api/favoritos/publicaciones ───
 export const getPublicacionesFavoritas = async (req, res, next) => {
   try {
     const [perfilData, prefData, interesData] = await Promise.all([
@@ -64,7 +64,7 @@ export const getPublicacionesFavoritas = async (req, res, next) => {
   }
 };
 
-// ── GET /api/favoritos ────────────────────────────────────────
+// ─── GET /api/favoritos ───
 export const getFavoritos = async (req, res) => {
   const favoritos = await prisma.favorito.findMany({
     where: { usuario_id: req.userId },
@@ -73,7 +73,7 @@ export const getFavoritos = async (req, res) => {
   res.json({ favoritos: favoritos.map(f => f.publicacion_id) });
 };
 
-// ── POST /api/favoritos/:publicacionId — toggle ───────────────
+// ─── POST /api/favoritos/:publicacionId — toggle ───
 export const toggleFavorito = async (req, res) => {
   const { publicacionId } = req.params;
 

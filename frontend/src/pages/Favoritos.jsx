@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Heart, MapPin, MessageCircle, Phone, Search } from 'lucide-react'
 import { apiFetch } from '../lib/apiFetch'
 
+// ─── Constantes y helpers ───
 const AVATAR_COLORS = ['#ec4899', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b']
 
 function tiempoRelativo(fechaStr) {
@@ -27,6 +28,7 @@ function buildTags(pub) {
   return tags
 }
 
+// ─── Tarjeta de favorito ───
 function FavCard({ pub, onQuitar }) {
   const navigate  = useNavigate()
   const foto      = pub.fotos?.[0]
@@ -205,6 +207,7 @@ function FavCard({ pub, onQuitar }) {
   )
 }
 
+// ─── Ordenación ───
 const ORDEN_CHIPS = [
   { value: 'recientes',   label: 'Todos' },
   { value: 'precio_asc',  label: 'Más baratos' },
@@ -218,6 +221,7 @@ function ordenar(lista, criterio) {
   return copia
 }
 
+// ─── Página ───
 export default function Favoritos() {
   const navigate = useNavigate()
   const [publicaciones, setPublicaciones] = useState([])

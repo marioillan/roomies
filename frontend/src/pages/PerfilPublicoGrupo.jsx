@@ -10,6 +10,7 @@ import LoginModal from '../components/LoginModal.jsx'
 import RegistroModal from '../components/RegistroModal.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
+// ─── Tarjeta de rasgo de convivencia ───
 function TraitCard({ cfg, valor }) {
   const frase = labelsGrupo[cfg.campo]?.[valor]
   return (
@@ -26,6 +27,7 @@ function TraitCard({ cfg, valor }) {
   )
 }
 
+// ─── Página ───
 export default function PerfilPublicoGrupo() {
   const { id }   = useParams()
   const navigate = useNavigate()
@@ -107,7 +109,7 @@ export default function PerfilPublicoGrupo() {
           </h1>
         </div>
 
-        {/* ── Hero card ── */}
+        {/* ─── Hero card ─── */}
         <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 sm:grid-cols-2' style={CARD_SHADOW}>
 
           {/* Columna der: identidad del grupo */}
@@ -197,7 +199,7 @@ export default function PerfilPublicoGrupo() {
           </div>
         </div>
 
-        {/* ── Datos del piso + Intereses ── */}
+        {/* ─── Datos del piso + Intereses ─── */}
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
 
           {/* Datos del piso */}
@@ -280,7 +282,7 @@ export default function PerfilPublicoGrupo() {
 
         </div>
 
-        {/* ── Perfil de convivencia ── */}
+        {/* ─── Perfil de convivencia ─── */}
         <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-6' style={CARD_SHADOW}>
           <div>
             <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500 mb-1.5'>Convivencia</p>

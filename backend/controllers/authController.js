@@ -5,7 +5,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '../src/config/db.js';
 import { registroSchema, loginSchema } from '../validators/authValidator.js';
 
-// ── Google OAuth clients ──────────────────────────────────────
+// ─── Google OAuth clients ───
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
@@ -21,7 +21,7 @@ const calendarClient = new OAuth2Client(
   CALENDAR_REDIRECT_URI
 );
 
-// ── Helpers de token ──────────────────────────────────────────
+// ─── Helpers de token ───
 const ACCESS_TOKEN_TTL = '15m';
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 días en ms
 
@@ -59,7 +59,7 @@ const setAuthCookies = async (res, userId) => {
   res.cookie('refresh_token', nuevoRefreshToken, REFRESH_COOKIE_OPTIONS);
 };
 
-// ── POST /api/auth/registro ───────────────────────────────────
+// ─── POST /api/auth/registro ───
 export const registro = async (req, res, next) => {
   const parsed = registroSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -96,7 +96,7 @@ export const registro = async (req, res, next) => {
   }
 };
 
-// ── POST /api/auth/login ──────────────────────────────────────
+// ─── POST /api/auth/login ───
 export const login = async (req, res, next) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -143,7 +143,7 @@ export const login = async (req, res, next) => {
   }
 };
 
-// ── POST /api/auth/refresh ────────────────────────────────────
+// ─── POST /api/auth/refresh ───
 export const refreshToken = async (req, res, next) => {
   const tokenRecibido = req.cookies?.refresh_token;
   if (!tokenRecibido) {
@@ -156,13 +156,13 @@ export const refreshToken = async (req, res, next) => {
     });
 
     if (!registro || registro.expires_at < new Date()) {
-      // Token no existe o expirado: limpiar cookies
       res.clearCookie('token', ACCESS_COOKIE_OPTIONS);
       res.clearCookie('refresh_token', REFRESH_COOKIE_OPTIONS);
       return res.status(401).json({ message: 'Sesión expirada' });
     }
 
-    // Rotación: borrar el token actual y emitir uno nuevo
+    // El borrado y la creación van en la misma transacción: si se separasen y
+    // fallase la segunda, el usuario perdería la sesión sin poder renovarla.
     const nuevoRefreshToken = randomUUID();
     const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
 
@@ -186,7 +186,7 @@ export const refreshToken = async (req, res, next) => {
   }
 };
 
-// ── GET /api/auth/google ──────────────────────────────────────
+// ─── GET /api/auth/google ───
 export const googleAuth = (req, res) => {
   const url = googleClient.generateAuthUrl({
     access_type: 'offline',
@@ -196,7 +196,7 @@ export const googleAuth = (req, res) => {
   res.redirect(url);
 };
 
-// ── GET /api/auth/google/callback ─────────────────────────────
+// ─── GET /api/auth/google/callback ───
 export const googleCallback = async (req, res) => {
   const { code, error } = req.query;
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -248,7 +248,7 @@ export const googleCallback = async (req, res) => {
   }
 };
 
-// ── GET /api/auth/google/calendar ────────────────────────────
+// ─── GET /api/auth/google/calendar ───
 export const googleCalendar = (req, res) => {
   const token = req.cookies?.token;
   if (!token) return res.status(401).json({ message: 'No autenticado' });
@@ -270,7 +270,7 @@ export const googleCalendar = (req, res) => {
   res.redirect(url);
 };
 
-// ── GET /api/auth/google/calendar/callback ────────────────────
+// ─── GET /api/auth/google/calendar/callback ───
 export const googleCalendarCallback = async (req, res) => {
   const { code, error, state: userId } = req.query;
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -296,7 +296,7 @@ export const googleCalendarCallback = async (req, res) => {
   }
 };
 
-// ── GET /api/auth/me ──────────────────────────────────────────
+// ─── GET /api/auth/me ───
 export const me = async (req, res, next) => {
   try {
     // BOOL_OR requiere SQL raw porque Prisma no soporta agregaciones booleanas directas
@@ -338,7 +338,7 @@ export const me = async (req, res, next) => {
   }
 };
 
-// ── POST /api/auth/logout ─────────────────────────────────────
+// ─── POST /api/auth/logout ───
 export const logout = async (req, res, next) => {
   const tokenRecibido = req.cookies?.refresh_token;
 

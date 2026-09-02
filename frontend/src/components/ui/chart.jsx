@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-// ── ChartContainer ──────────────────────────────────────────────────
+// ─── ChartContainer ───
 // Inyecta las variables CSS de color del config y envuelve en ResponsiveContainer.
 
 export function ChartContainer({ config, children, className, ...props }) {
@@ -19,12 +19,12 @@ export function ChartContainer({ config, children, className, ...props }) {
   )
 }
 
-// ── ChartTooltip ────────────────────────────────────────────────────
+// ─── ChartTooltip ───
 // Re-exporta el Tooltip de recharts para usarlo con ChartTooltipContent.
 
 export const ChartTooltip = Tooltip
 
-// ── ChartTooltipContent ─────────────────────────────────────────────
+// ─── ChartTooltipContent ───
 
 export function ChartTooltipContent({
   active,
@@ -86,7 +86,7 @@ export function ChartTooltipContent({
   )
 }
 
-// ── ChartLegend ─────────────────────────────────────────────────────
+// ─── ChartLegend ───
 
 export const ChartLegend = Legend
 

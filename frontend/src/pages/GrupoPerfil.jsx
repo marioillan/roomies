@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { apiFetch } from '../lib/apiFetch'
 import { useModalAccesible } from '../lib/useModalAccesible.js'
 
-// ── Componente principal ───────────────────────────────────────────
+// ─── Componente principal ───
 
 function TraitCard({ cfg, valor }) {
   const frase = labelsGrupo[cfg.campo]?.[valor]
@@ -207,7 +207,7 @@ function GrupoPerfil() {
   return (
     <div className='max-w-7xl mx-auto flex flex-col gap-5 '>
 
-      {/* ── Header ── */}
+      {/* ─── Header ─── */}
       <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between'>
         <h1 className='font-display text-3xl sm:text-[2.25rem] font-medium text-slate-900 leading-none -tracking-[0.02em]'>Mi grupo</h1>
         {/* Botones de acción — solo escritorio; en móvil se muestran al final de la página */}
@@ -216,7 +216,7 @@ function GrupoPerfil() {
         </div>
       </div>
 
-      {/* ── Modal: confirmar salida ── */}
+      {/* ─── Modal: confirmar salida ─── */}
       {mostrarModalSalir && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'>
           <div ref={refModalSalir} role='dialog' aria-modal='true' aria-label='¿Salir del grupo?' tabIndex={-1}
@@ -257,7 +257,7 @@ function GrupoPerfil() {
         </div>
       )}
 
-      {/* ── Modal: transferir admin antes de salir ── */}
+      {/* ─── Modal: transferir admin antes de salir ─── */}
       {mostrarModalTransferir && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'>
           <div ref={refModalTransferir} role='dialog' aria-modal='true' aria-label='Transferir administración' tabIndex={-1}
@@ -371,7 +371,7 @@ function GrupoPerfil() {
         </div>
       )}
 
-      {/* ── Hero card ── */}
+      {/* ─── Hero card ─── */}
       <div
         className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 sm:grid-cols-2'
         style={CARD_SHADOW}
@@ -472,7 +472,7 @@ function GrupoPerfil() {
         </div>
       </div>
 
-      {/* ── Datos del piso + Intereses ── */}
+      {/* ─── Datos del piso + Intereses ─── */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
 
         {/* Datos del piso */}
@@ -574,7 +574,7 @@ function GrupoPerfil() {
 
       </div>
 
-      {/* ── Perfil de convivencia ── */}
+      {/* ─── Perfil de convivencia ─── */}
       <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-6' style={CARD_SHADOW}>
         <div className='flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between'>
           <div>

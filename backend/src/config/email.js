@@ -22,7 +22,7 @@ export async function sendMail({ to, subject, html }) {
   }
 }
 
-// ── Plantillas ────────────────────────────────────────────────────
+// ─── Plantillas ───
 
 function base(contenido) {
   return `
@@ -70,7 +70,7 @@ function chip(color, texto) {
   return `<span style="display:inline-block;padding:4px 12px;background:${c.bg};color:${c.text};border-radius:20px;font-size:13px;font-weight:600">${texto}</span>`
 }
 
-// ── Emails de solicitudes ─────────────────────────────────────────
+// ─── Emails de solicitudes ───
 
 export function emailSolicitudEnviadaUsuario({ nombreUsuario, nombreGrupo, appUrl }) {
   return {
@@ -126,7 +126,7 @@ export function emailSolicitudRechazada({ nombreUsuario, nombreGrupo }) {
   }
 }
 
-// ── Email de publicación ──────────────────────────────────────────
+// ─── Email de publicación ───
 
 export function emailPublicacionConfirmada({ nombreAdmin, nombreGrupo, tituloAnuncio, appUrl }) {
   return {
@@ -146,7 +146,7 @@ export function emailPublicacionConfirmada({ nombreAdmin, nombreGrupo, tituloAnu
   }
 }
 
-// ── Emails de facturas ────────────────────────────────────────────
+// ─── Emails de facturas ───
 
 export function emailFacturaNueva({ nombreInquilino, tipo, descripcion, importe, fechaVencimiento, appUrl }) {
   return {

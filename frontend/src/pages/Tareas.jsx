@@ -8,7 +8,7 @@ import {
 import { useModalAccesible } from '../lib/useModalAccesible.js'
 import ModalConfirmarAccion from '../components/ModalConfirmarAccion.jsx'
 
-// ── Configuración de zonas ────────────────────────────────────────────
+// ─── Configuración de zonas ───
 
 const ZONA_CONFIG = {
   'Cocina':  { color: '#f59e0b', bg: '#fef3c7', Icon: UtensilsCrossed },
@@ -22,7 +22,7 @@ function getZonaCfg(nombre) {
   return ZONA_CONFIG[nombre] ?? ZONA_DEFAULT
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────
+// ─── Helpers ───
 
 const DIA_LABEL = { LUNES: 'lun', MARTES: 'mar', MIERCOLES: 'mié', JUEVES: 'jue', VIERNES: 'vie', SABADO: 'sáb', DOMINGO: 'dom' }
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -59,7 +59,7 @@ function ProximaSemanaZona({ miembros, zonas, miembroIdx, semanaRotacion }) {
   )
 }
 
-// ── AvatarMiembro ─────────────────────────────────────────────────────
+// ─── AvatarMiembro ───
 
 function AvatarMiembro({ foto, nombre, size = 'sm' }) {
   const cls = size === 'lg'
@@ -73,7 +73,7 @@ function AvatarMiembro({ foto, nombre, size = 'sm' }) {
   )
 }
 
-// ── Modal confirmar eliminación ───────────────────────────────────────
+// ─── Modal confirmar eliminación ───
 
 function ModalConfirmarEliminar({ zona, eliminando, onConfirmar, onCancelar }) {
   const refDialogo = useModalAccesible(onCancelar)
@@ -120,7 +120,7 @@ function ModalConfirmarEliminar({ zona, eliminando, onConfirmar, onCancelar }) {
   )
 }
 
-// ── Modal añadir zona ─────────────────────────────────────────────────
+// ─── Modal añadir zona ───
 
 function ModalAñadirZona({ onClose, onAñadida }) {
   const refDialogo = useModalAccesible(onClose)
@@ -186,7 +186,7 @@ function ModalAñadirZona({ onClose, onAñadida }) {
   )
 }
 
-// ── Vista sin configurar ──────────────────────────────────────────────
+// ─── Vista sin configurar ───
 
 function VistaNoConfigurada({ esAdmin, onSolicitarIniciar, iniciando, errorInit }) {
   return (
@@ -220,7 +220,7 @@ function VistaNoConfigurada({ esAdmin, onSolicitarIniciar, iniciando, errorInit 
   )
 }
 
-// ── Modal confirmar inicio de rotación ─────────────────────────────────
+// ─── Modal confirmar inicio de rotación ───
 
 function ModalConfirmarIniciar({ iniciando, errorInit, onConfirmar, onCancelar }) {
   return (
@@ -237,7 +237,7 @@ function ModalConfirmarIniciar({ iniciando, errorInit, onConfirmar, onCancelar }
   )
 }
 
-// ── Componente principal ──────────────────────────────────────────────
+// ─── Componente principal ───
 
 function Tareas() {
   const { grupo, miembros: miembrosGrupo, user } = useOutletContext()

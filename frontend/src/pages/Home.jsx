@@ -273,7 +273,8 @@ function ComparadorCompatibilidad() {
 
   return (
     <>
-      {/* ── Escritorio: divisoria arrastrable ── */}
+
+      {/* ─── Escritorio: divisoria arrastrable ─── */}
       <div className="hidden lg:block mt-10">
         <div className="mb-3 flex justify-between font-mono text-[0.65rem] font-semibold uppercase tracking-[0.16em]">
           <span className="text-emerald-700">Con perfil de convivencia</span>
@@ -311,7 +312,7 @@ function ComparadorCompatibilidad() {
         </div>
       </div>
 
-      {/* ── Móvil: la misma tarjeta, cambiada con un botón fijo ── */}
+      {/* ─── Móvil: la misma tarjeta, cambiada con un botón fijo ─── */}
       <div className="lg:hidden mt-8">
         <p aria-live="polite"
           className="mb-3 flex items-center gap-2 font-mono text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -553,7 +554,7 @@ export default function Home() {
 
         <div className="relative max-w-[78rem] mx-auto px-6 sm:px-10 pt-24 pb-20 sm:pt-32 sm:pb-26 flex flex-col items-center">
 
-          {/* ── Tarjetas flotantes a los lados del titular (escritorio) ── */}
+          {/* ─── Tarjetas flotantes a los lados del titular (escritorio) ─── */}
           <div className="hidden xl:block" aria-hidden="true">
             {TARJETAS_HERO.map(({ icon: Icono, titulo, detalle, acento, posicion, rotacion, retardo, duracion }) => (
               <div
@@ -578,7 +579,7 @@ export default function Home() {
             ))}
           </div>
 
-          {/* ── Columna central de texto ── */}
+          {/* ─── Columna central de texto ─── */}
           <div className="relative z-[2] w-full max-w-2xl flex flex-col items-center text-center">
             <p
               className="inline-flex items-center gap-2.5 mb-7 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-4 py-1.5 font-mono text-[0.7rem] font-medium uppercase tracking-[0.14em] text-emerald-200"
@@ -669,9 +670,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─────────────────────────────────────────── */}
-      {/* CÓMO FUNCIONA                                */}
-      {/* ─────────────────────────────────────────── */}
+      {/* ─── CÓMO FUNCIONA ─── */}
       <section aria-labelledby="como-funciona-heading" className="relative bg-white pt-20 sm:pt-28 px-6 sm:px-10">
         <div className="max-w-5xl mx-auto">
 
@@ -718,9 +717,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─────────────────────────────────────────── */}
-      {/* Y DESPUÉS — LA CONVIVENCIA                   */}
-      {/* ─────────────────────────────────────────── */}
+      {/* ─── Y DESPUÉS — LA CONVIVENCIA ─── */}
       <section aria-labelledby="convivencia-heading" className="bg-white pt-10 pb-20 sm:pb-28 px-6 sm:px-10">
         <Reveal className="relative max-w-5xl mx-auto bg-slate-900 rounded-3xl p-8 sm:p-14 overflow-hidden">
           <div aria-hidden="true"
@@ -761,9 +758,7 @@ export default function Home() {
         </Reveal>
       </section>
 
-      {/* ─────────────────────────────────────────── */}
-      {/* COMPATIBILIDAD                               */}
-      {/* ─────────────────────────────────────────── */}
+      {/* ─── COMPATIBILIDAD ─── */}
       <section aria-labelledby="compatibilidad-heading" className="bg-white pb-20 sm:pb-28 px-6 sm:px-10">
         <div className="max-w-5xl mx-auto">
 
@@ -795,9 +790,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─────────────────────────────────────────── */}
-      {/* FUNCIONALIDADES                              */}
-      {/* ─────────────────────────────────────────── */}
+      {/* ─── FUNCIONALIDADES ─── */}
       <section aria-labelledby="features-heading" className="bg-slate-50 py-20 sm:py-28 px-6 sm:px-10">
         <div className="max-w-5xl mx-auto">
 

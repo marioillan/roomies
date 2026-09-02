@@ -8,6 +8,7 @@ import {
   LayoutDashboard, Megaphone, ClipboardList, Receipt, ShoppingCart, Users, CalendarDays,
 } from 'lucide-react'
 
+// ─── Pestañas de navegación ───
 const TABS = [
   { path: '/grupo',             icon: LayoutDashboard, exact: true, title: 'Inicio'},
   { path: '/grupo/calendario',  icon: CalendarDays,                 title: 'Calendario'},
@@ -16,6 +17,7 @@ const TABS = [
   { path: '/grupo/compra',      icon: ShoppingCart,                 title: 'Compra'},
 ]
 
+// ─── Layout ───
 function LayoutGrupo() {
   const { user } = useAuth()
   const navigate = useNavigate()

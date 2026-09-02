@@ -17,6 +17,7 @@ import {
 
 const APP_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 
+// ─── Subida de imágenes a Cloudinary ───
 export const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -26,7 +27,7 @@ export const upload = multer({
   },
 });
 
-// ── Helpers internos ──────────────────────────────────────────
+// ─── Helpers internos ───
 
 function generarCodigo() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -95,7 +96,7 @@ async function crearEventoEnCalendar(tokenStr, eventoData, usuarioId) {
   return gcalData.id;
 }
 
-// ── POST /api/grupos/unirse ───────────────────────────────────
+// ─── POST /api/grupos/unirse ───
 export const unirseGrupo = async (req, res, next) => {
   const { codigo_acceso } = req.body;
   if (!codigo_acceso || typeof codigo_acceso !== 'string') {
@@ -159,7 +160,7 @@ export const unirseGrupo = async (req, res, next) => {
   }
 };
 
-// ── POST /api/grupos/crear ────────────────────────────────────
+// ─── POST /api/grupos/crear ───
 export const crearGrupo = async (req, res, next) => {
   const parsed = crearGrupoSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -192,7 +193,7 @@ export const crearGrupo = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/grupos/editar ────────────────────────────────────
+// ─── PUT /api/grupos/editar ───
 export const editarGrupo = async (req, res, next) => {
   const parsed = editarGrupoSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -214,7 +215,7 @@ export const editarGrupo = async (req, res, next) => {
   }
 };
 
-// ── GET /api/grupos/mis-grupos ────────────────────────────────
+// ─── GET /api/grupos/mis-grupos ───
 export const getMisGrupos = async (req, res, next) => {
   try {
     const rows = await prisma.$queryRaw`
@@ -235,7 +236,7 @@ export const getMisGrupos = async (req, res, next) => {
   }
 };
 
-// ── GET /api/grupos/mi-grupo ──────────────────────────────────
+// ─── GET /api/grupos/mi-grupo ───
 export const getMiGrupo = async (req, res, next) => {
   try {
     let grupoId = null;
@@ -289,7 +290,7 @@ export const getMiGrupo = async (req, res, next) => {
   }
 };
 
-// ── GET /api/grupos/convivencia ───────────────────────────────
+// ─── GET /api/grupos/convivencia ───
 export const getConvivencia = async (req, res, next) => {
   try {
     const m = await getMembership(req.userId);
@@ -301,7 +302,7 @@ export const getConvivencia = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/grupos/convivencia ───────────────────────────────
+// ─── PUT /api/grupos/convivencia ───
 export const editarConvivencia = async (req, res, next) => {
   const grupoId = req.grupoId;
   const parsed = grupoConvivenciaSchema.safeParse(req.body);
@@ -331,7 +332,7 @@ export const editarConvivencia = async (req, res, next) => {
   }
 };
 
-// ── GET /api/grupos/publicacion ───────────────────────────────
+// ─── GET /api/grupos/publicacion ───
 export const getPublicacion = async (req, res, next) => {
   try {
     const m = await getMembership(req.userId);
@@ -353,7 +354,7 @@ export const getPublicacion = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/grupos/publicacion ───────────────────────────────
+// ─── PUT /api/grupos/publicacion ───
 export const editarPublicacion = async (req, res, next) => {
   const grupoId = req.grupoId;
   const parsed = publicacionSchema.safeParse(req.body);
@@ -418,7 +419,7 @@ export const editarPublicacion = async (req, res, next) => {
   }
 };
 
-// ── PATCH /api/grupos/publicacion/visible ────────────────────
+// ─── PATCH /api/grupos/publicacion/visible ───
 export const actualizarVisibilidad = async (req, res, next) => {
   try {
     const { visible } = req.body;
@@ -437,7 +438,7 @@ export const actualizarVisibilidad = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/grupos/publicacion ───────────────────────────
+// ─── DELETE /api/grupos/publicacion ───
 export const eliminarPublicacion = async (req, res, next) => {
   try {
     const pub = await prisma.publicacion.findFirst({ where: { grupo_id: req.grupoId } });
@@ -450,7 +451,7 @@ export const eliminarPublicacion = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/grupos/publicacion/fotos ─────────────────────────
+// ─── PUT /api/grupos/publicacion/fotos ───
 export const subirFotosPublicacion = async (req, res, next) => {
   const grupoId = req.grupoId;
   if (!req.files?.length) return res.status(400).json({ message: 'No se han enviado fotos' });
@@ -492,7 +493,7 @@ export const subirFotosPublicacion = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/grupos/publicacion/fotos/:fotoId ──────────────
+// ─── DELETE /api/grupos/publicacion/fotos/:fotoId ───
 export const eliminarFotoPublicacion = async (req, res, next) => {
   const grupoId = req.grupoId;
   try {
@@ -512,7 +513,7 @@ export const eliminarFotoPublicacion = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/grupos/foto ──────────────────────────────────────
+// ─── PUT /api/grupos/foto ───
 export const subirFotoGrupo = async (req, res, next) => {
   const grupoId = req.grupoId;
   try {
@@ -537,7 +538,7 @@ export const subirFotoGrupo = async (req, res, next) => {
   }
 };
 
-// ── GET /api/grupos/eventos ───────────────────────────────────
+// ─── GET /api/grupos/eventos ───
 export const getEventos = async (req, res, next) => {
   try {
     const m = await getMembership(req.userId);
@@ -564,7 +565,7 @@ export const getEventos = async (req, res, next) => {
   }
 };
 
-// ── POST /api/grupos/eventos ──────────────────────────────────
+// ─── POST /api/grupos/eventos ───
 export const crearEvento = async (req, res, next) => {
   const parsed = eventoSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -585,7 +586,8 @@ export const crearEvento = async (req, res, next) => {
       select: { id: true, titulo: true, descripcion: true, fecha_inicio: true, fecha_fin: true, created_at: true },
     });
 
-    // Sincronizar con todos los miembros del grupo que tengan Google Calendar conectado
+    // El evento ya está guardado: la sincronización con Calendar es best-effort
+    // (allSettled + try/catch) para que un fallo de la API de Google no lo anule.
     let googleEventId = null;
     try {
       const miembros = await prisma.miembroGrupo.findMany({
@@ -620,7 +622,7 @@ export const crearEvento = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/grupos/eventos/:id ───────────────────────────────
+// ─── PUT /api/grupos/eventos/:id ───
 export const editarEvento = async (req, res, next) => {
   const eventoExistente = await prisma.evento.findFirst({
     where: { id: req.params.id, grupo_id: req.grupoId },
@@ -653,7 +655,7 @@ export const editarEvento = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/grupos/eventos/:id ────────────────────────────
+// ─── DELETE /api/grupos/eventos/:id ───
 export const eliminarEvento = async (req, res, next) => {
   const eventoExistente = await prisma.evento.findFirst({
     where: { id: req.params.id, grupo_id: req.grupoId },
@@ -672,7 +674,7 @@ export const eliminarEvento = async (req, res, next) => {
   }
 };
 
-// ── GET /api/grupos/intereses ─────────────────────────────────
+// ─── GET /api/grupos/intereses ───
 export const getIntereses = async (req, res, next) => {
   try {
     const todos = await prisma.interes.findMany({
@@ -689,7 +691,7 @@ export const getIntereses = async (req, res, next) => {
   }
 };
 
-// ── GET /api/grupos/mis-intereses ─────────────────────────────
+// ─── GET /api/grupos/mis-intereses ───
 export const getMisIntereses = async (req, res, next) => {
   try {
     const m = await getMembership(req.userId);
@@ -706,7 +708,7 @@ export const getMisIntereses = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/grupos/intereses ─────────────────────────────────
+// ─── PUT /api/grupos/intereses ───
 export const editarIntereses = async (req, res, next) => {
   const grupoId = req.grupoId;
   const parsed = interesesSchema.safeParse(req.body);
@@ -728,7 +730,7 @@ export const editarIntereses = async (req, res, next) => {
   }
 };
 
-// ── POST /api/grupos/transferir-admin ────────────────────────
+// ─── POST /api/grupos/transferir-admin ───
 export const transferirAdmin = async (req, res, next) => {
   const grupoId = req.grupoId;
   const parsed = transferirAdminSchema.safeParse(req.body);
@@ -762,7 +764,7 @@ export const transferirAdmin = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/grupos/salir ──────────────────────────────────
+// ─── DELETE /api/grupos/salir ───
 export const salirGrupo = async (req, res, next) => {
   try {
     const grupoId = req.grupoId;
@@ -788,7 +790,7 @@ export const salirGrupo = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/grupos/miembros/:usuarioId ────────────────────
+// ─── DELETE /api/grupos/miembros/:usuarioId ───
 export const eliminarMiembro = async (req, res, next) => {
   const grupoId = req.grupoId;
   const { usuarioId } = req.params;
@@ -814,7 +816,7 @@ export const eliminarMiembro = async (req, res, next) => {
   }
 };
 
-// ── GET /api/grupos/solicitudes-union ─────────────────────────
+// ─── GET /api/grupos/solicitudes-union ───
 export const getSolicitudesUnion = async (req, res, next) => {
   try {
     const pcg = await prisma.perfilConvivenciaGrupo.findFirst({ where: { grupo_id: req.grupoId } });
@@ -855,7 +857,7 @@ export const getSolicitudesUnion = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/grupos/solicitudes-union/:solicitudId/aceptar ────
+// ─── PUT /api/grupos/solicitudes-union/:solicitudId/aceptar ───
 export const aceptarSolicitudUnion = async (req, res, next) => {
   try {
     const solicitud = await prisma.solicitudUnion.findFirst({
@@ -885,7 +887,7 @@ export const aceptarSolicitudUnion = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/grupos/solicitudes-union/:solicitudId/rechazar ───
+// ─── PUT /api/grupos/solicitudes-union/:solicitudId/rechazar ───
 export const rechazarSolicitudUnion = async (req, res, next) => {
   try {
     const solicitud = await prisma.solicitudUnion.findFirst({

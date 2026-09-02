@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { apiFetch } from '../lib/apiFetch'
 import { UserPlus, UserCheck, UserX, AlertCircle } from 'lucide-react'
 
-// ── Avatar ───────────────────────────────────────────────────────────
+// ─── Avatar ───
 
 function AvatarUsuario({ foto, nombre }) {
   if (foto) return <img src={foto} alt={nombre} className='w-14 h-14 rounded-full object-cover shrink-0' />
@@ -14,7 +14,7 @@ function AvatarUsuario({ foto, nombre }) {
   )
 }
 
-// ── Card solicitud ───────────────────────────────────────────────────
+// ─── Card solicitud ───
 
 // Aquí no se muestra la compatibilidad a propósito: para cuando llega una
 // solicitud de unión, el administrador ya evaluó la afinidad en la solicitud de
@@ -61,7 +61,7 @@ function CardSolicitud({ solicitud, procesando, onAceptar, onRechazar }) {
   )
 }
 
-// ── Página ────────────────────────────────────────────────────────────
+// ─── Página ───
 
 function SolicitudesUnion() {
   const { miembros, user } = useOutletContext()

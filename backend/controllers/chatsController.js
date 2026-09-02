@@ -12,7 +12,7 @@ import { ACCIONES_SOLICITUD_VALIDAS } from '../validators/chatsValidator.js';
 
 const APP_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 
-// ── POST /api/chats/solicitar/:publicacionId ──────────────────
+// ─── POST /api/chats/solicitar/:publicacionId ───
 export const solicitarContacto = async (req, res) => {
   const { publicacionId } = req.params;
 
@@ -45,7 +45,8 @@ export const solicitarContacto = async (req, res) => {
     });
   }
 
-  // Si estaba rechazada, resetear a PENDIENTE; si no existe, crear
+  // La tabla tiene UNIQUE (usuario_id, grupo_id): una solicitud rechazada se
+  // reabre actualizando la fila, porque insertar otra violaría la restricción.
   let solicitudId;
   if (solicitudExistente?.estado === 'RECHAZADA') {
     await prisma.solicitudContacto.update({
@@ -85,7 +86,7 @@ export const solicitarContacto = async (req, res) => {
   res.json({ solicitudId });
 };
 
-// ── GET /api/chats/solicitudes ────────────────────────────────
+// ─── GET /api/chats/solicitudes ───
 export const getSolicitudes = async (req, res, next) => {
   try {
     // Las 7 dimensiones del algoritmo: si alguna no se selecciona,
@@ -147,7 +148,7 @@ export const getSolicitudes = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/chats/solicitudes/:solicitudId ───────────────────
+// ─── PUT /api/chats/solicitudes/:solicitudId ───
 export const gestionarSolicitud = async (req, res) => {
   const { accion } = req.body;
   if (!ACCIONES_SOLICITUD_VALIDAS.includes(accion)) {
@@ -195,7 +196,7 @@ export const gestionarSolicitud = async (req, res) => {
   res.json({ ok: true, chatId });
 };
 
-// ── GET /api/chats/mis-solicitudes ───────────────────────────
+// ─── GET /api/chats/mis-solicitudes ───
 export const getMisSolicitudes = async (req, res, next) => {
   try {
     const data = await prisma.solicitudContacto.findMany({
@@ -219,7 +220,7 @@ export const getMisSolicitudes = async (req, res, next) => {
   }
 };
 
-// ── GET /api/chats/como-solicitante ──────────────────────────
+// ─── GET /api/chats/como-solicitante ───
 export const getChatsComoSolicitante = async (req, res, next) => {
   try {
     const chats = await prisma.$queryRaw`
@@ -242,7 +243,7 @@ export const getChatsComoSolicitante = async (req, res, next) => {
   }
 };
 
-// ── GET /api/chats/como-admin ─────────────────────────────────
+// ─── GET /api/chats/como-admin ───
 export const getChatsComoAdmin = async (req, res, next) => {
   try {
     const membresia = await prisma.miembroGrupo.findFirst({
@@ -276,7 +277,7 @@ export const getChatsComoAdmin = async (req, res, next) => {
   }
 };
 
-// ── GET /api/chats/:chatId/mensajes ──────────────────────────
+// ─── GET /api/chats/:chatId/mensajes ───
 export const getMensajes = async (req, res, next) => {
   try {
     const acceso = await prisma.chat.findFirst({
@@ -317,7 +318,7 @@ export const getMensajes = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/chats/:chatId ─────────────────────────────────
+// ─── DELETE /api/chats/:chatId ───
 export const cerrarChat = async (req, res, next) => {
   try {
     const acceso = await prisma.chat.findFirst({
@@ -342,7 +343,7 @@ export const cerrarChat = async (req, res, next) => {
   }
 };
 
-// ── POST /api/chats/:chatId/mensajes ─────────────────────────
+// ─── POST /api/chats/:chatId/mensajes ───
 export const enviarMensaje = async (req, res, next) => {
   try {
     const { contenido } = req.body;

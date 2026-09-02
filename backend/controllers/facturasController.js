@@ -7,6 +7,7 @@ import { sendMail, emailFacturaNueva } from '../src/config/email.js';
 
 const APP_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 
+// ─── Subida de documentos a Cloudinary ───
 export const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -27,7 +28,7 @@ async function subirDocumento(buffer) {
   });
 }
 
-// ── GET /api/facturas/historial ───────────────────────────────
+// ─── GET /api/facturas/historial ───
 export const getHistorial = async (req, res, next) => {
   try {
     const historial = await prisma.$queryRaw`
@@ -48,7 +49,7 @@ export const getHistorial = async (req, res, next) => {
   }
 };
 
-// ── GET /api/facturas ─────────────────────────────────────────
+// ─── GET /api/facturas ───
 export const getFacturas = async (req, res, next) => {
   try {
     let facturas;
@@ -97,7 +98,7 @@ export const getFacturas = async (req, res, next) => {
   }
 };
 
-// ── POST /api/facturas ────────────────────────────────────────
+// ─── POST /api/facturas ───
 export const crearFactura = async (req, res, next) => {
   const parsed = facturaSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -186,7 +187,7 @@ export const crearFactura = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/facturas/:id ─────────────────────────────────────
+// ─── PUT /api/facturas/:id ───
 export const editarFactura = async (req, res, next) => {
   const parsed = facturaSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -276,7 +277,7 @@ export const editarFactura = async (req, res, next) => {
   }
 };
 
-// ── PATCH /api/facturas/:id/pagada ────────────────────────────
+// ─── PATCH /api/facturas/:id/pagada ───
 export const togglePagada = async (req, res, next) => {
   try {
     const pagosActuales = await prisma.pagoFactura.findMany({
@@ -304,7 +305,7 @@ export const togglePagada = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/facturas/:id ──────────────────────────────────
+// ─── DELETE /api/facturas/:id ───
 export const eliminarFactura = async (req, res, next) => {
   try {
     const existente = await prisma.factura.findFirst({
@@ -328,7 +329,7 @@ export const eliminarFactura = async (req, res, next) => {
   }
 };
 
-// ── PATCH /api/facturas/:id/pagos/:usuarioId ──────────────────
+// ─── PATCH /api/facturas/:id/pagos/:usuarioId ───
 export const togglePagoUsuario = async (req, res, next) => {
   try {
     const existente = await prisma.pagoFactura.findFirst({

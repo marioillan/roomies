@@ -9,7 +9,7 @@ import { CheckCircle, MinusCircle, XCircle } from 'lucide-react'
  * que muestran el resultado del algoritmo de matching se ven exactamente igual.
  */
 
-// ── Donut del porcentaje ──────────────────────────────────────────────
+// ─── Donut del porcentaje ───
 
 export function DonutCompatibilidad({ score }) {
   const r    = 28
@@ -39,7 +39,7 @@ const taglineCompatibilidad = (score, sujeto = 'el grupo') =>
   score >= 50 ? `Afinidad moderada con ${sujeto}`  :
                 `Baja afinidad con ${sujeto}`
 
-// ── Desglose por dimensiones ──────────────────────────────────────────
+// ─── Desglose por dimensiones ───
 
 const DIMENSIONES = [
   { key: 'horario',            label: 'Horario'   },
@@ -88,7 +88,7 @@ export function DesgloseCompatibilidad({ desglose }) {
   )
 }
 
-// ── Tarjeta completa: donut + frase + desglose opcional ───────────────
+// ─── Tarjeta completa: donut + frase + desglose opcional ───
 
 export function TarjetaCompatibilidad({ score, desglose, sujeto, className = '' }) {
   return (
@@ -107,7 +107,7 @@ export function TarjetaCompatibilidad({ score, desglose, sujeto, className = '' 
   )
 }
 
-// ── Intereses en común ────────────────────────────────────────────────
+// ─── Intereses en común ───
 
 export function InteresesComunes({ intereses, className = '' }) {
   if (!intereses?.length) return null

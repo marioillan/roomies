@@ -14,7 +14,7 @@ export const requireAuth = (req, res, next) => {
   }
 };
 
-// ── Helper compartido ─────────────────────────────────────────
+// ─── Helper compartido ───
 
 async function getMiembroActivo(req) {
   const grupoId = req.query.grupo_id || req.body?.grupo_id || null;
@@ -27,7 +27,7 @@ async function getMiembroActivo(req) {
   });
 }
 
-// ── Middlewares de autorización ───────────────────────────────
+// ─── Middlewares de autorización ───
 
 export const requireMiembro = async (req, res, next) => {
   try {

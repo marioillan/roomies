@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { prisma } from '../src/config/db.js';
 import { zonaSchema } from '../validators/tareasValidator.js';
 
+// ─── Constantes y helpers ───
 const ZONAS_PREDEFINIDAS = ['Cocina', 'Baño', 'Salón', 'Pasillo'];
 
 function getLunesActual() {
@@ -14,7 +15,7 @@ function getLunesActual() {
   return lunes;
 }
 
-// ── GET /api/tareas ───────────────────────────────────────────
+// ─── GET /api/tareas ───
 export const getTareas = async (req, res, next) => {
   try {
     const grupo_id = req.grupoId;
@@ -108,7 +109,7 @@ export const getTareas = async (req, res, next) => {
   }
 };
 
-// ── POST /api/tareas/iniciar ──────────────────────────────────
+// ─── POST /api/tareas/iniciar ───
 export const iniciarTareas = async (req, res, next) => {
   try {
     const grupo_id = req.grupoId;
@@ -137,7 +138,7 @@ export const iniciarTareas = async (req, res, next) => {
   }
 };
 
-// ── POST /api/tareas/zonas ────────────────────────────────────
+// ─── POST /api/tareas/zonas ───
 export const anadirZona = async (req, res, next) => {
   const parsed = zonaSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -153,7 +154,7 @@ export const anadirZona = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/tareas/zonas/:id ──────────────────────────────
+// ─── DELETE /api/tareas/zonas/:id ───
 export const eliminarZona = async (req, res, next) => {
   try {
     const deleted = await prisma.tarea.deleteMany({
@@ -166,7 +167,7 @@ export const eliminarZona = async (req, res, next) => {
   }
 };
 
-// ── PATCH /api/tareas/turnos/:id/estado ───────────────────────
+// ─── PATCH /api/tareas/turnos/:id/estado ───
 export const toggleEstadoTurno = async (req, res, next) => {
   try {
     const existente = await prisma.asignacionTarea.findFirst({

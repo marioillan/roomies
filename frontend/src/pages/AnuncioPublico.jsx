@@ -16,7 +16,7 @@ import {
 import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 import HeaderPublico from '../components/HeaderPublico.jsx'
 
-// ── Helpers ───────────────────────────────────────────────────────────
+// ─── Helpers ───
 
 const COMODIDAD_CONFIG = {
   wifi:               { Icon: Wifi,          label: 'Wifi fibra'          },
@@ -39,7 +39,7 @@ function AvatarMiembro({ foto, nombre, size = 8 }) {
   )
 }
 
-// ── Galería ───────────────────────────────────────────────────────────
+// ─── Galería ───
 
 function Galeria({ fotos, publicacionId, user, esFavorito, onToggleFavorito }) {
   const [activa, setActiva] = useState(0)
@@ -126,7 +126,7 @@ function Galeria({ fotos, publicacionId, user, esFavorito, onToggleFavorito }) {
   )
 }
 
-// ── Card contacto (columna derecha) ───────────────────────────────────
+// ─── Card contacto (columna derecha) ───
 
 function CardContacto({ pub, miembros, user, navigate, onSolicitar, estadoSolicitud, perteneceAlGrupo }) {
   return (
@@ -196,7 +196,7 @@ function CardContacto({ pub, miembros, user, navigate, onSolicitar, estadoSolici
   )
 }
 
-// ── Card compañeros ───────────────────────────────────────────────────
+// ─── Card compañeros ───
 
 function CardCompaneros({ miembros, compatibilidad, grupoTieneConvivencia, user, navigate, publicacionId }) {
   const visibles  = miembros.slice(0, 5)
@@ -275,7 +275,7 @@ function CardCompaneros({ miembros, compatibilidad, grupoTieneConvivencia, user,
   )
 }
 
-// ── Chip ──────────────────────────────────────────────────────────────
+// ─── Chip ───
 
 function Chip({ icon: Icon, children, variant = 'default' }) {
   const cls = variant === 'price'
@@ -289,7 +289,7 @@ function Chip({ icon: Icon, children, variant = 'default' }) {
   )
 }
 
-// ── Sección ───────────────────────────────────────────────────────────
+// ─── Sección ───
 
 function Seccion({ title, children }) {
   return (
@@ -302,9 +302,9 @@ function Seccion({ title, children }) {
   )
 }
 
-// ── Input ciudad con Google Places ────────────────────────────────────
+// ─── Input ciudad con Google Places ───
 
-// ── AnuncioPublico ────────────────────────────────────────────────────
+// ─── AnuncioPublico ───
 
 export default function AnuncioPublico() {
   const { user, recargarUsuario } = useAuth()
@@ -367,7 +367,7 @@ export default function AnuncioPublico() {
     } catch { setEstadoSolicitud('error') }
   }
 
-  // ── Loading ───────────────────────────────────────────────────────
+  // ─── Loading ───
   if (cargando) {
     return (
       <div className='min-h-screen bg-slate-100 flex items-center justify-center'>
@@ -428,7 +428,7 @@ export default function AnuncioPublico() {
         {/* Grid principal — 1 col mobile, 2 col desktop */}
         <div className='grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-6' style={{ alignItems: 'start' }}>
 
-          {/* ── Columna izquierda ─────────────────────────────── */}
+          {/* ─── Columna izquierda ─── */}
           <div className='flex flex-col gap-5'>
 
             {/* Galería */}
@@ -527,7 +527,7 @@ export default function AnuncioPublico() {
 
           </div>
 
-          {/* ── Columna derecha (sticky) ──────────────────────── */}
+          {/* ─── Columna derecha (sticky) ─── */}
           <div className='flex flex-col gap-4 sticky top-24'>
 
             {/* Botones guardar + compartir */}

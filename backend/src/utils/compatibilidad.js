@@ -3,6 +3,9 @@ const DIMENSIONES_FUSIONABLES = [
   'tolerancia_fiestas', 'limpieza_orden', 'nivel_ruido',
 ]
 
+// La fusión es dimensión a dimensión y no una sustitución del objeto entero:
+// lo que el usuario busca en un compañero manda, pero solo en los campos que
+// haya rellenado; en el resto sigue valiendo su propio perfil de convivencia.
 export function fusionarPerfil(perfil, preferencias) {
   if (!perfil)       return preferencias ?? null
   if (!preferencias) return perfil
@@ -26,6 +29,8 @@ const ORDEN = {
 
 function matchOrdinal(valorUsuario, valorGrupo, campo) {
   const orden = ORDEN[campo]
+  // Sin dato en alguno de los dos lados se devuelve 0.5 (neutro) en vez de 0:
+  // un campo sin rellenar no debe penalizar como si fuese una incompatibilidad.
   if (!valorUsuario || !valorGrupo || !orden) return 0.5
   const diff = Math.abs(orden[valorUsuario] - orden[valorGrupo])
   return diff === 0 ? 1.0 : diff === 1 ? 0.5 : 0.0

@@ -37,7 +37,7 @@ function Avatar({ foto, nombre, size = 'md' }) {
       </div>
 }
 
-// ── Modal confirmar cierre de chat ────────────────────────────────
+// ─── Modal confirmar cierre de chat ───
 
 function ModalCerrarChat({ nombreOtro, cerrando, onConfirmar, onCancelar }) {
   const refDialogo = useModalAccesible(onCancelar)
@@ -80,7 +80,7 @@ function ModalCerrarChat({ nombreOtro, cerrando, onConfirmar, onCancelar }) {
   )
 }
 
-// ── Conversación ──────────────────────────────────────────────────
+// ─── Conversación ───
 
 function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtro, esAdmin, onCerrar, onVolver }) {
   const navigate = useNavigate()
@@ -250,7 +250,7 @@ function Conversacion({ chatId, user, nombreOtro, fotoOtro, subtituloOtro, idOtr
   )
 }
 
-// ── Detalle solicitud (admin) ─────────────────────────────────────
+// ─── Detalle solicitud (admin) ───
 
 function DetalleSolicitud({ solicitud, onAccion }) {
   const [cargando, setCargando] = useState(null)
@@ -326,7 +326,7 @@ function DetalleSolicitud({ solicitud, onAccion }) {
   )
 }
 
-// ── Fila de conversación (lista izquierda) ────────────────────────
+// ─── Fila de conversación (lista izquierda) ───
 
 function ConvRow({ foto, nombre, subtitulo, ultimoMensaje, ultimoEn, activa, onClick, isPendiente, compatibilidad }) {
   const contenido = (
@@ -383,7 +383,7 @@ function ConvRow({ foto, nombre, subtitulo, ultimoMensaje, ultimoEn, activa, onC
   )
 }
 
-// ── Página Chat ───────────────────────────────────────────────────
+// ─── Página Chat ───
 
 export default function Chat({ modo }) {
   const { user } = useAuth()

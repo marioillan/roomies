@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { prisma } from '../src/config/db.js';
 import { anadirSchema, editarSchema } from '../validators/compraValidator.js';
 
-// ── GET /api/compra ───────────────────────────────────────────
+// ─── GET /api/compra ───
 export const getProductos = async (req, res, next) => {
   try {
     const data = await prisma.producto.findMany({
@@ -28,7 +28,7 @@ export const getProductos = async (req, res, next) => {
   }
 };
 
-// ── POST /api/compra ──────────────────────────────────────────
+// ─── POST /api/compra ───
 export const anadirProducto = async (req, res, next) => {
   const parsed = anadirSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -55,7 +55,7 @@ export const anadirProducto = async (req, res, next) => {
   }
 };
 
-// ── PATCH /api/compra/:id/comprado ────────────────────────────
+// ─── PATCH /api/compra/:id/comprado ───
 export const toggleComprado = async (req, res, next) => {
   try {
     const existente = await prisma.producto.findFirst({
@@ -88,7 +88,7 @@ export const toggleComprado = async (req, res, next) => {
   }
 };
 
-// ── PUT /api/compra/:id ───────────────────────────────────────
+// ─── PUT /api/compra/:id ───
 export const editarProducto = async (req, res, next) => {
   const parsed = editarSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
@@ -127,7 +127,7 @@ export const editarProducto = async (req, res, next) => {
   }
 };
 
-// ── DELETE /api/compra/:id ────────────────────────────────────
+// ─── DELETE /api/compra/:id ───
 export const eliminarProducto = async (req, res, next) => {
   try {
     const deleted = await prisma.producto.deleteMany({
