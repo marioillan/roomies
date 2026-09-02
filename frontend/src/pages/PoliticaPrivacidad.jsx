@@ -4,18 +4,6 @@ import PaginaLegal from '../components/PaginaLegal.jsx'
 // que completarlos antes de publicar el sitio.
 const SECCIONES = [
   {
-    titulo: 'Responsable del tratamiento',
-    parrafos: [
-      'El responsable del tratamiento de los datos personales recogidos a través de esta plataforma es:',
-    ],
-    lista: [
-      'Responsable: [nombre y apellidos del titular]',
-      'NIF: [NIF del titular]',
-      'Domicilio: [dirección postal]',
-      'Correo electrónico: housie.app@gmail.com',
-    ],
-  },
-  {
     titulo: 'Datos que tratamos',
     parrafos: [
       'Housie trata únicamente los datos necesarios para prestar el servicio. Según el uso que hagas de la plataforma, podemos tratar:',
