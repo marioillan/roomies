@@ -362,11 +362,15 @@ function FilterPanelContent({
         <FilterSection title='Tipo de vivienda'>
           <div className='space-y-2.5'>
             {TIPOS_PISO.map(({ value, label }) => {
-              const active = tipoPiso === value
+              const active = tipoPiso.has(value)
               return (
                 <button key={value} type='button'
                   aria-pressed={active}
-                  onClick={() => setTipoPiso(active ? '' : value)}
+                  onClick={() => setTipoPiso(prev => {
+                    const s = new Set(prev)
+                    s.has(value) ? s.delete(value) : s.add(value)
+                    return s
+                  })}
                   className='cursor-pointer! w-full flex items-center gap-3 group'>
                   <span className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition ${
                     active ? 'bg-white border-white' : 'border-white/30 group-hover:border-white/60'
@@ -406,8 +410,8 @@ function FilterPanelContent({
           <div className='flex gap-2'>
             {[
               { value: '',       label: 'Todos' },
-              { value: 'MUJER',  label: 'Chicas' },
-              { value: 'HOMBRE', label: 'Chicos' },
+              { value: 'MUJER',  label: 'Solo chicas' },
+              { value: 'HOMBRE', label: 'Solo chicos' },
             ].map(({ value, label }) => (
               <button key={label} type='button'
                 onClick={() => setGeneroPref(value)}
@@ -511,7 +515,10 @@ export default function BuscarPage() {
   const [precioMin, setPrecioMin]                   = useState(searchParams.get('precio_min') ?? '')
   const [precioMax, setPrecioMax]                   = useState(searchParams.get('precio_max') ?? '')
   const [habitacionesMin, setHabitacionesMin]       = useState(searchParams.get('habitaciones_min') ?? '')
-  const [tipoPiso, setTipoPiso]                     = useState(searchParams.get('tipo_piso') ?? '')
+  const [tipoPiso, setTipoPiso] = useState(() => {
+    const param = searchParams.get('tipo_piso')
+    return param ? new Set(param.split(',').filter(Boolean)) : new Set()
+  })
   const [filtAmueblado, setFiltAmueblado]           = useState(searchParams.get('amueblado') === 'true')
   const [filtWifi, setFiltWifi]                     = useState(searchParams.get('wifi') === 'true')
   const [filtMascotas, setFiltMascotas]             = useState(searchParams.get('mascotas') === 'true')
@@ -554,7 +561,7 @@ export default function BuscarPage() {
     if (f.precioMin)       q.set('precio_min',         f.precioMin)
     if (f.precioMax)       q.set('precio_max',         f.precioMax)
     if (f.habitacionesMin) q.set('habitaciones_min',   f.habitacionesMin)
-    if (f.tipoPiso)        q.set('tipo_piso',          f.tipoPiso)
+    if (f.tipoPiso?.size > 0) q.set('tipo_piso', [...f.tipoPiso].join(','))
     if (f.amueblado)       q.set('amueblado',          'true')
     if (f.wifi)            q.set('wifi',               'true')
     if (f.mascotas)        q.set('mascotas',           'true')
@@ -642,13 +649,13 @@ export default function BuscarPage() {
   }
 
   const limpiarFiltros = (yBuscar = false) => {
-    setPrecioMin(''); setPrecioMax(''); setHabitacionesMin(''); setTipoPiso('')
+    setPrecioMin(''); setPrecioMax(''); setHabitacionesMin(''); setTipoPiso(new Set())
     setFiltAmueblado(false); setFiltWifi(false); setFiltMascotas(false); setFiltParking(false)
     setFiltLavadora(false); setFiltAC(false); setFiltCalefaccion(false)
     setFiltAscensor(false); setFiltPermiteFumar(false); setGeneroPref('')
     setFiltIntereses(new Set())
     if (yBuscar) buscar(ciudad, 1, {
-      precioMin: '', precioMax: '', habitacionesMin: '', tipoPiso: '',
+      precioMin: '', precioMax: '', habitacionesMin: '', tipoPiso: new Set(),
       amueblado: false, wifi: false, mascotas: false, parking: false,
       lavadora: false, ac: false, calefaccion: false,
       ascensor: false, permiteFumar: false, generoPref: '',
@@ -670,7 +677,7 @@ export default function BuscarPage() {
     })
   }
 
-  const nFiltros = [precioMin, precioMax, habitacionesMin, tipoPiso, filtAmueblado, filtWifi, filtMascotas, filtParking, filtLavadora, filtAC, filtCalefaccion, filtAscensor, filtPermiteFumar, generoPref].filter(Boolean).length + filtIntereses.size
+  const nFiltros = [precioMin, precioMax, habitacionesMin, filtAmueblado, filtWifi, filtMascotas, filtParking, filtLavadora, filtAC, filtCalefaccion, filtAscensor, filtPermiteFumar, generoPref].filter(Boolean).length + filtIntereses.size + tipoPiso.size
   const filtrosActivos = nFiltros > 0
 
   if (cargandoInicial) {

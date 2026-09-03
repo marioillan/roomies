@@ -58,9 +58,12 @@ export const buscarPublicaciones = async (req, res, next) => {
     params.push(parseInt(habitaciones_min));
     conditions.push(`p.habitaciones_libres >= $${params.length}`);
   }
-  if (tipo_piso && TIPOS_VALIDOS.includes(tipo_piso)) {
-    params.push(tipo_piso);
-    conditions.push(`p.tipo_piso = $${params.length}`);
+  if (tipo_piso) {
+    const tipos = tipo_piso.split(',').filter(t => TIPOS_VALIDOS.includes(t));
+    if (tipos.length) {
+      params.push(tipos);
+      conditions.push(`p.tipo_piso = ANY($${params.length})`);
+    }
   }
   if (amueblado          === 'true') conditions.push('p.amueblado = TRUE');
   if (wifi               === 'true') conditions.push('p.wifi = TRUE');
@@ -73,7 +76,7 @@ export const buscarPublicaciones = async (req, res, next) => {
   if (permite_fumar      === 'true') conditions.push('p.permite_fumar = TRUE');
   if (genero_preferido && GENEROS_VALIDOS.includes(genero_preferido)) {
     params.push(genero_preferido);
-    conditions.push(`(p.genero_preferido = $${params.length} OR p.genero_preferido = 'INDIFERENTE' OR p.genero_preferido IS NULL)`);
+    conditions.push(`p.genero_preferido = $${params.length}`);
   }
 
   // Filtros duros de compatibilidad
