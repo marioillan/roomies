@@ -200,8 +200,10 @@ function CardContacto({ pub, miembros, user, navigate, onSolicitar, estadoSolici
 // ─── Card compañeros ───
 
 function CardCompaneros({ miembros, compatibilidad, grupoTieneConvivencia, user, navigate, publicacionId }) {
-  const visibles  = miembros.slice(0, 5)
-  const restantes = miembros.length - visibles.length
+  // El casero no es un compañero de piso: no se muestra ni se cuenta aquí
+  const companeros = miembros.filter(m => m.rol_en_grupo !== 'CASERO')
+  const visibles   = companeros.slice(0, 5)
+  const restantes  = companeros.length - visibles.length
 
   return (
     <div className='bg-white border border-slate-100 rounded-[1.25rem] p-6 flex flex-col gap-4' style={CARD_SHADOW}>
@@ -262,7 +264,7 @@ function CardCompaneros({ miembros, compatibilidad, grupoTieneConvivencia, user,
           )}
         </div>
         <p className='text-sm text-slate-500 font-medium'>
-          {miembros.length} {miembros.length === 1 ? 'miembro' : 'miembros'}
+          {companeros.length} {companeros.length === 1 ? 'miembro' : 'miembros'}
         </p>
       </div>
 

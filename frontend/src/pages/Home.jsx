@@ -186,6 +186,7 @@ const ANUNCIO_DEMO = {
   ciudad: 'Valladolid',
   descripcion: 'Ideal para estudiantes. Cerca de la UVa y del campus Miguel Delibes. Muy bien comunicado.',
   grupo: 'Piso Valladolid',
+  fotoGrupo: 'https://res.cloudinary.com/dnjxewpp9/image/upload/w_900,q_auto,f_auto/fotogrupo1_wlwj6r.jpg',
   compatibilidad: 90,
   interesesComunes: ['Running', 'Cine'],
 }
@@ -210,7 +211,7 @@ function TarjetaAnuncioDemo({ conPerfil }) {
           </p>
           <p className="mt-3 text-sm leading-relaxed text-slate-500 text-pretty">{ANUNCIO_DEMO.descripcion}</p>
           <p className="mt-4 flex items-center gap-2.5">
-            <span aria-hidden="true" className="w-[30px] h-[30px] rounded-full bg-emerald-500 text-white flex items-center justify-center text-[0.8125rem] font-bold">P</span>
+            <img src={ANUNCIO_DEMO.fotoGrupo} alt="" className="w-[30px] h-[30px] rounded-full object-cover shrink-0 ring-1 ring-slate-200" />
             <span className="text-sm font-medium text-slate-700">{ANUNCIO_DEMO.grupo}</span>
           </p>
         </div>

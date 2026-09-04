@@ -21,9 +21,9 @@ function CarruselFotos({ fotos, nombre }) {
   const next = () => setIdx(i => (i + 1) % total)
   const src = fotos[idx]
   return (
-    <div className='relative w-full aspect-[3/4] rounded-3xl overflow-hidden' style={CARD_SHADOW}>
+    <div className='relative w-full h-[24rem] rounded-3xl overflow-hidden' style={CARD_SHADOW}>
       {src
-        ? <img src={src} alt={nombre} className='w-full h-full object-cover object-top' />
+        ? <img src={src} alt={nombre} className='w-full h-full object-cover' />
         : <div className='w-full h-full flex flex-col items-center justify-center gap-2' style={{ background: STRIPE_BG }}>
             <Camera aria-hidden='true' size={24} className='text-slate-500' />
           </div>
@@ -31,11 +31,11 @@ function CarruselFotos({ fotos, nombre }) {
       {total > 1 && (
         <>
           <button aria-label='Foto anterior' onClick={prev}
-            className='cursor-pointer! absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition backdrop-blur-sm'>
+            className='cursor-pointer! absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full text-white flex items-center justify-center transition'>
             <ChevronLeft aria-hidden='true' size={18} />
           </button>
           <button aria-label='Foto siguiente' onClick={next}
-            className='cursor-pointer! absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition backdrop-blur-sm'>
+            className='cursor-pointer! absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full text-white flex items-center justify-center transition'>
             <ChevronRight aria-hidden='true' size={18} />
           </button>
           <div className='absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5'>
@@ -139,10 +139,12 @@ export default function PerfilPublicoUsuario() {
         </div>
 
         {/* ─── Hero card ─── */}
-        <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 md:grid-cols-[18rem_1fr] gap-8 items-start' style={CARD_SHADOW}>
+        <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 grid grid-cols-1 md:grid-cols-2 gap-8 items-center' style={CARD_SHADOW}>
 
           {/* Carrusel de fotos */}
-          <CarruselFotos fotos={fotos} nombre={usuario.nombre} />
+          <div className='px-0 sm:px-20'>
+            <CarruselFotos fotos={fotos} nombre={usuario.nombre} />
+          </div>
 
           {/* Identidad */}
           <div className='flex flex-col gap-4'>
@@ -228,7 +230,7 @@ export default function PerfilPublicoUsuario() {
         </div>
 
         {/* ─── Compatibilidad — grid 3×2 de tarjetas ─── */}
-        <div className='bg-slate-50 border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-6' style={CARD_SHADOW}>
+        <div className='bg-white border border-slate-100 rounded-3xl p-5 sm:p-7 flex flex-col gap-6' style={CARD_SHADOW}>
           <div>
             <p className='font-mono text-[0.8rem] font-semibold tracking-[0.16em] uppercase text-slate-500 mb-1.5'>Compatibilidad</p>
             <h3 className='font-display text-2xl sm:text-[2rem] font-normal text-slate-900 leading-none'>¿Cómo es en casa?</h3>
