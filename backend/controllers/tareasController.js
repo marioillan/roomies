@@ -78,11 +78,11 @@ export const getTareas = async (req, res, next) => {
     });
 
     if (!asignExist) {
-      const nZonas = zonas.length;
+      const nMiembros = miembros.length;
       await prisma.asignacionTarea.createMany({
-        data: miembros.map((m, i) => {
-          const zona = zonas[(i + semanaRotacion) % nZonas];
-          return { id: randomUUID(), tarea_id: zona.id, usuario_id: m.id, semana: lunesDate, estado: 'PENDIENTE' };
+        data: zonas.map((zona, i) => {
+          const miembro = miembros[(i + semanaRotacion) % nMiembros];
+          return { id: randomUUID(), tarea_id: zona.id, usuario_id: miembro.id, semana: lunesDate, estado: 'PENDIENTE' };
         }),
         skipDuplicates: true,
       });
