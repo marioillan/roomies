@@ -1,0 +1,1986 @@
+{
+  "info": {
+    "_postman_id": "84135986-1fbb-45e9-8437-6576876beb0d",
+    "name": "Housie API",
+    "description": "Coleccion de pruebas de la API de Housie. Ejecutar con la base de datos cargada con seed_completo.sql. Las carpetas deben ejecutarse en orden: cada bloque inicia sesion con el usuario que necesita.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53363045",
+    "_collection_link": "https://go.postman.co/collection/53363045-84135986-1fbb-45e9-8437-6576876beb0d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. Autenticacion",
+      "item": [
+        {
+          "name": "Registro con contrasena invalida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Devuelve el mensaje de validacion de Zod\", () => {",
+                  "  pm.expect(pm.response.json().message).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Test Postman\",\n  \"email\": \"postman.test@housie.com\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/registro",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "La contrasena no cumple el minimo de 8 caracteres: debe rechazarse en el servidor."
+          },
+          "response": []
+        },
+        {
+          "name": "Login con credenciales incorrectas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria@housie.com\",\n  \"password\": \"contrasenaerronea\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login correcto (Maria, ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve el usuario\", () => {",
+                  "  const u = pm.response.json().user;",
+                  "  pm.expect(u).to.have.property(\"id\");",
+                  "  pm.expect(u.email).to.eql(\"maria@housie.com\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria@housie.com\",\n  \"password\": \"housie123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Usuario autenticado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"El objeto de usuario esta completo\", () => {",
+                  "  const u = pm.response.json().user;",
+                  "  pm.expect(u).to.have.property(\"perfil_completo\");",
+                  "  pm.expect(u).to.have.property(\"es_casero\");",
+                  "  pm.expect(u).to.have.property(\"fotos\");",
+                  "});",
+                  "pm.collectionVariables.set(\"maria_id\", pm.response.json().user.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Renovacion de token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Perfil",
+      "item": [
+        {
+          "name": "Perfil de convivencia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Contiene las dimensiones del matching\", () => {",
+                  "  const p = pm.response.json().perfil;",
+                  "  [\"ocupacion\",\"horario\",\"ambiente\",\"frecuencia_visitas\",\"tolerancia_fiestas\",\"limpieza_orden\",\"nivel_ruido\"].forEach(c => pm.expect(p).to.have.property(c));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/perfil/convivencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "perfil",
+                "convivencia"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Preferencias de companero",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/perfil/preferencias",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "perfil",
+                "preferencias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Catalogo de intereses (publico)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve las categorias del catalogo\", () => {",
+                  "  pm.expect(Object.keys(pm.response.json().categorias).length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/perfil/intereses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "perfil",
+                "intereses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mis intereses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"El usuario tiene al menos 3 intereses\", () => {",
+                  "  pm.expect(pm.response.json().intereses.length).to.be.at.least(3);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/perfil/mis-intereses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "perfil",
+                "mis-intereses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fotos del perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Las fotos llegan ordenadas y la principal es la de orden 0\", () => {",
+                  "  const f = pm.response.json().fotos;",
+                  "  pm.expect(f).to.be.an(\"array\");",
+                  "  if (f.length) pm.expect(f[0].orden).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/perfil/fotos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "perfil",
+                "fotos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Perfil publico de un usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve usuario, convivencia e intereses\", () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b).to.have.property(\"usuario\");",
+                  "  pm.expect(b).to.have.property(\"convivencia\");",
+                  "  pm.expect(b).to.have.property(\"intereses\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/perfil/publico/{{maria_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "perfil",
+                "publico",
+                "{{maria_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar perfil con enum invalido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Maria Garcia\",\n  \"genero\": \"Mujer\",\n  \"fecha_nacimiento\": \"2002-03-15\",\n  \"pais\": \"Espana\",\n  \"ocupacion\": \"VALOR_INEXISTENTE\",\n  \"horario\": \"INTERMEDIO\",\n  \"frecuencia_visitas\": \"A_VECES\",\n  \"ambiente\": \"EQUILIBRADO\",\n  \"tolerancia_fiestas\": \"OCASIONAL\",\n  \"limpieza_orden\": \"ORDENADO\",\n  \"nivel_ruido\": \"MODERADO\",\n  \"fumador\": false,\n  \"tiene_mascotas\": false,\n  \"lgbtq_friendly\": true,\n  \"sobre_mi\": \"Texto de prueba\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/perfil/editar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "perfil",
+                "editar"
+              ]
+            },
+            "description": "Comprueba que la validacion del servidor rechaza un valor fuera del enumerado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Publicaciones y compatibilidad",
+      "item": [
+        {
+          "name": "Listar publicaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve publicaciones paginadas\", () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.publicaciones).to.be.an(\"array\").that.is.not.empty;",
+                  "  pm.expect(b).to.have.property(\"total\");",
+                  "});",
+                  "pm.collectionVariables.set(\"pub_id\", pm.response.json().publicaciones[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/publicaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "publicaciones"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Compatibilidad calculada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Toda publicacion con perfil de grupo tiene compatibilidad entre 0 y 100\", () => {",
+                  "  pm.response.json().publicaciones.forEach(p => {",
+                  "    if (p.compatibilidad !== null) {",
+                  "      pm.expect(p.compatibilidad).to.be.within(0, 100);",
+                  "    }",
+                  "  });",
+                  "});",
+                  "pm.test(\"El orden por defecto es descendente por compatibilidad\", () => {",
+                  "  const v = pm.response.json().publicaciones.map(p => p.compatibilidad ?? -1);",
+                  "  const ord = [...v].sort((a,b) => b-a);",
+                  "  pm.expect(v).to.eql(ord);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/publicaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "publicaciones"
+              ]
+            },
+            "description": "Verifica el algoritmo de compatibilidad: rango valido y ordenacion del ranking."
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por ciudad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Todas las publicaciones son de la ciudad solicitada\", () => {",
+                  "  pm.response.json().publicaciones.forEach(p => pm.expect(p.ciudad).to.eql(\"Granada\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/publicaciones?ciudad=Granada",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "publicaciones"
+              ],
+              "query": [
+                {
+                  "key": "ciudad",
+                  "value": "Granada"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por precio maximo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ninguna publicacion supera el precio maximo\", () => {",
+                  "  pm.response.json().publicaciones.forEach(p => pm.expect(Number(p.precio)).to.be.at.most(400));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/publicaciones?precio_max=400",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "publicaciones"
+              ],
+              "query": [
+                {
+                  "key": "precio_max",
+                  "value": "400"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle de publicacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Incluye grupo, miembros y fotos\", () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b).to.have.property(\"publicacion\");",
+                  "  pm.expect(b).to.have.property(\"miembros\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/publicaciones/{{pub_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "publicaciones",
+                "{{pub_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle de publicacion inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/publicaciones/00000000-0000-4000-8000-000000000000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "publicaciones",
+                "00000000-0000-4000-8000-000000000000"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Grupos",
+      "item": [
+        {
+          "name": "Mi grupo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve el grupo y sus miembros\", () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b.grupo).to.have.property(\"nombre\");",
+                  "  pm.expect(b.miembros).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "pm.test(\"Los roles son los del enumerado de tres valores\", () => {",
+                  "  pm.response.json().miembros.forEach(m => pm.expect([\"ADMIN\",\"MIEMBRO\",\"CASERO\"]).to.include(m.rol_en_grupo));",
+                  "});",
+                  "pm.collectionVariables.set(\"miembro_id\", pm.response.json().miembros.filter(m => m.rol_en_grupo === \"MIEMBRO\")[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grupos/mi-grupo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "mi-grupo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mis grupos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grupos/mis-grupos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "mis-grupos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Perfil de convivencia del grupo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grupos/convivencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "convivencia"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Publicacion del grupo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grupos/publicacion",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "publicacion"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eventos del grupo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grupos/eventos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "eventos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Solicitudes de union",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grupos/solicitudes-union",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "solicitudes-union"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar grupo con nombre demasiado corto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"AB\",\n  \"descripcion\": \"Descripcion valida del grupo\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grupos/editar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "editar"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Tareas",
+      "item": [
+        {
+          "name": "Listar tareas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve zonas y miembros del grupo\", () => {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(b).to.be.an(\"object\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tareas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tareas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear zona",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200 o 201\", () => pm.expect([200,201]).to.include(pm.response.code));",
+                  "pm.collectionVariables.set(\"zona_id\", (pm.response.json().zona || pm.response.json()).id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Zona de prueba Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tareas/zonas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tareas",
+                "zonas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear zona sin nombre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tareas/zonas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tareas",
+                "zonas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar zona",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200 o 204\", () => pm.expect([200,204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tareas/zonas/{{zona_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tareas",
+                "zonas",
+                "{{zona_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Lista de la compra",
+      "item": [
+        {
+          "name": "Listar productos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/compra",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "compra"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Anadir producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Codigo de estado 200 o 201\", () => pm.expect([200,201]).to.include(pm.response.code));",
+                  "pm.collectionVariables.set(\"producto_id\", (pm.response.json().producto || pm.response.json()).id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Producto de prueba Postman\",\n  \"categoria\": \"comida\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/compra",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "compra"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Marcar como comprado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/compra/{{producto_id}}/comprado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "compra",
+                "{{producto_id}}",
+                "comprado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200 o 204\", () => pm.expect([200,204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/compra/{{producto_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "compra",
+                "{{producto_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Facturas y favoritos",
+      "item": [
+        {
+          "name": "Listar facturas (inquilino)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/facturas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Historial de facturas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/historial",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "historial"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar favoritos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favoritos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "favoritos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Anadir a favoritos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200 o 201\", () => pm.expect([200,201]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favoritos/{{pub_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "favoritos",
+                "{{pub_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Publicaciones favoritas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"La publicacion anadida aparece en favoritos\", () => {",
+                  "  const ids = pm.response.json().publicaciones.map(p => p.id);",
+                  "  pm.expect(ids).to.include(pm.collectionVariables.get(\"pub_id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favoritos/publicaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "favoritos",
+                "publicaciones"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Quitar de favoritos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200 o 201\", () => pm.expect([200,201]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favoritos/{{pub_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "favoritos",
+                "{{pub_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Chats",
+      "item": [
+        {
+          "name": "Solicitudes recibidas (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chats/solicitudes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chats",
+                "solicitudes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mis solicitudes enviadas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chats/mis-solicitudes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chats",
+                "mis-solicitudes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Chats como administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chats/como-admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chats",
+                "como-admin"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Chats como solicitante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chats/como-solicitante",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chats",
+                "como-solicitante"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Control de acceso",
+      "item": [
+        {
+          "name": "Cerrar sesion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sin sesion: acceso a tareas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tareas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tareas"
+              ]
+            },
+            "description": "requireAuth debe rechazar la peticion sin cookie de sesion."
+          },
+          "response": []
+        },
+        {
+          "name": "Sin sesion: acceso al perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/perfil/convivencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "perfil",
+                "convivencia"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login como MIEMBRO (Ana)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ana@housie.com\",\n  \"password\": \"housie123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Miembro: editar el grupo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Intento de cambio\",\n  \"descripcion\": \"Un miembro no deberia poder editar el grupo\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grupos/editar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "editar"
+              ]
+            },
+            "description": "requireAdmin: solo el administrador puede editar el grupo."
+          },
+          "response": []
+        },
+        {
+          "name": "Miembro: expulsar a otro miembro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/grupos/miembros/{{maria_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "miembros",
+                "{{maria_id}}"
+              ]
+            },
+            "description": "requireAdmin: solo el administrador puede expulsar miembros."
+          },
+          "response": []
+        },
+        {
+          "name": "Miembro: transferir la administracion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nuevo_admin_id\": \"{{maria_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grupos/transferir-admin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "transferir-admin"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Miembro: crear una factura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/facturas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas"
+              ]
+            },
+            "description": "requireCasero: solo el casero puede registrar facturas."
+          },
+          "response": []
+        },
+        {
+          "name": "Login como CASERO (Roberto)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"roberto@housie.com\",\n  \"password\": \"housie123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Casero: acceso a tareas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tareas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tareas"
+              ]
+            },
+            "description": "requireInquilino: el casero esta vinculado al grupo solo a efectos de facturacion."
+          },
+          "response": []
+        },
+        {
+          "name": "Casero: acceso a la lista de la compra",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/compra",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "compra"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Casero: crear un evento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Evento de prueba\",\n  \"fecha_inicio\": \"2026-12-01T10:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/grupos/eventos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "eventos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Casero: acceso a sus facturas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Codigo de estado 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/facturas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas"
+              ]
+            },
+            "description": "requireMiembro: el casero si accede al modulo de facturas."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "maria_id",
+      "value": ""
+    },
+    {
+      "key": "pub_id",
+      "value": ""
+    },
+    {
+      "key": "miembro_id",
+      "value": ""
+    },
+    {
+      "key": "zona_id",
+      "value": ""
+    },
+    {
+      "key": "producto_id",
+      "value": ""
+    }
+  ]
+}
