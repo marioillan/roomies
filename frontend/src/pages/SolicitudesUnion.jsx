@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { apiFetch } from '../lib/apiFetch'
 import { UserPlus, UserCheck, UserX, AlertCircle } from 'lucide-react'
+import { EstadoVacio } from '../components/EstadoVacio'
 
 // ─── Avatar ───
 
@@ -122,17 +123,11 @@ function SolicitudesUnion() {
           <div role='status' aria-label='Cargando' className='w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin' />
         </div>
       ) : solicitudes.length === 0 ? (
-        <div className='flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center'>
-          <div className='w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center'>
-            <UserPlus aria-hidden='true' size={28} className='text-amber-500' />
-          </div>
-          <div>
-            <h2 className='font-display text-2xl font-bold text-slate-900'>No hay solicitudes pendientes</h2>
-            <p className='text-slate-500 text-sm mt-2 max-w-xs mx-auto'>
-              Cuando alguien intente unirse con el código de acceso del grupo, aparecerá aquí.
-            </p>
-          </div>
-        </div>
+        <EstadoVacio
+          icono={UserPlus}
+          titulo='No hay solicitudes pendientes'
+          descripcion='Cuando alguien intente unirse con el código de acceso del grupo, aparecerá aquí.'
+        />
       ) : (
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-5'>
           {solicitudes.map(s => (

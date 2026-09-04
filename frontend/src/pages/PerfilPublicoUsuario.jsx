@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight, Camera } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Camera, SearchX } from 'lucide-react'
+import { EstadoVacio } from '../components/EstadoVacio'
 import { CARD_SHADOW, TARJETAS_CONVIVENCIA_USUARIO, labelsUsuario, calcEdad } from '../lib/convivencia.js'
 import { apiFetch } from '../lib/apiFetch'
 import PieDePagina from '../components/PieDePagina.jsx'
@@ -99,10 +100,13 @@ export default function PerfilPublicoUsuario() {
   )
 
   if (!datos?.usuario) return (
-    <div className='min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4'>
-      <p className='text-slate-500 font-semibold'>Usuario no encontrado</p>
-      <button onClick={() => navigate(-1)} className='cursor-pointer! text-sm text-emerald-600 hover:text-emerald-700 font-semibold transition'>← Volver</button>
-    </div>
+    <EstadoVacio
+      pantallaCompleta
+      icono={SearchX}
+      titulo='Usuario no encontrado'
+      descripcion='Puede que haya eliminado su cuenta o que el enlace no sea correcto.'
+      accion={{ label: 'Volver', icono: ArrowLeft, onClick: () => navigate(-1) }}
+    />
   )
 
   const { usuario, convivencia, intereses } = datos

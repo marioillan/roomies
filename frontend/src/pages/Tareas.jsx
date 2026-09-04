@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useModalAccesible } from '../lib/useModalAccesible.js'
 import ModalConfirmarAccion from '../components/ModalConfirmarAccion.jsx'
+import { EstadoVacio } from '../components/EstadoVacio'
 
 // ─── Configuración de zonas ───
 
@@ -190,33 +191,18 @@ function ModalAñadirZona({ onClose, onAñadida }) {
 
 function VistaNoConfigurada({ esAdmin, onSolicitarIniciar, iniciando, errorInit }) {
   return (
-    <div className='flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center'>
-      <div className='w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center'>
-        <RefreshCw aria-hidden='true' size={28} className='text-emerald-500' />
-      </div>
-      <div>
-        <h2 className='font-display text-2xl font-bold text-slate-900'>Rotación de limpieza</h2>
-        <p className='text-slate-500 text-sm mt-2 max-w-xs mx-auto'>
-          {esAdmin
-            ? 'Inicializa las zonas predefinidas (Cocina, Baño, Salón, Pasillo) para empezar la rotación semanal.'
-            : 'El administrador del grupo aún no ha configurado las zonas de limpieza.'}
-        </p>
-      </div>
-      {esAdmin && (
-        <>
-          <button
-            onClick={onSolicitarIniciar} disabled={iniciando}
-            className='cursor-pointer! inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition disabled:opacity-50'
-          >
-            {iniciando
-              ? <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-              : <Plus aria-hidden='true' size={16} />}
-            Inicializar zonas
-          </button>
-          {errorInit && <p className='text-sm text-red-600'>{errorInit}</p>}
-        </>
-      )}
-    </div>
+    <EstadoVacio
+      icono={RefreshCw}
+      titulo='Rotación de tareas'
+      descripcion={esAdmin
+        ? 'Inicializa las zonas predefinidas (Cocina, Baño, Salón, Pasillo) para empezar la rotación semanal.'
+        : 'El administrador del grupo aún no ha configurado las zonas de limpieza.'}
+      accion={esAdmin
+        ? { label: 'Inicializar zonas', icono: Plus, onClick: onSolicitarIniciar, disabled: iniciando, cargando: iniciando }
+        : null}
+    >
+      {esAdmin && errorInit && <p className='text-sm text-red-600'>{errorInit}</p>}
+    </EstadoVacio>
   )
 }
 

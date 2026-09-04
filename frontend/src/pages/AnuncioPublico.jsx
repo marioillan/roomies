@@ -11,8 +11,9 @@ import {
   Heart, MessageCircle, ArrowLeft, MapPin, Euro, Bed, Ruler,
   Home, House, Layers, MoveUp, Wifi, WashingMachine, Wind, Flame, Car, Trees,
   Cigarette, PawPrint, Phone, ChevronLeft, ChevronRight, ImageOff,
-  Users, Check, Search, Link2,
+  Users, Check, Search, SearchX, Link2,
 } from 'lucide-react'
+import { EstadoVacio } from '../components/EstadoVacio'
 import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 import HeaderPublico from '../components/HeaderPublico.jsx'
 
@@ -378,13 +379,13 @@ export default function AnuncioPublico() {
 
   if (!datos?.publicacion) {
     return (
-      <div className='min-h-screen bg-slate-100 flex flex-col items-center justify-center gap-4'>
-        <p className='text-slate-500 font-semibold'>Anuncio no encontrado</p>
-        <button onClick={() => navigate('/buscar')}
-          className='cursor-pointer! text-sm text-emerald-600 hover:text-emerald-700 font-semibold transition'>
-          ← Volver a la búsqueda
-        </button>
-      </div>
+      <EstadoVacio
+        pantallaCompleta
+        icono={SearchX}
+        titulo='Anuncio no encontrado'
+        descripcion='Puede que se haya eliminado o que el enlace no sea correcto.'
+        accion={{ label: 'Volver a la búsqueda', icono: Search, onClick: () => navigate('/buscar') }}
+      />
     )
   }
 

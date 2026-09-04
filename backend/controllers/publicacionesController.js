@@ -76,7 +76,7 @@ export const buscarPublicaciones = async (req, res, next) => {
   if (permite_fumar      === 'true') conditions.push('p.permite_fumar = TRUE');
   if (genero_preferido && GENEROS_VALIDOS.includes(genero_preferido)) {
     params.push(genero_preferido);
-    conditions.push(`p.genero_preferido = $${params.length}`);
+    conditions.push(`(p.genero_preferido = $${params.length} OR p.genero_preferido = 'INDIFERENTE' OR p.genero_preferido IS NULL)`);
   }
 
   // Filtros duros de compatibilidad

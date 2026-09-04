@@ -645,10 +645,14 @@ export default function Home() {
               ))}
             </ul>
 
-          {/* Las mismas tarjetas en móvil, donde no caben a los lados: pasan a
-              ser una tira desplazable para que el hero siga enseñando el producto. */}
+          {/* Las mismas tarjetas donde no caben a los lados: pasan a ser una tira
+              desplazable para que el hero siga enseñando el producto.
+              En móvil no se muestran: la tira obligaba a un gesto horizontal para
+              ver algo que ya cuentan la lista de ventajas y la rejilla 01–06 de
+              más abajo, y alargaba el hero justo encima del buscador, que es la
+              acción real de la portada. */}
           <ul
-            className="xl:hidden self-stretch -mx-6 sm:-mx-10 mt-10 px-6 sm:px-10 flex gap-3 overflow-x-auto no-scrollbar"
+            className="hidden md:flex xl:hidden self-stretch -mx-6 sm:-mx-10 mt-10 px-6 sm:px-10 gap-3 overflow-x-auto no-scrollbar"
             style={{ animation: 'heroFadeUp 0.7s ease 0.4s both' }}
           >
             {TARJETAS_HERO.map(({ icon: Icono, titulo, detalle, acento }) => (

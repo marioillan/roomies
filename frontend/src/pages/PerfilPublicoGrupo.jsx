@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Search, SearchX } from 'lucide-react'
+import { EstadoVacio } from '../components/EstadoVacio'
 import { CARD_SHADOW, TARJETAS_CONVIVENCIA_GRUPO, labelsGrupo, PASTEL } from '../lib/convivencia.js'
 import { apiFetch } from '../lib/apiFetch'
 import PieDePagina from '../components/PieDePagina.jsx'
@@ -61,13 +62,13 @@ export default function PerfilPublicoGrupo() {
 
   if (!datos?.publicacion) {
     return (
-      <div className='min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4'>
-        <p className='text-slate-500 font-semibold'>Grupo no encontrado</p>
-        <button onClick={() => navigate('/buscar')}
-          className='cursor-pointer! text-sm text-emerald-600 hover:text-emerald-700 font-semibold transition'>
-          ← Volver a la búsqueda
-        </button>
-      </div>
+      <EstadoVacio
+        pantallaCompleta
+        icono={SearchX}
+        titulo='Grupo no encontrado'
+        descripcion='Puede que se haya eliminado o que el enlace no sea correcto.'
+        accion={{ label: 'Volver a la búsqueda', icono: Search, onClick: () => navigate('/buscar') }}
+      />
     )
   }
 

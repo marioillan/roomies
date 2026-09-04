@@ -5,6 +5,7 @@ import {
   Megaphone, MapPin, Eye, EyeOff, Plus, Pencil,
   Trash2, MessageCircle, ChevronLeft, ChevronRight, ImageOff, Globe, UserPlus,
 } from 'lucide-react'
+import { EstadoVacio } from '../components/EstadoVacio'
 
 // ─── Constantes de estilo ───
 
@@ -373,34 +374,23 @@ function Publicacion() {
 
   if (!publicacion) {
     return (
-      <div className='flex items-center justify-center min-h-[70vh]'>
-        <div className={`${CARD} p-12 flex flex-col items-center text-center gap-5 w-full max-w-[28rem]`}>
-          <div className='w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center'>
-            <Megaphone aria-hidden='true' size={28} className='text-emerald-500' />
-          </div>
-
-          <div className='flex flex-col gap-2'>
-            <h2 className='font-display text-[2rem] font-bold text-slate-900 leading-tight'>
-              Todavía no tenéis anuncio
-            </h2>
-            <p className='text-sm text-slate-500 leading-relaxed max-w-xs mx-auto'>
-              El anuncio muestra vuestro piso en el marketplace para que futuros compañeros puedan contactaros y pedir unirse al grupo.
-            </p>
-          </div>
-
-          <button
-            onClick={() => navigate('/grupo/publicacion/formulario')}
-            disabled={!esAdmin}
-            className='cursor-pointer! flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-3 rounded-xl transition w-full max-w-[20rem]'
-          >
-            <Plus aria-hidden='true' size={15} /> Crear anuncio
-          </button>
-
+      <EstadoVacio
+        icono={Megaphone}
+        titulo='Todavía no tenéis anuncio'
+        descripcion='El anuncio muestra vuestro piso en el marketplace para que futuros compañeros puedan contactaros y pedir unirse al grupo.'
+        accion={{
+          label: 'Crear anuncio',
+          icono: Plus,
+          onClick: () => navigate('/grupo/publicacion/formulario'),
+          disabled: !esAdmin,
+        }}
+      >
+        {!esAdmin && (
           <p className='text-xs text-slate-500'>
             Solo el administrador puede crear y editar el anuncio
           </p>
-        </div>
-      </div>
+        )}
+      </EstadoVacio>
     )
   }
 

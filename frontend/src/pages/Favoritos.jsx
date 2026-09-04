@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart, MapPin, MessageCircle, Phone, Search } from 'lucide-react'
 import { apiFetch } from '../lib/apiFetch'
+import { EstadoVacio } from '../components/EstadoVacio'
 
 // ─── Constantes y helpers ───
 const AVATAR_COLORS = ['#ec4899', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b']
@@ -286,22 +287,12 @@ export default function Favoritos() {
 
       {/* Estado vacío */}
       {publicaciones.length === 0 && (
-        <div className='flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center'>
-          <div className='w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center'>
-            <Heart aria-hidden='true' size={28} className='text-emerald-500' />
-          </div>
-          <div>
-            <h2 className='font-display text-2xl font-bold text-slate-900'>Aún no tienes favoritos</h2>
-            <p className='text-slate-500 text-sm mt-2 max-w-xs mx-auto'>Explora habitaciones y guarda las que más te interesen</p>
-          </div>
-          <button
-            type='button'
-            onClick={() => navigate('/buscar')}
-            className='cursor-pointer! inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition'
-          >
-            <Search aria-hidden='true' size={16} /> Buscar habitaciones
-          </button>
-        </div>
+        <EstadoVacio
+          icono={Heart}
+          titulo='Aún no tienes favoritos'
+          descripcion='Explora habitaciones y guarda las que más te interesen'
+          accion={{ label: 'Buscar habitaciones', icono: Search, onClick: () => navigate('/buscar') }}
+        />
       )}
 
       {/* Lista */}

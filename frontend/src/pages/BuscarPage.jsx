@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { SaltarAlContenido } from '../components/Accesibilidad.jsx'
 import HeaderPublico from '../components/HeaderPublico.jsx'
+import { EstadoVacio } from '../components/EstadoVacio'
 import { useModalAccesible } from '../lib/useModalAccesible.js'
 
 const ESMERALDA = '#10b981'
@@ -813,24 +814,14 @@ export default function BuscarPage() {
 
             {/* Sin resultados */}
             {!loading && !error && total === 0 && (
-              <div className='flex flex-col items-center justify-center py-28 gap-4'>
-                <div className='w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center'>
-                  <Search aria-hidden='true' size={28} className='text-slate-500' />
-                </div>
-                <div className='text-center'>
-                  <p className='text-sm font-semibold text-slate-600'>{ciudadBuscada ? `Sin anuncios en ${ciudadBuscada}` : 'No hay anuncios disponibles'}</p>
-                  <p className='text-xs text-slate-500 mt-1'>Prueba con otra ciudad o amplía los filtros</p>
-                </div>
-                {filtrosActivos && (
-                  <button
-                    type='button'
-                    onClick={() => limpiarFiltros(true)}
-                    className='cursor-pointer! text-sm font-semibold text-emerald-600 hover:text-emerald-700 underline transition'
-                  >
-                    Quitar filtros
-                  </button>
-                )}
-              </div>
+              <EstadoVacio
+                icono={Search}
+                titulo={ciudadBuscada ? `Sin anuncios en ${ciudadBuscada}` : 'No hay anuncios disponibles'}
+                descripcion='Prueba con otra ciudad o amplía los filtros'
+                accion={filtrosActivos
+                  ? { label: 'Quitar filtros', icono: X, onClick: () => limpiarFiltros(true) }
+                  : null}
+              />
             )}
 
             {/* Resultados */}
