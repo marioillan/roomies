@@ -1,6 +1,7 @@
 // Estado vacío de pantalla completa: el bloque que ocupa el área de contenido
 // cuando no hay nada que listar todavía (sin favoritos, sin solicitudes, sin
 // anuncio) o cuando una búsqueda no devuelve resultados.
+
 export function EstadoVacio({ icono: Icono, titulo, descripcion, accion, pantallaCompleta, children }) {
   const IconoAccion = accion?.icono
 
@@ -26,13 +27,14 @@ export function EstadoVacio({ icono: Icono, titulo, descripcion, accion, pantall
           disabled={accion.disabled}
           className='cursor-pointer! inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-xl transition'
         >
+          {/* Mientras la acción está en vuelo el icono cede su sitio al spinner,
+              para no ensanchar el botón a mitad de pulsación. */}
           {accion.cargando
             ? <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
             : IconoAccion && <IconoAccion aria-hidden='true' size={16} />}
           {accion.label}
         </button>
       )}
-
       {children}
     </div>
   )

@@ -4,7 +4,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '../src/config/db.js';
 import cloudinary from '../src/config/cloudinary.js';
 import { sendMail, emailPublicacionConfirmada } from '../src/config/email.js';
-import { calcularCompatibilidad } from '../src/utils/compatibilidad.js';
+import { calcularCompatibilidad, fusionarPerfil } from '../src/utils/compatibilidad.js';
 import {
   crearGrupoSchema,
   editarGrupoSchema,
@@ -840,22 +840,7 @@ export const getSolicitudesUnion = async (req, res, next) => {
     });
 
     const resultado = solicitudes.map(s => {
-      const perfilUsuario = s.usuario.preferencias_companero ?? s.usuario.perfil_convivencia;
-      const compatibilidad = (perfilUsuario && pcg) ? calcularCompatibilidad(perfilUsuario, pcg) : null;
-      return {
-        id: s.id,
-        fecha_solicitud: s.fecha_solicitud,
-        usuario: { id: s.usuario.id, nombre: s.usuario.nombre, foto_perfil: s.usuario.fotos[0]?.url ?? null },
-        compatibilidad: compatibilidad?.score ?? null,
-        desglose: compatibilidad?.desglose ?? null,
-      };
-    });
-
-    res.json({ solicitudes: resultado });
-  } catch (err) {
-    next(err);
-  }
-};
+      const
 
 // ─── PUT /api/grupos/solicitudes-union/:solicitudId/aceptar ───
 export const aceptarSolicitudUnion = async (req, res, next) => {
