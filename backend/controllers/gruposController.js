@@ -840,7 +840,22 @@ export const getSolicitudesUnion = async (req, res, next) => {
     });
 
     const resultado = solicitudes.map(s => {
-      const
+      const perfilUsuario = fusionarPerfil(s.usuario.perfil_convivencia, s.usuario.preferencias_companero);
+      const compatibilidad = (perfilUsuario && pcg) ? calcularCompatibilidad(perfilUsuario, pcg) : null;
+      return {
+        id: s.id,
+        fecha_solicitud: s.fecha_solicitud,
+        usuario: { id: s.usuario.id, nombre: s.usuario.nombre, foto_perfil: s.usuario.fotos[0]?.url ?? null },
+        compatibilidad: compatibilidad?.score ?? null,
+        desglose: compatibilidad?.desglose ?? null,
+      };
+    });
+
+    res.json({ solicitudes: resultado });
+  } catch (err) {
+    next(err);
+  }
+};
 
 // ─── PUT /api/grupos/solicitudes-union/:solicitudId/aceptar ───
 export const aceptarSolicitudUnion = async (req, res, next) => {
