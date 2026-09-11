@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { prisma } from '../src/config/db.js';
-import { calcularCompatibilidad } from '../src/utils/compatibilidad.js';
+import { calcularCompatibilidad, fusionarPerfil } from '../src/utils/compatibilidad.js';
 import {
   sendMail,
   emailSolicitudEnviadaUsuario,
@@ -125,7 +125,7 @@ export const getSolicitudes = async (req, res, next) => {
     const solicitudes = solicitudesData.map(sc => {
       // Igual que en /api/publicaciones y en las solicitudes de unión: lo que
       // el usuario busca en un compañero manda sobre su propio perfil.
-      const perfilUsuario = sc.usuario.preferencias_companero ?? sc.usuario.perfil_convivencia;
+      const perfilUsuario = fusionarPerfil(sc.usuario.perfil_convivencia, sc.usuario.preferencias_companero);
       const interesesUsuario = new Set(sc.usuario.intereses.map(i => i.interes_id));
 
       return {
